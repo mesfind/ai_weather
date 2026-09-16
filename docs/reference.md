@@ -243,11 +243,11 @@ tuple
 
 type
 :   The classification of something in a program (for example, the contents of a variable)
-    as a kind of number (e.g. [floating-point](#float), [integer](#integer)), [string](#string), or something else.
+    as a kind of number (e.g., [floating-point number](#floating-point-number), [integer](#integer)), [string](#string), or something else.
 
 type of error
 :   Indicates the nature of an error in a program. For example, in Python,
-    an `IOError` to problems with file input/output.
+    an `IOError` refers to problems with file input/output.
     See also: [syntax error](#syntax-error).
 
 while loop
