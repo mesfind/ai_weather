@@ -144,7 +144,7 @@ Participants can spin up a pre-configured Docker container and verify the instal
 
 ~~~bash
 admin@MacBook~ $ docker run -it --gpus all climate-workshop:latest /bin/bash
-admin@MacBook~ $ python -c "import xarray, dask, cartopy; print('✅ Environment ready!')"
+admin@MacBook~ $ python -c "import xarray, dask, cartopy; print('Environment ready!')"
 ~~~  
 {: .bash}
 
@@ -157,8 +157,8 @@ admin@MacBook~ $ python -c "import xarray, dask, cartopy; print('✅ Environment
 The **NVIDIA DGX Spark** is a desktop AI supercomputer powered by the GB10 Grace Blackwell superchip, featuring 128 GB of unified memory and 1 PetaFLOP of parallel throughput [[16]]. It is designed to bring datacenter-capable AI, machine learning, and data science workflows directly to your desk [[19]].
 
 ### What is Possible with a Spark?
-- **✅ Ideal For**: Running benchmarks, blending forecasts, and training small bias correction models locally, *provided you already have your reforecast data*.
-- **❌ Not Ideal For**: Large-scale reforecast data generation. This task requires massive I/O throughput and distributed parallelism that are better suited for traditional HPC clusters.
+- **Ideal For**: Running benchmarks, blending forecasts, and training small bias correction models locally, *provided you already have your reforecast data*.
+- **Not Ideal For**: Large-scale reforecast data generation. This task requires massive I/O throughput and distributed parallelism that are better suited for traditional HPC clusters.
 
 For practical guides, playbooks, and interactive options to get started, visit the official [NVIDIA Build: DGX Spark](https://build.nvidia.com/spark) portal [[1]]. You can also explore the [DGX Spark User Guide](https://docs.nvidia.com/dgx/dgx-spark/common-use-cases.html) for common use cases [[3]].
 
