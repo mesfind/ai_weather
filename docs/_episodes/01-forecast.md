@@ -1,5 +1,5 @@
 ---
-title: 
+title: Setting Up AI Weather Forecasting Lab
 teaching: 1
 exercises: 0
 questions:
@@ -11,13 +11,12 @@ keypoints:
 - 
 ---
 
-# Setting Up AI Weather Forecasting Lab
+# Running Fire AI Weather Forecast
 
-## Onset
-
+## Onset 
 ## Censsion
 
 ## Temperature
 
-## Precipitation
+
 
