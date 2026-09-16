@@ -1,5 +1,5 @@
 ---
-title: Machine Learning Fundamentals
+title: Onset Climatology
 teaching: 1
 exercises: 0
 questions:
@@ -26,7 +26,7 @@ keypoints:
 </script>
 
 
-# Machine Learning Concepts
+# Onset Climatology Concepts
 
 Machine learning is a field of study that enables computers to learn and improve from experience without being explicitly programmed. It focuses on developing computer programs that can access data and use it to learn for themselves
 
