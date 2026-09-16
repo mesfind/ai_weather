@@ -1,5 +1,5 @@
 ---
-title: Virtual Environments and Hardware Workflows
+title: Setup
 teaching: 15
 exercises: 3
 questions:
