@@ -57,7 +57,7 @@
     </article>
     
     <!-- Navigation Links (Previous/Next) -->
-    {% if page.url contains '/episodes/' or page.url contains '/01-' or page.url contains '/02-' or page.url contains '/03-' or page.url contains '/04-' %}
+    {% if page.url contains '/episodes/' or page.url contains '/01-' or page.url contains '/02-' or page.url contains '/03-' or page.url contains '/04-' or page.url contains '/05-' or page.url contains '/06-'%}
       {% assign sorted_episodes = site.episodes | sort: 'name' %}
       {% for episode in sorted_episodes %}
         {% if episode.url == page.url %}
