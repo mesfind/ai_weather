@@ -1,10 +1,18 @@
-# docs/_config.yml
-title: "AI Weather"
-description: "A modern, state-of-the-art lesson on AI applications in Weather Forecasting."
-url: "https://mesfindiro.github.io" # Update with your actual GitHub Pages URL
-baseurl: "/ai_weather" # Update with your repo name, or leave blank if root
+# ============================================================
+# AI WEATHER —  Lesson Template
+# ============================================================
 
-# Modern Markdown & Syntax Highlighting
+# --- Site Metadata ---
+title: "AI Weather"
+description: "A modern, hands-on lesson on applying AI to weather forecasting using Python."
+author: "Mesfin Diro"
+email: "mesfin.diro@aau.edu.et"
+url: "https://mesfindiro.github.io"
+baseurl: "/ai_weather"
+repository: "mesfindiro/ai_weather"
+license: "CC-BY 4.0"
+
+# --- Build Settings ---
 markdown: kramdown
 kramdown:
   input: GFM
@@ -13,31 +21,54 @@ kramdown:
     css_class: 'highlight'
     block:
       line_numbers: false
+  smart_quotes: ["apos", "apos", "quot", "quot"]
 
-# SOTA SCSS Configuration
+# --- SCSS ---
 sass:
   sass_dir: _sass
   style: compressed
 
-# Modern Lesson Collection
+# --- Collections ---
 collections:
   episodes:
     output: true
-    permalink: /episodes/:title/
+    permalink: /episodes/:slug/
 
-# Default Front Matter
+# --- Defaults ---
 defaults:
   - scope:
       path: ""
     values:
-      layout: "default"
+      layout: "page"
+      toc: true
   - scope:
       path: ""
       type: "episodes"
     values:
-      layout: "default"
+      layout: "episode"
+      toc: true
 
-# Native GitHub Pages Plugins
+# --- Plugins ---
 plugins:
   - jekyll-seo-tag
   - jekyll-sitemap
+  - jekyll-feed
+
+# --- Exclusions ---
+exclude:
+  - Makefile
+  - bin/
+  - vendor/
+  - .sass-cache/
+  - .jekyll-cache/
+  - Gemfile
+  - Gemfile.lock
+  - node_modules/
+  - requirements.txt
+  - "*.map"
+  - README.md
+  - CONTRIBUTING.md
+  - CITATION
+
+# --- Features ---
+mathjax: true
