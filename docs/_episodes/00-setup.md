@@ -1,5 +1,5 @@
 ---
-title: 
+title: Setup
 teaching: 1
 exercises: 0
 questions:
