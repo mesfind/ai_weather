@@ -1,0 +1,436 @@
+[
+  {
+    "objectID": "shell_programming.html#shell-programming-with-bash-and-vivim",
+    "href": "shell_programming.html#shell-programming-with-bash-and-vivim",
+    "title": "",
+    "section": "Shell Programming with Bash and vi/vim",
+    "text": "Shell Programming with Bash and vi/vim\nWhat is a Shell?\nDefinition: Command-line interpreter for OS services\nCommon Shells:\n\nBash - Most common on Linux\nZsh - Extended features\nFish - User-friendly\n\nShell Script: Text file with shell commands\nPrimary Uses:\n\nAutomating repetitive tasks\nGluing programs together\nSystem administration\nData processing pipelines\n\nWhy learn vi/vim?\n\nAvailable on every Unix/Linux system\nScript editing without leaving terminal\nFast navigation and manipulation"
+  },
+  {
+    "objectID": "shell_programming.html#your-first-shell-script",
+    "href": "shell_programming.html#your-first-shell-script",
+    "title": "",
+    "section": "Your First Shell Script",
+    "text": "Your First Shell Script\nStep 1: Create file with vi\nvi first_script.sh\nStep 2: Enter insert mode (i) and type:\n#!/bin/bash\n# Author: Kedir Jemal\necho \"Welcome to shell programming\"\necho \"Current date: $(date)\"\necho \"Directory: $(pwd)\"\nStep 3: Save and exit (Esc then :wq)\nStep 4: Make executable\nchmod +x first_script.sh\nStep 5: Run\n./first_script.sh\nShebang #!/bin/bash specifies interpreter"
+  },
+  {
+    "objectID": "shell_programming.html#vi-editor---three-modes",
+    "href": "shell_programming.html#vi-editor---three-modes",
+    "title": "",
+    "section": "vi Editor - Three Modes",
+    "text": "vi Editor - Three Modes\n\n\n\nMode\nPurpose\nHow to Enter\n\n\n\n\nCommand\nNavigate, delete, copy\nEsc\n\n\nInsert\nType text\ni, a, o\n\n\nLast Line\nSave, quit, search\n:\n\n\n\nQuick Switching:\nCommand → Insert:  i (insert before cursor)\n                  a (append after cursor)\n                  o (new line below)\n\nInsert → Command:  Esc\n\nCommand → Last Line: :\nOpen files:\nvi file.txt          # Open file\nvi +10 file.txt      # Open at line 10\nvi +/pattern file.txt # Open at pattern"
+  },
+  {
+    "objectID": "shell_programming.html#vi-navigation-command-mode",
+    "href": "shell_programming.html#vi-navigation-command-mode",
+    "title": "",
+    "section": "vi Navigation (Command Mode)",
+    "text": "vi Navigation (Command Mode)\nBasic Movement:\n\n\n\nKey\nMovement\n\n\n\n\nh or ←\nLeft one char\n\n\nj or ↓\nDown one line\n\n\nk or ↑\nUp one line\n\n\nl or →\nRight one char\n\n\n\nWord Movement:\n\n\n\nKey\nMovement\n\n\n\n\nw\nBeginning of next word\n\n\nb\nBeginning of previous word\n\n\ne\nEnd of word"
+  },
+  {
+    "objectID": "shell_programming.html#vi-navigation-command-mode-1",
+    "href": "shell_programming.html#vi-navigation-command-mode-1",
+    "title": "",
+    "section": "vi Navigation (Command Mode)",
+    "text": "vi Navigation (Command Mode)\nLine and File:\n\n\n\nKey\nMovement\n\n\n\n\n0\nBeginning of line\n\n\n$\nEnd of line\n\n\ngg\nFirst line of file\n\n\nG\nLast line of file\n\n\n:n or nG\nGo to line n\n\n\n\nPage Movement:\n\nCtrl+f - Forward page\nCtrl+b - Backward page\nCtrl+d - Half page down\nCtrl+u - Half page up"
+  },
+  {
+    "objectID": "shell_programming.html#vi-insert-and-edit",
+    "href": "shell_programming.html#vi-insert-and-edit",
+    "title": "",
+    "section": "vi Insert and Edit",
+    "text": "vi Insert and Edit\nEntering Insert Mode:\n\n\n\nCommand\nAction\n\n\n\n\ni\nInsert before cursor\n\n\nI\nInsert at line beginning\n\n\na\nAppend after cursor\n\n\nA\nAppend at line end\n\n\no\nOpen new line below\n\n\nO\nOpen new line above\n\n\n\nDeleting:\n\n\n\nCommand\nAction\n\n\n\n\nx\nDelete character\n\n\ndw\nDelete word\n\n\ndd\nDelete line\n\n\nd$\nDelete to end of line\n\n\n3dd\nDelete 3 lines"
+  },
+  {
+    "objectID": "shell_programming.html#vi-insert-and-edit-conti",
+    "href": "shell_programming.html#vi-insert-and-edit-conti",
+    "title": "",
+    "section": "vi Insert and Edit (conti…)",
+    "text": "vi Insert and Edit (conti…)\nCopy & Paste:\n\n\n\nCommand\nAction\n\n\n\n\nyy\nYank (copy) line\n\n\nyw\nYank word\n\n\np\nPaste after cursor\n\n\nP\nPaste before cursor\n\n\n\nUndo/Redo:\n\nu - Undo\nCtrl+r - Redo"
+  },
+  {
+    "objectID": "shell_programming.html#vi-visual-mode",
+    "href": "shell_programming.html#vi-visual-mode",
+    "title": "",
+    "section": "vi Visual Mode",
+    "text": "vi Visual Mode\nEntering Visual Mode:\n\n\n\nCommand\nAction\n\n\n\n\nv\nCharacter selection\n\n\nV\nLine selection\n\n\nCtrl+v\nBlock (column) selection\n\n\n\nOperations on Selection:\n\n\n\nCommand\nAction\n\n\n\n\nd\nDelete selected\n\n\ny\nYank (copy) selected\n\n\nc\nChange selected\n\n\n~\nChange case\n\n\n&gt;\nIndent right\n\n\n&lt;\nIndent left\n\n\n\nBlock Mode Example - Add comments:\n1. Ctrl+v to enter block mode\n2. Move down with j\n3. Press I (capital i)\n4. Type # and press Esc\nBlock Mode Example - Delete column:\n1. Ctrl+v\n2. Select column with h/j/k/l\n3. Press d"
+  },
+  {
+    "objectID": "shell_programming.html#vi-search-and-replace",
+    "href": "shell_programming.html#vi-search-and-replace",
+    "title": "",
+    "section": "vi Search and Replace",
+    "text": "vi Search and Replace\nSearch Commands:\n\n\n\nCommand\nAction\n\n\n\n\n/pattern\nSearch forward\n\n\n?pattern\nSearch backward\n\n\nn\nRepeat search\n\n\nN\nReverse search\n\n\n*\nSearch word under cursor\n\n\n:noh\nClear highlighting\n\n\n\nReplace (Substitution):\n\n\n\nCommand\nAction\n\n\n\n\n:s/old/new/\nFirst on current line\n\n\n:s/old/new/g\nAll on current line\n\n\n:%s/old/new/g\nEntire file\n\n\n:%s/old/new/gc\nWith confirmation\n\n\n:5,10s/old/new/g\nLines 5-10\n\n\n:.,$s/old/new/g\nCurrent to end\n\n\n\nConfirmation flags:\n\ny - yes, replace\nn - no, skip\na - all remaining\nq - quit"
+  },
+  {
+    "objectID": "shell_programming.html#vi-multiple-files",
+    "href": "shell_programming.html#vi-multiple-files",
+    "title": "",
+    "section": "vi Multiple Files",
+    "text": "vi Multiple Files\nOpening multiple files:\nvi file1.txt file2.txt file3.txt\nFile navigation (last line mode):\n\n\n\nCommand\nAction\n\n\n\n\n:n\nNext file\n\n\n:prev\nPrevious file\n\n\n:first\nFirst file\n\n\n:last\nLast file\n\n\n:args\nList all files\n\n\n\nSplit windows:\n\n\n\nCommand\nAction\n\n\n\n\n:split or :sp\nHorizontal split\n\n\n:vsplit or :vs\nVertical split\n\n\nCtrl+w w\nMove between splits\n\n\nCtrl+w h/j/k/l\nMove to split\n\n\nCtrl+w q\nClose split\n\n\n:new\nNew horizontal split\n\n\n:vnew\nNew vertical split\n\n\n\nTabs (Vim):\n\n\n\nCommand\nAction\n\n\n\n\n:tabnew file\nNew tab\n\n\ngt\nNext tab\n\n\ngT\nPrevious tab\n\n\n:tabclose\nClose tab"
+  },
+  {
+    "objectID": "shell_programming.html#vi-macros-and-markers",
+    "href": "shell_programming.html#vi-macros-and-markers",
+    "title": "",
+    "section": "vi Macros and Markers",
+    "text": "vi Macros and Markers\nMarkers (Bookmarks):\nma              # Set marker 'a' at cursor\n`a              # Jump to marker 'a'\n'a              # Jump to line of marker 'a'\n``              # Previous position\n'.              # Last change\nRecording Macros:\nqq              # Start recording to register q\n[commands]      # Do your actions\nq               # Stop recording\n\n@q              # Play macro once\n@@              # Repeat last macro\n5@q             # Play macro 5 times\nMacro Example - Add semicolon:\nqq              # Start record\nA               # Append at end\n;               # Add semicolon\nEsc             # Back to command mode\nj               # Move down\nq               # Stop record\n\n10@q            # Execute 10 times"
+  },
+  {
+    "objectID": "shell_programming.html#vi-configuration-.vimrc",
+    "href": "shell_programming.html#vi-configuration-.vimrc",
+    "title": "",
+    "section": "vi Configuration (.vimrc)",
+    "text": "vi Configuration (.vimrc)\nCreate personal config:\nvi ~/.vimrc\nCommon settings:\n\" Basic settings\nset number              \" Line numbers\nset relativenumber      \" Relative numbers\nset autoindent          \" Auto indent\nset tabstop=4           \" Tab width = 4\nset shiftwidth=4        \" Indent width = 4\nset expandtab           \" Use spaces\nset hlsearch            \" Highlight search\nset incsearch           \" Incremental search\nset ignorecase          \" Case insensitive\nset smartcase           \" Override if uppercase\nset wrap                \" Wrap lines\nsyntax on               \" Syntax highlighting\nTemporary settings (in vi):\n:set number\n:set nonumber\n:set list\n:set paste\n:syntax on\n:colorscheme desert"
+  },
+  {
+    "objectID": "shell_programming.html#bash-variables",
+    "href": "shell_programming.html#bash-variables",
+    "title": "",
+    "section": "Bash Variables",
+    "text": "Bash Variables\nRules:\n\nNo spaces around =\nCase-sensitive\nAll values are strings\n\nExamples:\n#!/bin/bash\n\nname=\"Almaz\"\ncity=\"Adama\"\nage=28\n\necho \"Name: $name\"\necho \"City: ${city}\"\necho \"$name is $age years old\"\n\n# Command substitution\ncurrent_dir=$(pwd)\nfile_count=$(ls | wc -l)\n\necho \"Directory: $current_dir\"\necho \"Files: $file_count\"\nArithmetic:\na=10\nb=20\nsum=$((a + b))\nproduct=$((a * b))\n((counter++))"
+  },
+  {
+    "objectID": "shell_programming.html#special-variables",
+    "href": "shell_programming.html#special-variables",
+    "title": "",
+    "section": "Special Variables",
+    "text": "Special Variables\n\n\n\nVariable\nDescription\n\n\n\n\n$0\nScript name\n\n\n$1-$9\nPositional parameters\n\n\n$#\nNumber of arguments\n\n\n$@\nAll args as separate\n\n\n$*\nAll args as single string\n\n\n$?\nExit status\n\n\n$$\nProcess ID\n\n\n\nExample:\n#!/bin/bash\n# special_vars.sh\n\necho \"Script: $0\"\necho \"Args count: $#\"\necho \"All args: $@\"\necho \"First arg: $1\"\necho \"Process ID: $$\"\n\nfor arg in \"$@\"; do\n    echo \"Arg: $arg\"\ndone\nEnvironment variables:\necho \"$HOME\"\necho \"$USER\"\necho \"$PATH\"\nexport MY_VAR=\"value\""
+  },
+  {
+    "objectID": "shell_programming.html#user-input",
+    "href": "shell_programming.html#user-input",
+    "title": "",
+    "section": "User Input",
+    "text": "User Input\nBasic read:\necho \"What is your name?\"\nread name\necho \"Hello, $name\"\nRead options:\n# Prompt\nread -p \"Enter age: \" age\n\n# Silent (password)\nread -s -p \"Password: \" pass\n\n# Timeout (5 seconds)\nread -t 5 -p \"Response: \" resp\n\n# Limit characters\nread -n 1 -p \"Press key: \" key\n\n# Read multiple\nread first last\nDefault values:\nread -p \"Directory [backup]: \" dir\ndir=${dir:-backup}\nRead from file:\nwhile read line; do\n    echo \"$line\"\ndone &lt; file.txt"
+  },
+  {
+    "objectID": "shell_programming.html#conditional-statements",
+    "href": "shell_programming.html#conditional-statements",
+    "title": "",
+    "section": "Conditional Statements",
+    "text": "Conditional Statements\nSyntax:\nif [ condition ]; then\n    commands\nelif [ other ]; then\n    commands\nelse\n    commands\nfi\nExamples:\nname=\"Hundessa\"\n\nif [[ \"$name\" == \"Hundessa\" ]]; then\n    echo \"Welcome\"\nfi\n\nage=25\nif [[ $age -ge 18 ]]; then\n    echo \"Adult\"\nelse\n    echo \"Minor\"\nfi\n\nscore=85\nif [[ $score -ge 90 ]]; then\n    echo \"A\"\nelif [[ $score -ge 80 ]]; then\n    echo \"B\"\nelse\n    echo \"C\"\nfi\nTest alternatives:\n\n[[ ]] - Modern (preferred)\n[ ] - Traditional\n(( )) - Arithmetic"
+  },
+  {
+    "objectID": "shell_programming.html#test-operators",
+    "href": "shell_programming.html#test-operators",
+    "title": "",
+    "section": "Test Operators",
+    "text": "Test Operators\nString comparison:\n\n\n\nOperator\nMeaning\n\n\n\n\n== or =\nEqual\n\n\n!=\nNot equal\n\n\n-z\nEmpty\n\n\n-n\nNot empty\n\n\n\nNumeric comparison:\n\n\n\nOperator\nMeaning\n\n\n\n\n-eq\nEqual\n\n\n-ne\nNot equal\n\n\n-lt\nLess than\n\n\n-le\nLess or equal\n\n\n-gt\nGreater than\n\n\n-ge\nGreater or equal\n\n\n\nFile tests:\n\n\n\nOperator\nMeaning\n\n\n\n\n-e\nExists\n\n\n-f\nRegular file\n\n\n-d\nDirectory\n\n\n-r\nReadable\n\n\n-w\nWritable\n\n\n-x\nExecutable\n\n\n-s\nNot empty"
+  },
+  {
+    "objectID": "shell_programming.html#logical-operators",
+    "href": "shell_programming.html#logical-operators",
+    "title": "",
+    "section": "Logical Operators",
+    "text": "Logical Operators\nCombining conditions:\n# AND - both true\nif [[ $age -ge 18 && \"$license\" == \"yes\" ]]; then\n    echo \"Can drive\"\nfi\n\n# OR - at least one true\nif [[ \"$day\" == \"Sat\" || \"$day\" == \"Sun\" ]]; then\n    echo \"Weekend\"\nfi\n\n# NOT - negate\nif [[ ! -f \"$file\" ]]; then\n    echo \"File missing\"\nfi\nCommand chaining:\n# Execute second only if first succeeds\nmkdir newdir && cd newdir\n\n# Execute second only if first fails\ncd /nonexistent || echo \"Failed\"\nOld style (-a and -o):\nif [ $age -ge 18 -a \"$license\" = \"yes\" ]; then\n    echo \"Can drive\"\nfi"
+  },
+  {
+    "objectID": "shell_programming.html#case-statements",
+    "href": "shell_programming.html#case-statements",
+    "title": "",
+    "section": "Case Statements",
+    "text": "Case Statements\nSyntax:\ncase expression in\n    pattern1)\n        commands\n        ;;\n    pattern2)\n        commands\n        ;;\n    *)\n        default\n        ;;\nesac\nExample - Menu:\necho \"1) Start 2) Stop 3) Exit\"\nread choice\n\ncase $choice in\n    1)\n        echo \"Starting...\"\n        ;;\n    2)\n        echo \"Stopping...\"\n        ;;\n    3)\n        exit 0\n        ;;\n    *)\n        echo \"Invalid: $choice\"\n        ;;\nesac\nPattern matching:\ncase \"$file\" in\n    *.txt)\n        echo \"Text file\"\n        ;;\n    *.jpg|*.png)\n        echo \"Image file\"\n        ;;\n    *.sh)\n        echo \"Shell script\"\n        ;;\nesac"
+  },
+  {
+    "objectID": "shell_programming.html#for-loops",
+    "href": "shell_programming.html#for-loops",
+    "title": "",
+    "section": "For Loops",
+    "text": "For Loops\nBasic syntax:\nfor variable in list; do\n    commands\ndone\nExamples:\n# List iteration\nfor name in Almaz Bontu Chaltu; do\n    echo \"Name: $name\"\ndone\n\n# Range\nfor num in {1..10}; do\n    echo \"Number: $num\"\ndone\n\n# Step range\nfor num in {1..10..2}; do\n    echo \"Odd: $num\"\ndone\n\n# Files\nfor file in *.txt; do\n    echo \"File: $file\"\ndone\nC-style for:\nfor ((i=1; i&lt;=5; i++)); do\n    echo \"Iteration $i\"\ndone\nBreak and continue:\nfor num in {1..10}; do\n    if [[ $num -eq 5 ]]; then\n        break\n    fi\n    echo \"$num\"\ndone"
+  },
+  {
+    "objectID": "shell_programming.html#while-and-until-loops",
+    "href": "shell_programming.html#while-and-until-loops",
+    "title": "",
+    "section": "While and Until Loops",
+    "text": "While and Until Loops\nWhile loop:\ncounter=1\nwhile [[ $counter -le 10 ]]; do\n    echo \"Counter: $counter\"\n    ((counter++))\ndone\nRead file line by line:\nwhile IFS=: read -r user uid; do\n    echo \"User: $user, UID: $uid\"\ndone &lt; /etc/passwd\nInfinite loop with break:\ncount=0\nwhile true; do\n    ((count++))\n    if [[ $count -ge 5 ]]; then\n        break\n    fi\ndone\nUntil loop (opposite of while):\ncounter=1\nuntil [[ $counter -gt 10 ]]; do\n    echo \"$counter\"\n    ((counter++))\ndone\nWait for file:\nwhile [[ ! -f \"data.txt\" ]]; do\n    sleep 2\ndone"
+  },
+  {
+    "objectID": "shell_programming.html#functions",
+    "href": "shell_programming.html#functions",
+    "title": "",
+    "section": "Functions",
+    "text": "Functions\nSyntax:\nfunction_name() {\n    commands\n}\nExamples:\n# Simple function\ngreet() {\n    echo \"Hello, $1\"\n}\n\ngreet \"Bontu\"\n\n# With return value\nadd() {\n    echo $(( $1 + $2 ))\n}\n\nresult=$(add 5 3)\nLocal variables:\ndemo() {\n    local local_var=\"I am local\"\n    global_var=\"Modified\"\n}\nExit codes:\ncheck_file() {\n    if [[ -f \"$1\" ]]; then\n        return 0\n    else\n        return 1\n    fi\n}\n\ncheck_file \"/etc/passwd\"\necho \"Exit code: $?\""
+  },
+  {
+    "objectID": "shell_programming.html#arrays",
+    "href": "shell_programming.html#arrays",
+    "title": "",
+    "section": "Arrays",
+    "text": "Arrays\nIndexed arrays:\n# Create\nfruits=(\"mango\" \"banana\" \"papaya\")\n\n# Access\necho \"${fruits[0]}\"      # First\necho \"${fruits[@]}\"      # All\necho \"${#fruits[@]}\"     # Length\n\n# Add\nfruits+=(\"orange\")\n\n# Loop\nfor fruit in \"${fruits[@]}\"; do\n    echo \"$fruit\"\ndone\n\n# Remove\nunset fruits[1]\nAssociative arrays (Bash 4+):\ndeclare -A user_info\nuser_info[\"name\"]=\"Hundessa\"\nuser_info[\"age\"]=30\n\necho \"${user_info[\"name\"]}\"\n\nfor key in \"${!user_info[@]}\"; do\n    echo \"$key: ${user_info[$key]}\"\ndone"
+  },
+  {
+    "objectID": "shell_programming.html#exit-codes",
+    "href": "shell_programming.html#exit-codes",
+    "title": "",
+    "section": "Exit Codes",
+    "text": "Exit Codes\nCommon codes: | Code | Meaning | |——|———| | 0 | Success | | 1 | General error | | 2 | Misuse of builtin | | 127 | Command not found |\nChecking exit codes:\nls /etc/passwd\necho \"Exit code: $?\"\n\nif ls /etc/passwd; then\n    echo \"Success\"\nelse\n    echo \"Failed\"\nfi\nSetting exit codes:\nif [[ ! -f \"$1\" ]]; then\n    echo \"Error: File missing\"\n    exit 1\nfi\nexit 0\nError handling:\nset -euo pipefail\n\n# -e: exit on error\n# -u: error on undefined var\n# -o pipefail: pipeline fails if any command fails"
+  },
+  {
+    "objectID": "shell_programming.html#command-line-arguments",
+    "href": "shell_programming.html#command-line-arguments",
+    "title": "",
+    "section": "Command Line Arguments",
+    "text": "Command Line Arguments\nBasic parsing:\n#!/bin/bash\necho \"Script: $0\"\necho \"First arg: $1\"\necho \"All args: $@\"\necho \"Arg count: $#\"\nUsing getopts:\nwhile getopts \"f:n:vh\" opt; do\n    case $opt in\n        f)\n            file=\"$OPTARG\"\n            ;;\n        n)\n            name=\"$OPTARG\"\n            ;;\n        v)\n            verbose=1\n            ;;\n        h)\n            show_help\n            ;;\n    esac\ndone\nshift $((OPTIND-1))\nManual parsing:\nwhile [[ $# -gt 0 ]]; do\n    case $1 in\n        --mode)\n            mode=\"$2\"\n            shift 2\n            ;;\n        --help)\n            exit 0\n            ;;\n        *)\n            input=\"$1\"\n            shift\n            ;;\n    esac\ndone"
+  },
+  {
+    "objectID": "shell_programming.html#text-processing-with-awk",
+    "href": "shell_programming.html#text-processing-with-awk",
+    "title": "",
+    "section": "Text Processing with awk",
+    "text": "Text Processing with awk\nBasic awk:\n# Print columns\nawk -F: '{print $1, $3}' /etc/passwd\n\n# Pattern matching\nawk '/bash/ {print $0}' /etc/passwd\n\n# Conditional\nawk -F: '$3 &gt;= 1000 {print $1}' /etc/passwd\n\n# Sum column\nawk '{sum += $1} END {print sum}' file.txt\n\n# Format output\nawk '{printf \"Name: %-10s Age: %d\\n\", $1, $2}'\nAwk script:\nawk '\nBEGIN { count=0 }\n/ERROR/ {\n    count++\n    print $0\n}\nEND { print \"Total errors:\", count }\n' logfile\nField separator:\nawk -F',' '{print $2}' file.csv\nawk -F'[: ]+' '{print $1}' file.txt"
+  },
+  {
+    "objectID": "shell_programming.html#text-processing-with-sed",
+    "href": "shell_programming.html#text-processing-with-sed",
+    "title": "",
+    "section": "Text Processing with sed",
+    "text": "Text Processing with sed\nBasic sed:\n# Substitute first match\necho \"Hello World\" | sed 's/World/Bontu/'\n\n# Substitute all matches (global)\necho \"a a a\" | sed 's/a/b/g'\n\n# Delete lines\nsed '/^#/d' file.txt\n\n# Print matching lines\nsed -n '/pattern/p' file.txt\n\n# In-place edit (with backup)\nsed -i.bak 's/old/new/g' file.txt\nMultiple operations:\nsed -e 's/foo/bar/g' -e 's/hello/hi/g' file.txt\nsed 's/foo/bar/g; s/hello/hi/g' file.txt\nAddress ranges:\nsed '5,10s/old/new/g' file.txt\nsed '/start/,/end/s/old/new/g' file.txt\nAppend and insert:\nsed '/pattern/a\\This line is appended'\nsed '/pattern/i\\This line is inserted'"
+  },
+  {
+    "objectID": "shell_programming.html#pipes-and-redirections",
+    "href": "shell_programming.html#pipes-and-redirections",
+    "title": "",
+    "section": "Pipes and Redirections",
+    "text": "Pipes and Redirections\nStandard streams:\n\n\n\nStream\nFD\nSymbol\n\n\n\n\nstdin\n0\n&lt;\n\n\nstdout\n1\n&gt; or &gt;&gt;\n\n\nstderr\n2\n2&gt;\n\n\n\nOutput redirection:\n# Overwrite\necho \"Hello\" &gt; output.txt\n\n# Append\necho \"World\" &gt;&gt; output.txt\n\n# Error only\nls /bad 2&gt; error.log\n\n# Both stdout and stderr\ncommand &&gt; output.txt\ncommand &gt; output.txt 2&gt;&1\n\n# Discard\ncommand &&gt; /dev/null\nPipes:\nls -la | grep \".txt\" | wc -l\ncat file.txt | sort | uniq -c\n\n# tee - write to file and pipe\ncommand | tee output.txt | next_command\nHere document:\ncat &lt;&lt; EOF\nLine 1\nLine 2\nEOF"
+  },
+  {
+    "objectID": "shell_programming.html#vi-quick-reference",
+    "href": "shell_programming.html#vi-quick-reference",
+    "title": "",
+    "section": "vi Quick Reference",
+    "text": "vi Quick Reference\nCommand Mode Navigation:\nh j k l    Left, Down, Up, Right\nw b e      Word forward, back, end\n0 $        Start, end of line\ngg G       First, last line\nCtrl+f/b   Page forward, back\nInsert Mode Entry:\ni a        Insert before, after cursor\nI A        Insert at line start, end\no O        New line below, above\nEditing:\nx X        Delete char under/before cursor\ndd         Delete line\ndw d$      Delete word, to end of line\nyy p       Yank line, paste below\nu Ctrl+r   Undo, redo\nVisual Mode:\nv V Ctrl+v  Visual, line, block\nd y c       Delete, yank, change\n&gt; &lt;         Indent right, left\nSearch & Replace:\n/pattern    Search forward\n?pattern    Search backward\nn N         Next, previous\n:%s/old/new/g  Replace all\nFile Operations:\n:w          Save\n:q          Quit\n:wq         Save and quit\n:q!         Quit without saving"
+  },
+  {
+    "objectID": "shell_programming.html#best-practices",
+    "href": "shell_programming.html#best-practices",
+    "title": "",
+    "section": "Best Practices",
+    "text": "Best Practices\nShell scripting:\n#!/bin/bash\nset -euo pipefail\n\n# Quote variables\necho \"$variable\"\n\n# Use [[ ]] instead of [ ]\nif [[ \"$name\" == \"Bontu\" ]]; then\n\n# Use $(...) instead of backticks\nresult=$(command)\n\n# Check exit codes\ncommand || handle_error\n\n# Add comments\n# This function validates input\nvalidate() { ... }\nDebugging:\n# Run with debug\nbash -x script.sh\n\n# Set debug in script\nset -x\n# code\nset +x\n\n# Syntax check\nbash -n script.sh\n\n# Use shellcheck\nshellcheck script.sh\nvi tips:\n:set syntax=sh\n:set number\nvimtutor  # Interactive tutorial"
+  },
+  {
+    "objectID": "shell_programming.html#why-shell-scripting-for-sysadmins-and-hpc",
+    "href": "shell_programming.html#why-shell-scripting-for-sysadmins-and-hpc",
+    "title": "",
+    "section": "Why Shell Scripting for SysAdmins and HPC?",
+    "text": "Why Shell Scripting for SysAdmins and HPC?\nSystem Administration Uses: - User account management (create, modify, delete) - Log rotation and analysis - Backup automation - System monitoring and alerting - Software deployment across multiple nodes - Security audit scripts - Configuration management\nHPC Specific Uses: - Job submission and management - Workflow automation - Data staging (input/output) - Job dependency handling - Cluster health monitoring - Resource usage reporting - Parallel job coordination\nExample Ethiopian HPC Context: - Ethiopian universities and research centers - Weather modeling at Ethiopian Meteorology Institute - Genomics research at Ethiopian Biotechnology Institute - Climate modeling for agriculture planning"
+  },
+  {
+    "objectID": "shell_programming.html#what-is-a-job-scheduler",
+    "href": "shell_programming.html#what-is-a-job-scheduler",
+    "title": "",
+    "section": "What is a Job Scheduler?",
+    "text": "What is a Job Scheduler?\nDefinition: A job scheduler is software that manages batch jobs in a multi-user HPC environment.\nWhy Schedulers are Needed: - Fair resource allocation among users - Maximize cluster utilization - Queue management - Job dependency handling - Resource reservation\nCommon HPC Schedulers: | Scheduler | Description | |———–|————-| | Slurm | Most common on modern clusters | | Torque/PBS | Legacy but still widely used | | LSF | IBM platform | | SGE | Sun Grid Engine |\nThis Lesson Covers: - Torque (PBS) commands and scripting - Slurm commands and scripting - Integration with Bash"
+  },
+  {
+    "objectID": "shell_programming.html#torquepbs-basics",
+    "href": "shell_programming.html#torquepbs-basics",
+    "title": "",
+    "section": "Torque/PBS Basics",
+    "text": "Torque/PBS Basics\nTorque Components: | Component | Purpose | |———–|———| | pbs_server | Central management daemon | | pbs_sched | Scheduler daemon | | pbs_mom | Node execution daemon |\nBasic Torque Commands: | Command | Purpose | |———|———| | qsub | Submit a job | | qstat | View job status | | qdel | Delete a job | | qhold | Hold a job | | qrls | Release a held job | | qalter | Modify job attributes | | pbsnodes | View node status |\nCommon qstat Options:\nqstat              # Show user's jobs\nqstat -a           # Show all jobs\nqstat -n           # Show node allocation\nqstat -f jobid     # Full job details\nqstat -q           # Show queues"
+  },
+  {
+    "objectID": "shell_programming.html#torquepbs-job-script-structure",
+    "href": "shell_programming.html#torquepbs-job-script-structure",
+    "title": "",
+    "section": "Torque/PBS Job Script Structure",
+    "text": "Torque/PBS Job Script Structure\nBasic PBS Job Script:\n#!/bin/bash\n#PBS -N my_job           # Job name\n#PBS -l nodes=2:ppn=4    # 2 nodes, 4 cores per node\n#PBS -l walltime=01:00:00 # Max runtime\n#PBS -q batch            # Queue name\n#PBS -j oe               # Join output/error\n#PBS -o /path/to/output  # Output file\n#PBS -e /path/to/error   # Error file\n#PBS -M user@domain.com  # Email address\n#PBS -m abe              # Email on abort, begin, end\n\ncd $PBS_O_WORKDIR        # Change to submission dir\necho \"Job started on $(date)\"\necho \"Running on node: $(hostname)\"\n\n# Your actual work here\n./my_program\n\necho \"Job finished on $(date)\"\nExplanation of PBS Directives:\n\n#PBS lines are interpreted by qsub, not bash\n$PBS_O_WORKDIR - Original working directory\n$PBS_NODEFILE - File with allocated node list\n$PBS_JOBID - Unique job identifier"
+  },
+  {
+    "objectID": "shell_programming.html#torquepbs-advanced-script",
+    "href": "shell_programming.html#torquepbs-advanced-script",
+    "title": "",
+    "section": "Torque/PBS Advanced Script",
+    "text": "Torque/PBS Advanced Script\nComplete PBS Script with Error Handling:\n#!/bin/bash\n#PBS -N hpc_simulation\n#PBS -l nodes=4:ppn=8\n#PBS -l walltime=12:00:00\n#PBS -l mem=32gb\n#PBS -q research\n#PBS -j oe\n#PBS -M mesfindiro@gmail.com\n#PBS -m ae\n\nset -euo pipefail\n\n# Change to submission directory\ncd $PBS_O_WORKDIR || { echo \"CD failed\"; exit 1; }\n\n# Create job-specific temp directory\nTEMP_DIR=\"/scratch/${PBS_JOBID}\"\nmkdir -p \"$TEMP_DIR\"\n\n# Copy input data to scratch\necho \"Staging input data...\"\ncp input_data/* \"$TEMP_DIR/\"\n\n# Run MPI application\nmpirun -np 32 -machinefile $PBS_NODEFILE ./simulation\n\n# Copy results back\necho \"Staging output data...\"\ncp \"$TEMP_DIR\"/results_* output/\n\n# Cleanup\nrm -rf \"$TEMP_DIR\"\n\necho \"Job $PBS_JOBID completed on $(date)\"\nKey PBS Variables:\n\n\n\nVariable\nDescription\n\n\n\n\n$PBS_O_WORKDIR\nSubmission directory\n\n\n$PBS_JOBID\nJob ID\n\n\n$PBS_NODEFILE\nList of allocated nodes\n\n\n$PBS_QUEUE\nQueue name\n\n\n$PBS_NODENUM\nNumber of nodes"
+  },
+  {
+    "objectID": "shell_programming.html#torquepbs-job-management-scripts",
+    "href": "shell_programming.html#torquepbs-job-management-scripts",
+    "title": "",
+    "section": "Torque/PBS Job Management Scripts",
+    "text": "Torque/PBS Job Management Scripts\nSubmit Array Job:\n#!/bin/bash\n#PBS -t 1-100            # Array of 100 tasks\n#PBS -l nodes=1:ppn=1    # 1 core per task\n\ncd $PBS_O_WORKDIR\n\n# Use array index to process different inputs\nINPUT_FILE=\"input_${PBS_ARRAYID}.txt\"\nOUTPUT_FILE=\"output_${PBS_ARRAYID}.txt\"\n\n./process_data \"$INPUT_FILE\" \"$OUTPUT_FILE\"\nMonitor Jobs Script:\n#!/bin/bash\n# monitor_pbs.sh - Check job status\n\nUSER=\"hundessa\"\n\necho \"=== Job Status for $USER ===\"\nqstat -u \"$USER\" | while read line; do\n    echo \"$line\"\ndone\n\necho \"\"\necho \"=== Running Jobs ===\"\nqstat -u \"$USER\" | grep \" R \"\n\necho \"\"\necho \"=== Queued Jobs ===\"\nqstat -u \"$USER\" | grep \" Q \"\n\necho \"\"\necho \"=== Node Status ===\"\npbsnodes -a | grep -E \"state|name\"\nDelete All Jobs Script:\n#!/bin/bash\n# delete_all_jobs.sh\n\nread -p \"Delete all your jobs? (y/n): \" confirm\n\nif [[ \"$confirm\" == \"y\" ]]; then\n    for job in $(qstat -u \"$USER\" | awk 'NR&gt;2 {print $1}'); do\n        echo \"Deleting job: $job\"\n        qdel \"$job\"\n    done\n    echo \"All jobs deleted\"\nfi"
+  },
+  {
+    "objectID": "shell_programming.html#slurm-basics",
+    "href": "shell_programming.html#slurm-basics",
+    "title": "",
+    "section": "Slurm Basics",
+    "text": "Slurm Basics\n\n\nSlurm Components:\n\n\n\nComponent\nPurpose\n\n\n\n\nslurmctld\nCentral management daemon\n\n\nslurmdbd\nDatabase daemon\n\n\nslurmd\nNode execution daemon\n\n\n\n\nBasic Slurm Commands:\n\n\n\nCommand\nPurpose\n\n\n\n\nsbatch\nSubmit a batch job\n\n\nsrun\nRun interactive job\n\n\nsqueue\nView job queue\n\n\nscancel\nCancel a job\n\n\nsinfo\nView node/partition info\n\n\nscontrol\nDetailed job control\n\n\nsacct\nJob accounting data\n\n\nsstat\nRunning job statistics\n\n\n\n\nCommon squeue Options:\nsqueue              # Show all jobs\nsqueue -u bontu     # Show user's jobs\nsqueue -l           # Long format\nsqueue -j jobid     # Specific job\nsqueue -p partition # Specific partition\n\n\n## Slurm Job Script Structure\n\n**Basic Slurm Job Script:**\n\n```bash\n#!/bin/bash\n#SBATCH --job-name=my_job\n#SBATCH --nodes=2\n#SBATCH --ntasks-per-node=4\n#SBATCH --cpus-per-task=1\n#SBATCH --time=01:00:00\n#SBATCH --partition=batch\n#SBATCH --output=%j.out\n#SBATCH --error=%j.err\n#SBATCH --mail-user=almaz@ethioresearch.et\n#SBATCH --mail-type=ALL\n\n# %j expands to job ID\n\necho \"Job started on $(date)\"\necho \"Running on node: $(hostname)\"\necho \"Job ID: $SLURM_JOB_ID\"\necho \"Node list: $SLURM_JOB_NODELIST\"\n\n# Your work\nsrun ./my_program\n\necho \"Job finished on $(date)\"\nSlurm vs Torque Comparison: | Torque/PBS | Slurm | Description | |————|——-|————-| | #PBS -l nodes=N | #SBATCH --nodes=N | Node count | | #PBS -l walltime=T | #SBATCH --time=T | Time limit | | #PBS -N name | #SBATCH --job-name=name | Job name | | qsub | sbatch | Submit | | qstat | squeue | Status | | qdel | scancel | Delete |"
+  },
+  {
+    "objectID": "shell_programming.html#slurm-advanced-script",
+    "href": "shell_programming.html#slurm-advanced-script",
+    "title": "",
+    "section": "Slurm Advanced Script",
+    "text": "Slurm Advanced Script\nComplete Slurm Script with Resource Request:\n#!/bin/bash\n#SBATCH --job-name=hpc_weather\n#SBATCH --nodes=4\n#SBATCH --ntasks=32\n#SBATCH --cpus-per-task=2\n#SBATCH --mem=64G\n#SBATCH --time=24:00:00\n#SBATCH --partition=gpu\n#SBATCH --gres=gpu:4\n#SBATCH --output=logs/%j.out\n#SBATCH --error=logs/%j.err\n#SBATCH --mail-type=BEGIN,END,FAIL\n#SBATCH --mail-user=chaltu@climate.et\n\nset -euo pipefail\n\n# Load required modules\nmodule purge\nmodule load gcc/10.2\nmodule load openmpi/4.1\nmodule load cuda/11.2\n\n# Change to submission directory\ncd $SLURM_SUBMIT_DIR\n\n# Create unique scratch directory\nSCRATCH=\"/scratch/${SLURM_JOB_ID}\"\nmkdir -p \"$SCRATCH\"\n\n# Stage input data\nrsync -av input/ \"$SCRATCH/\"\n\n# Run the application\ncd \"$SCRATCH\"\nsrun ./weather_model parameters.dat\n\n# Stage output back\nrsync -av results/ \"$SLURM_SUBMIT_DIR/results/\"\n\n# Cleanup\ncd /\nrm -rf \"$SCRATCH\"\n\necho \"Job $SLURM_JOB_ID completed\"\nImportant Slurm Variables: | Variable | Description | |———-|————-| | $SLURM_JOB_ID | Job ID | | $SLURM_JOB_NAME | Job name | | $SLURM_SUBMIT_DIR | Submission directory | | $SLURM_JOB_NODELIST | Allocated nodes | | $SLURM_NTASKS | Total tasks | | $SLURM_CPUS_PER_TASK | CPUs per task |"
+  },
+  {
+    "objectID": "shell_programming.html#slurm-job-arrays",
+    "href": "shell_programming.html#slurm-job-arrays",
+    "title": "",
+    "section": "Slurm Job Arrays",
+    "text": "Slurm Job Arrays\nArray Job Submission:\n#!/bin/bash\n#SBATCH --job-name=array_job\n#SBATCH --array=1-100\n#SBATCH --ntasks=1\n#SBATCH --cpus-per-task=1\n#SBATCH --time=01:00:00\n#SBATCH --output=logs/%A_%a.out\n\n# %A = job ID, %a = array index\n\ncd $SLURM_SUBMIT_DIR\n\n# Use array index\nINPUT=\"data/input_${SLURM_ARRAY_TASK_ID}.txt\"\nOUTPUT=\"output/result_${SLURM_ARRAY_TASK_ID}.txt\"\n\n./process \"$INPUT\" \"$OUTPUT\"\nSubmit with step:\n# Submit array with step of 10\n#SBATCH --array=0-100:10\nArray Management Script:\n#!/bin/bash\n# manage_array.sh - Monitor and control array jobs\n\nJOB_ID=\"$1\"\n\necho \"=== Array Job $JOB_ID Status ===\"\nsqueue -j \"$JOB_ID\" --array\n\necho \"\"\necho \"=== Completed Tasks ===\"\nsacct -j \"$JOB_ID\" --format=JobID,State,ExitCode | grep \"COMPLETED\"\n\necho \"\"\necho \"=== Failed Tasks ===\"\nsacct -j \"$JOB_ID\" --format=JobID,State,ExitCode | grep \"FAILED\"\n\n# Cancel remaining tasks\n# scancel --job=$JOB_ID --array"
+  },
+  {
+    "objectID": "shell_programming.html#system-administration---user-management",
+    "href": "shell_programming.html#system-administration---user-management",
+    "title": "",
+    "section": "System Administration - User Management",
+    "text": "System Administration - User Management\nCreate Multiple Users Script:\n#!/bin/bash\n# create_users.sh - Batch user creation for HPC cluster\n\nUSER_LIST=\"users.txt\"\nDEFAULT_GROUP=\"hpcusers\"\nHOME_BASE=\"/home\"\n\nif [[ ! -f \"$USER_LIST\" ]]; then\n    echo \"Error: $USER_LIST not found\"\n    echo \"Format: username:fullname:project\"\n    exit 1\nfi\n\nwhile IFS=: read -r username fullname project; do\n    echo \"Creating user: $username\"\n    \n    # Create user with home directory\n    useradd -m -d \"$HOME_BASE/$username\" -s /bin/bash -c \"$fullname\" \"$username\"\n    \n    # Add to HPC group\n    usermod -aG \"$DEFAULT_GROUP\" \"$username\"\n    \n    # Set default password (force change on first login)\n    echo \"$username:TempPass123\" | chpasswd\n    chage -d 0 \"$username\"\n    \n    # Create project directory\n    mkdir -p \"/project/$project/$username\"\n    chown \"$username:$DEFAULT_GROUP\" \"/project/$project/$username\"\n    \n    # Set quota (if enabled)\n    # setquota -u \"$username\" 10G 20G 0 0 /home\n    \n    echo \"Created: $username - $fullname\"\ndone &lt; \"$USER_LIST\"\n\necho \"User creation completed\"\nModify User Quota Script:\n#!/bin/bash\n# set_quota.sh - Set HPC storage quotas\n\nUSERNAME=\"$1\"\nSOFT_LIMIT=\"${2:-10G}\"\nHARD_LIMIT=\"${3:-20G}\"\n\nif [[ -z \"$USERNAME\" ]]; then\n    echo \"Usage: $0 &lt;username&gt; [soft_limit] [hard_limit]\"\n    echo \"Example: $0 bontu 50G 100G\"\n    exit 1\nfi\n\n# Set quota on /home partition\nsetquota -u \"$USERNAME\" \"$SOFT_LIMIT\" \"$HARD_LIMIT\" 0 0 /home\n\n# Set quota on /scratch partition\nsetquota -u \"$USERNAME\" \"$SOFT_LIMIT\" \"$HARD_LIMIT\" 0 0 /scratch\n\necho \"Quota set for $USERNAME: soft=$SOFT_LIMIT hard=$HARD_LIMIT\"\n\n# Report current usage\nrepquota -u /home | grep \"$USERNAME\""
+  },
+  {
+    "objectID": "shell_programming.html#system-administration---log-management",
+    "href": "shell_programming.html#system-administration---log-management",
+    "title": "",
+    "section": "System Administration - Log Management",
+    "text": "System Administration - Log Management\nLog Rotation Script:\n#!/bin/bash\n# rotate_logs.sh - Rotate and compress HPC logs\n\nLOG_DIR=\"/var/log/hpc\"\nARCHIVE_DIR=\"/archive/logs\"\nRETENTION_DAYS=90\n\n# Create archive directory if not exists\nmkdir -p \"$ARCHIVE_DIR\"\n\n# Rotate slurm logs\nif [[ -d \"$LOG_DIR/slurm\" ]]; then\n    cd \"$LOG_DIR/slurm\"\n    for log in slurm*.log; do\n        if [[ -f \"$log\" ]]; then\n            # Get date from log or use modification time\n            date_str=$(stat -c %y \"$log\" | cut -d' ' -f1)\n            tar -czf \"$ARCHIVE_DIR/slurm_${date_str}.tar.gz\" \"$log\"\n            rm \"$log\"\n            echo \"Rotated: $log\"\n        fi\n    done\nfi\n\n# Rotate torque logs\nif [[ -d \"$LOG_DIR/torque\" ]]; then\n    cd \"$LOG_DIR/torque\"\n    for log in *.log.*; do\n        if [[ -f \"$log\" ]]; then\n            gzip \"$log\"\n            mv \"$log.gz\" \"$ARCHIVE_DIR/\"\n            echo \"Compressed: $log\"\n        fi\n    done\nfi\n\n# Remove old archives\nfind \"$ARCHIVE_DIR\" -type f -mtime +$RETENTION_DAYS -delete\n\necho \"Log rotation completed at $(date)\"\nLog Analysis for Job Failures:\n#!/bin/bash\n# analyze_failures.sh - Find common job failure reasons\n\nLOG_DIR=\"/var/log/slurm\"\nOUTPUT_FILE=\"failure_report_$(date +%Y%m%d).txt\"\n\necho \"=== Job Failure Analysis Report ===\" &gt; \"$OUTPUT_FILE\"\necho \"Generated: $(date)\" &gt;&gt; \"$OUTPUT_FILE\"\necho \"\" &gt;&gt; \"$OUTPUT_FILE\"\n\n# Count failures by exit code\necho \"Failures by exit code:\" &gt;&gt; \"$OUTPUT_FILE\"\ngrep -h \"exit code\" \"$LOG_DIR\"/*.out 2&gt;/dev/null | \\\n    awk '{print $NF}' | sort | uniq -c | sort -rn &gt;&gt; \"$OUTPUT_FILE\"\n\necho \"\" &gt;&gt; \"$OUTPUT_FILE\"\n\n# Count failures by node\necho \"Failures by node:\" &gt;&gt; \"$OUTPUT_FILE\"\ngrep -h \"Node\" \"$LOG_DIR\"/*.err 2&gt;/dev/null | \\\n    awk '{print $3}' | sort | uniq -c | sort -rn &gt;&gt; \"$OUTPUT_FILE\"\n\necho \"\" &gt;&gt; \"$OUTPUT_FILE\"\n\n# Top error messages\necho \"Top error messages:\" &gt;&gt; \"$OUTPUT_FILE\"\ngrep -h -i \"error\\|failed\\|timeout\" \"$LOG_DIR\"/*.err 2&gt;/dev/null | \\\n    sort | uniq -c | sort -rn | head -20 &gt;&gt; \"$OUTPUT_FILE\"\n\necho \"Report saved to: $OUTPUT_FILE\""
+  },
+  {
+    "objectID": "shell_programming.html#system-administration---monitoring-scripts",
+    "href": "shell_programming.html#system-administration---monitoring-scripts",
+    "title": "",
+    "section": "System Administration - Monitoring Scripts",
+    "text": "System Administration - Monitoring Scripts\nCluster Health Check Script:\n#!/bin/bash\n# health_check.sh - Comprehensive HPC cluster health check\n\nALERT_EMAIL=\"sysadmin@ethioresearch.et\"\nREPORT_FILE=\"/tmp/cluster_health_$(date +%Y%m%d).txt\"\n\n{\n    echo \"=== HPC Cluster Health Report ===\"\n    echo \"Date: $(date)\"\n    echo \"Hostname: $(hostname)\"\n    echo \"\"\n    \n    # Check load average\n    echo \"=== System Load ===\"\n    uptime\n    echo \"\"\n    \n    # Check memory\n    echo \"=== Memory Usage ===\"\n    free -h\n    echo \"\"\n    \n    # Check disk space on critical partitions\n    echo \"=== Disk Usage ===\"\n    df -h /home /scratch /project /var\n    echo \"\"\n    \n    # Check Slurm controller status\n    echo \"=== Slurm Controller ===\"\n    systemctl status slurmctld --no-pager | grep \"Active\"\n    echo \"\"\n    \n    # Check number of down nodes\n    echo \"=== Node Status ===\"\n    DOWN_NODES=$(sinfo -o \"%t\" | grep -c \"down\\|drain\")\n    TOTAL_NODES=$(sinfo -o \"%t\" | wc -l)\n    echo \"Total nodes: $TOTAL_NODES\"\n    echo \"Down/Drained nodes: $DOWN_NODES\"\n    echo \"\"\n    \n    # Check pending jobs\n    PENDING=$(squeue -t PD -h | wc -l)\n    RUNNING=$(squeue -t R -h | wc -l)\n    echo \"=== Job Queue ===\"\n    echo \"Pending jobs: $PENDING\"\n    echo \"Running jobs: $RUNNING\"\n    echo \"\"\n    \n    # Check license usage (if applicable)\n    echo \"=== License Usage ===\"\n    # lmstat -a -c /path/to/license.dat | grep \"Users of\"\n    \n} &gt; \"$REPORT_FILE\"\n\n# Send alert if issues found\nif [[ $DOWN_NODES -gt 0 ]] || [[ $PENDING -gt 100 ]]; then\n    mail -s \"HPC Cluster Alert\" \"$ALERT_EMAIL\" &lt; \"$REPORT_FILE\"\nfi\n\n# Print summary\ncat \"$REPORT_FILE\"\nNode Monitoring Script:\n#!/bin/bash\n# node_monitor.sh - Monitor specific node status\n\nNODE=\"$1\"\n\nif [[ -z \"$NODE\" ]]; then\n    echo \"Usage: $0 &lt;nodename&gt;\"\n    exit 1\nfi\n\necho \"=== Monitoring Node: $NODE ===\"\necho \"Time: $(date)\"\necho \"\"\n\n# Slurm status\necho \"Slurm Status:\"\nsinfo -n \"$NODE\" -o \"%n %t %c %m %a\"\n\n# Node details\necho \"\"\necho \"Node Details:\"\nscontrol show node \"$NODE\" | grep -E \"NodeName|State|CPUAlloc|CPUTot|RealMemory\"\n\n# Check if node is responding\necho \"\"\nif ping -c 1 \"$NODE\" &gt; /dev/null 2&gt;&1; then\n    echo \"Ping: OK\"\nelse\n    echo \"Ping: FAILED\"\nfi\n\n# Check SSH\necho \"\"\nif ssh -o ConnectTimeout=5 \"$NODE\" \"echo OK\" &gt; /dev/null 2&gt;&1; then\n    echo \"SSH: OK\"\nelse\n    echo \"SSH: FAILED\"\nfi\n\n# Remote load check\necho \"\"\necho \"Remote Load:\"\nssh \"$NODE\" \"uptime\" 2&gt;/dev/null || echo \"Cannot connect\""
+  },
+  {
+    "objectID": "shell_programming.html#hpc-workflow-automation",
+    "href": "shell_programming.html#hpc-workflow-automation",
+    "title": "",
+    "section": "HPC Workflow Automation",
+    "text": "HPC Workflow Automation\nComplete Analysis Pipeline Script:\n#!/bin/bash\n#SBATCH --job-name=genomics_pipeline\n#SBATCH --nodes=1\n#SBATCH --ntasks=8\n#SBATCH --mem=32G\n#SBATCH --time=48:00:00\n#SBATCH --partition=batch\n#SBATCH --array=1-50\n#SBATCH --output=logs/pipeline_%A_%a.out\n\n# Genomics data processing pipeline for Ethiopian research\n# Author: Jiru Demisse - Ethiopian Biotechnology Institute\n\nset -euo pipefail\n\n# Configuration\nDATA_DIR=\"/data/genomics\"\nREFERENCE=\"/ref/ethiopian_reference.fa\"\nOUTPUT_BASE=\"/results/$(date +%Y%m%d)\"\nSAMPLE_LIST=\"samples.txt\"\n\n# Get sample name for this array task\nSAMPLE=$(sed -n \"${SLURM_ARRAY_TASK_ID}p\" \"$SAMPLE_LIST\")\nSAMPLE_OUTPUT=\"${OUTPUT_BASE}/${SAMPLE}\"\n\n# Create output directory\nmkdir -p \"$SAMPLE_OUTPUT\"\n\necho \"Processing sample: $SAMPLE\"\necho \"Start time: $(date)\"\n\n# Step 1: Quality control\necho \"Step 1: Quality Control\"\nfastqc \"${DATA_DIR}/${SAMPLE}.fastq\" -o \"$SAMPLE_OUTPUT/\"\n\n# Step 2: Trimming\necho \"Step 2: Trimming adapters\"\ntrimmomatic SE \"${DATA_DIR}/${SAMPLE}.fastq\" \\\n    \"$SAMPLE_OUTPUT/${SAMPLE}_trimmed.fastq\" \\\n    ILLUMINACLIP:adapters.fa:2:30:10 \\\n    LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36\n\n# Step 3: Alignment\necho \"Step 3: Alignment to reference\"\nbwa mem -t 8 \"$REFERENCE\" \\\n    \"$SAMPLE_OUTPUT/${SAMPLE}_trimmed.fastq\" &gt; \\\n    \"$SAMPLE_OUTPUT/${SAMPLE}.sam\"\n\n# Step 4: Convert to BAM and sort\necho \"Step 4: BAM conversion\"\nsamtools view -bS \"$SAMPLE_OUTPUT/${SAMPLE}.sam\" | \\\n    samtools sort -o \"$SAMPLE_OUTPUT/${SAMPLE}.bam\"\n\n# Step 5: Index BAM\necho \"Step 5: Indexing\"\nsamtools index \"$SAMPLE_OUTPUT/${SAMPLE}.bam\"\n\n# Step 6: Variant calling\necho \"Step 6: Variant calling\"\nbcftools mpileup -f \"$REFERENCE\" \"$SAMPLE_OUTPUT/${SAMPLE}.bam\" | \\\n    bcftools call -mv -o \"$SAMPLE_OUTPUT/${SAMPLE}.vcf\"\n\n# Step 7: Cleanup intermediate files\nrm \"$SAMPLE_OUTPUT/${SAMPLE}.sam\"\nrm \"$SAMPLE_OUTPUT/${SAMPLE}_trimmed.fastq\"\n\necho \"End time: $(date)\"\necho \"Pipeline completed for sample: $SAMPLE\""
+  },
+  {
+    "objectID": "shell_programming.html#job-dependency-management",
+    "href": "shell_programming.html#job-dependency-management",
+    "title": "",
+    "section": "Job Dependency Management",
+    "text": "Job Dependency Management\nSlurm Job Dependencies:\n#!/bin/bash\n# submit_workflow.sh - Submit jobs with dependencies\n\n# Submit preprocessing job\nPREPROC_JOB=$(sbatch --parsable preprocess.slurm)\necho \"Preprocessing job: $PREPROC_JOB\"\n\n# Submit analysis job (runs after preprocessing)\nANALYSIS_JOB=$(sbatch --parsable --dependency=afterok:$PREPROC_JOB analysis.slurm)\necho \"Analysis job: $ANALYSIS_JOB\"\n\n# Submit postprocessing (runs after analysis)\nPOSTPROC_JOB=$(sbatch --parsable --dependency=afterok:$ANALYSIS_JOB postprocess.slurm)\necho \"Postprocessing job: $POSTPROC_JOB\"\n\n# Submit cleanup (runs after any job, even if fails)\nCLEANUP_JOB=$(sbatch --parsable --dependency=afterany:$POSTPROC_JOB cleanup.slurm)\n\necho \"Workflow submitted successfully\"\nDependency Types in Slurm: | Dependency | Meaning | |————|———| | after:jobid | Start after job starts | | afterok:jobid | Start after job succeeds | | afternotok:jobid | Start after job fails | | afterany:jobid | Start after job completes (any status) | | before:jobid | Start before specified job |\nTorque Job Dependencies:\n#!/bin/bash\n# PBS dependency example\n\n# Submit first job\nJOB1=$(qsub job1.pbs)\n\n# Submit second job (depends on first)\nqsub -W depend=afterok:$JOB1 job2.pbs\n\n# Submit job that depends on multiple\nqsub -W depend=afterok:${JOB1}:${JOB2} job3.pbs\n\n# Job that starts after any completion\nqsub -W depend=afterany:$JOB1 job4.pbs"
+  },
+  {
+    "objectID": "shell_programming.html#resource-monitoring-scripts",
+    "href": "shell_programming.html#resource-monitoring-scripts",
+    "title": "",
+    "section": "Resource Monitoring Scripts",
+    "text": "Resource Monitoring Scripts\nMonitor User Resource Usage:\n#!/bin/bash\n# user_usage.sh - Report resource usage for a user\n\nUSERNAME=\"$1\"\nDAYS=\"${2:-7}\"\n\nif [[ -z \"$USERNAME\" ]]; then\n    echo \"Usage: $0 &lt;username&gt; [days]\"\n    exit 1\nfi\n\necho \"=== Resource Usage Report for $USERNAME ===\"\necho \"Period: Last $DAYS days\"\necho \"\"\n\n# Slurm accounting\necho \"Slurm Jobs:\"\nsacct -u \"$USERNAME\" -S \"now-${DAYS}days\" \\\n    --format=JobID,JobName,Partition,ReqNodes,ReqMem,State,Elapsed,ExitCode \\\n    --noheader | head -50\n\necho \"\"\necho \"Summary:\"\nsacct -u \"$USERNAME\" -S \"now-${DAYS}days\" \\\n    --format=ReqNodes,ReqMem,State --noheader | \\\n    awk '\n    /COMPLETED/ {completed++; total_nodes+=$1}\n    /FAILED/ {failed++}\n    /CANCELLED/ {cancelled++}\n    END {\n        print \"Completed jobs: \" completed\n        print \"Failed jobs: \" failed\n        print \"Cancelled jobs: \" cancelled\n        print \"Total node requests: \" total_nodes\n    }'\n\necho \"\"\necho \"Storage Usage:\"\nquota -u \"$USERNAME\" 2&gt;/dev/null || echo \"Quota command not available\"\n\necho \"\"\necho \"Processes Running:\"\nps -u \"$USERNAME\" --no-headers | wc -l\nReal-time Cluster Dashboard Script:\n#!/bin/bash\n# dashboard.sh - Real-time HPC dashboard (refresh every 5 seconds)\n\nwhile true; do\n    clear\n    \n    echo \"========================================\"\n    echo \"     HPC Cluster Dashboard\"\n    echo \"     $(date)\"\n    echo \"========================================\"\n    \n    # Queue summary\n    echo \"\"\n    echo \"--- Queue Status ---\"\n    squeue -o \"%.10i %.12j %.8u %.8T %.10M %.6D %R\" | head -15\n    \n    echo \"\"\n    echo \"--- Partition Status ---\"\n    sinfo -o \"%P %a %D %t %c %m\"\n    \n    echo \"\"\n    echo \"--- Top Users by Jobs ---\"\n    squeue -h -o \"%u\" | sort | uniq -c | sort -rn | head -10\n    \n    echo \"\"\n    echo \"--- Node Health ---\"\n    sinfo -o \"%n %t %e %c\" | grep -E \"down|drain|idle|mix\" | head -10\n    \n    echo \"\"\n    echo \"Press Ctrl+C to exit\"\n    echo \"Next update in 5 seconds...\"\n    \n    sleep 5\ndone"
+  },
+  {
+    "objectID": "shell_programming.html#automated-job-submission-scripts",
+    "href": "shell_programming.html#automated-job-submission-scripts",
+    "title": "",
+    "section": "Automated Job Submission Scripts",
+    "text": "Automated Job Submission Scripts\nParameter Sweep Script:\n#!/bin/bash\n# param_sweep.sh - Submit multiple jobs with varying parameters\n\nPARAM_FILE=\"parameters.txt\"\nTEMPLATE=\"template.slurm\"\n\nif [[ ! -f \"$PARAM_FILE\" ]] || [[ ! -f \"$TEMPLATE\" ]]; then\n    echo \"Error: parameters.txt or template.slurm missing\"\n    exit 1\nfi\n\nJOB_IDS=()\n\nwhile IFS= read -r params; do\n    # Skip comments and empty lines\n    [[ \"$params\" =~ ^#.*$ ]] && continue\n    [[ -z \"$params\" ]] && continue\n    \n    # Create job-specific script\n    JOB_SCRIPT=\"job_${RANDOM}.slurm\"\n    cp \"$TEMPLATE\" \"$JOB_SCRIPT\"\n    \n    # Replace placeholders\n    sed -i \"s/__PARAMS__/$params/g\" \"$JOB_SCRIPT\"\n    \n    # Submit job\n    JOB_ID=$(sbatch --parsable \"$JOB_SCRIPT\")\n    JOB_IDS+=(\"$JOB_ID\")\n    \n    echo \"Submitted job $JOB_ID with parameters: $params\"\n    \n    # Cleanup\n    # rm \"$JOB_SCRIPT\"\n    \ndone &lt; \"$PARAM_FILE\"\n\necho \"\"\necho \"Submitted ${#JOB_IDS[@]} jobs\"\necho \"Job IDs: ${JOB_IDS[@]}\"\nCheckpoint-Restart Script:\n#!/bin/bash\n# checkpoint_job.sh - Job with checkpoint/restart capability\n\nCHECKPOINT_DIR=\"/scratch/${SLURM_JOB_ID}/checkpoints\"\nCHECKPOINT_FILE=\"$CHECKPOINT_DIR/state.chk\"\nMAX_RUNTIME=3600  # 1 hour per segment\n\nmkdir -p \"$CHECKPOINT_DIR\"\n\n# Function to save checkpoint\nsave_checkpoint() {\n    echo \"Saving checkpoint at $(date)\"\n    # Save application state\n    kill -USR1 $APP_PID\n    wait $APP_PID\n    touch \"$CHECKPOINT_FILE\"\n}\n\n# Function to restore from checkpoint\nrestore_checkpoint() {\n    if [[ -f \"$CHECKPOINT_FILE\" ]]; then\n        echo \"Restoring from checkpoint at $(date)\"\n        # Resume application from checkpoint\n        ./app --restore \"$CHECKPOINT_DIR\"\n    else\n        echo \"Starting fresh at $(date)\"\n        ./app &\n    fi\n}\n\n# Set trap for time limit\nSECONDS=0\nwhile true; do\n    restore_checkpoint\n    APP_PID=$!\n    \n    # Wait for time limit or completion\n    sleep $MAX_RUNTIME\n    \n    if kill -0 $APP_PID 2&gt;/dev/null; then\n        save_checkpoint\n    else\n        break\n    fi\ndone\n\necho \"Job completed at $(date)\""
+  },
+  {
+    "objectID": "shell_programming.html#data-transfer-and-staging-scripts",
+    "href": "shell_programming.html#data-transfer-and-staging-scripts",
+    "title": "",
+    "section": "Data Transfer and Staging Scripts",
+    "text": "Data Transfer and Staging Scripts\nParallel Data Transfer Script:\n#!/bin/bash\n# parallel_transfer.sh - Transfer large datasets in parallel\n\nSOURCE_DIR=\"$1\"\nDEST_DIR=\"$2\"\nPARALLEL_JOBS=\"${3:-4}\"\n\nif [[ -z \"$SOURCE_DIR\" ]] || [[ -z \"$DEST_DIR\" ]]; then\n    echo \"Usage: $0 &lt;source_dir&gt; &lt;dest_dir&gt; [parallel_jobs]\"\n    exit 1\nfi\n\n# Create destination\nmkdir -p \"$DEST_DIR\"\n\n# Transfer function\ntransfer_file() {\n    local file=\"$1\"\n    local dest=\"$2\"\n    echo \"Transferring: $file\"\n    rsync -av --progress \"$file\" \"$dest\"\n}\n\nexport -f transfer_file\n\n# Find all files and transfer in parallel\nfind \"$SOURCE_DIR\" -type f -name \"*.fastq\" | \\\n    xargs -P \"$PARALLEL_JOBS\" -I {} bash -c 'transfer_file \"$@\"' _ {} \"$DEST_DIR\"\n\necho \"Transfer completed\"\nStaging Script for Batch Jobs:\n#!/bin/bash\n# stage_data.sh - Stage input data for HPC job\n\nJOB_ID=\"$1\"\nINPUT_MANIFEST=\"$2\"\nSTAGE_DIR=\"/scratch/stage/${JOB_ID}\"\n\nif [[ -z \"$JOB_ID\" ]] || [[ -z \"$INPUT_MANIFEST\" ]]; then\n    echo \"Usage: $0 &lt;job_id&gt; &lt;input_manifest&gt;\"\n    exit 1\nfi\n\nmkdir -p \"$STAGE_DIR\"\n\necho \"Staging data for job $JOB_ID\"\n\nwhile IFS= read -r line; do\n    # Format: source_path,destination_name\n    SOURCE=$(echo \"$line\" | cut -d',' -f1)\n    DEST=$(echo \"$line\" | cut -d',' -f2)\n    \n    if [[ -f \"$SOURCE\" ]]; then\n        cp \"$SOURCE\" \"$STAGE_DIR/$DEST\"\n        echo \"Staged: $SOURCE -&gt; $STAGE_DIR/$DEST\"\n    elif [[ -d \"$SOURCE\" ]]; then\n        cp -r \"$SOURCE\" \"$STAGE_DIR/$DEST\"\n        echo \"Staged directory: $SOURCE\"\n    else\n        echo \"Warning: $SOURCE not found\" &gt;&2\n    fi\ndone &lt; \"$INPUT_MANIFEST\"\n\necho \"Staging complete. Data in: $STAGE_DIR\"\necho \"STAGE_DIR=$STAGE_DIR\" &gt; \"/tmp/stage_${JOB_ID}.env\""
+  },
+  {
+    "objectID": "shell_programming.html#bash-variables-for-hpc",
+    "href": "shell_programming.html#bash-variables-for-hpc",
+    "title": "",
+    "section": "Bash Variables for HPC",
+    "text": "Bash Variables for HPC\nImportant HPC Environment Variables:\n#!/bin/bash\n\n# Slurm variables\necho \"SLURM_JOB_ID: $SLURM_JOB_ID\"\necho \"SLURM_JOB_NAME: $SLURM_JOB_NAME\"\necho \"SLURM_NTASKS: $SLURM_NTASKS\"\necho \"SLURM_CPUS_PER_TASK: $SLURM_CPUS_PER_TASK\"\necho \"SLURM_JOB_NODELIST: $SLURM_JOB_NODELIST\"\necho \"SLURM_SUBMIT_DIR: $SLURM_SUBMIT_DIR\"\n\n# PBS/Torque variables\necho \"PBS_JOBID: $PBS_JOBID\"\necho \"PBS_O_WORKDIR: $PBS_O_WORKDIR\"\necho \"PBS_NODEFILE: $PBS_NODEFILE\"\necho \"PBS_ARRAYID: $PBS_ARRAYID\"\n\n# Common HPC paths\nSCRATCH=\"/scratch/${SLURM_JOB_ID:-$PBS_JOBID}\"\nPROJECT_DIR=\"/project/${PROJECT_NAME}\"\nSOFTWARE_DIR=\"/opt/software\"\nMODULEPATH=\"/opt/modules\"\n\n# Set custom variables\nexport TMPDIR=\"$SCRATCH/tmp\"\nexport OMP_NUM_THREADS=\"${SLURM_CPUS_PER_TASK:-1}\"\nParsing Node Lists:\n#!/bin/bash\n\n# Get list of allocated nodes\nif [[ -n \"$SLURM_JOB_NODELIST\" ]]; then\n    # Slurm: expand node list\n    NODES=$(scontrol show hostname \"$SLURM_JOB_NODELIST\")\nelif [[ -f \"$PBS_NODEFILE\" ]]; then\n    # Torque: read node file\n    NODES=$(cat \"$PBS_NODEFILE\" | sort -u)\nelse\n    NODES=$(hostname)\nfi\n\necho \"Allocated nodes:\"\necho \"$NODES\"\n\n# Count nodes\nNODE_COUNT=$(echo \"$NODES\" | wc -l)\necho \"Node count: $NODE_COUNT\"\n\n# Loop through nodes\nwhile read -r node; do\n    echo \"Processing node: $node\"\n    # ssh \"$node\" \"hostname && uptime\"\ndone &lt;&lt;&lt; \"$NODES\""
+  },
+  {
+    "objectID": "shell_programming.html#conditional-statements-for-hpc",
+    "href": "shell_programming.html#conditional-statements-for-hpc",
+    "title": "",
+    "section": "Conditional Statements for HPC",
+    "text": "Conditional Statements for HPC\nResource Checking:\n#!/bin/bash\n\n# Check if running on login or compute node\nif [[ -n \"$SLURM_JOB_ID\" ]] || [[ -n \"$PBS_JOBID\" ]]; then\n    echo \"Running as batch job\"\n    export IS_BATCH=true\nelse\n    echo \"Running interactively\"\n    export IS_BATCH=false\nfi\n\n# Check available memory\nTOTAL_MEM=$(free -g | awk '/^Mem:/ {print $2}')\nif [[ $TOTAL_MEM -lt 32 ]]; then\n    echo \"Warning: Low memory node ($TOTAL_MEM GB)\"\nelif [[ $TOTAL_MEM -lt 64 ]]; then\n    echo \"Memory: adequate ($TOTAL_MEM GB)\"\nelse\n    echo \"Memory: high ($TOTAL_MEM GB)\"\nfi\n\n# Check GPU availability\nif command -v nvidia-smi &&gt; /dev/null; then\n    GPU_COUNT=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)\n    if [[ $GPU_COUNT -gt 0 ]]; then\n        echo \"GPUs available: $GPU_COUNT\"\n    else\n        echo \"No GPUs detected\"\n    fi\nelse\n    echo \"No GPU support\"\nfi\nJob Type Detection:\n#!/bin/bash\n\n# Determine job type from parameters\ncase \"${JOB_TYPE:-default}\" in\n    serial)\n        echo \"Running serial job\"\n        ./serial_program\n        ;;\n    mpi)\n        echo \"Running MPI job on $SLURM_NTASKS processes\"\n        mpirun -np \"$SLURM_NTASKS\" ./mpi_program\n        ;;\n    openmp)\n        echo \"Running OpenMP job with $OMP_NUM_THREADS threads\"\n        ./openmp_program\n        ;;\n    gpu)\n        echo \"Running GPU job\"\n        CUDA_VISIBLE_DEVICES=0 ./gpu_program\n        ;;\n    *)\n        echo \"Unknown job type: $JOB_TYPE\"\n        exit 1\n        ;;\nesac"
+  },
+  {
+    "objectID": "shell_programming.html#loops-for-batch-processing",
+    "href": "shell_programming.html#loops-for-batch-processing",
+    "title": "",
+    "section": "Loops for Batch Processing",
+    "text": "Loops for Batch Processing\nProcessing Multiple Input Files:\n#!/bin/bash\n#SBATCH --ntasks=1\n#SBATCH --cpus-per-task=4\n#SBATCH --array=1-100\n\n# Process files in parallel using array\nINPUT_DIR=\"/data/inputs\"\nOUTPUT_DIR=\"/data/outputs/${SLURM_ARRAY_JOB_ID}\"\n\nmkdir -p \"$OUTPUT_DIR\"\n\n# Get file for this array task\nFILES=($INPUT_DIR/*.dat)\nFILE=\"${FILES[$((SLURM_ARRAY_TASK_ID - 1))]}\"\n\nif [[ -f \"$FILE\" ]]; then\n    BASENAME=$(basename \"$FILE\")\n    echo \"Processing: $BASENAME\"\n    \n    # Process the file\n    ./process_file \"$FILE\" \"$OUTPUT_DIR/${BASENAME%.dat}.out\"\n    \n    echo \"Completed: $BASENAME\"\nelse\n    echo \"No file for task $SLURM_ARRAY_TASK_ID\"\nfi\nLoop Over Nodes for Distributed Processing:\n#!/bin/bash\n#SBATCH --nodes=4\n#SBATCH --ntasks=4\n#SBATCH --cpus-per-task=1\n\n# Get node list\nNODES=$(scontrol show hostname \"$SLURM_JOB_NODELIST\")\n\n# Run commands on each node\nTASK_ID=0\nfor NODE in $NODES; do\n    echo \"Running on node: $NODE\"\n    \n    # Launch task on specific node\n    srun --nodes=1 --ntasks=1 --nodelist=\"$NODE\" \\\n        ./node_task \"$TASK_ID\" &\n    \n    ((TASK_ID++))\ndone\n\nwait\necho \"All node tasks completed\""
+  },
+  {
+    "objectID": "shell_programming.html#functions-for-reusable-hpc-code",
+    "href": "shell_programming.html#functions-for-reusable-hpc-code",
+    "title": "",
+    "section": "Functions for Reusable HPC Code",
+    "text": "Functions for Reusable HPC Code\nFunction Library for HPC Scripts:\n#!/bin/bash\n# hpc_functions.sh - Reusable HPC functions\n\n# Logging function\nlog_message() {\n    local level=\"$1\"\n    local message=\"$2\"\n    echo \"[$(date '+%Y-%m-%d %H:%M:%S')] [$level] $message\"\n}\n\n# Check job environment\ncheck_job_environment() {\n    if [[ -n \"$SLURM_JOB_ID\" ]]; then\n        echo \"SLURM\"\n        echo \"JOB_ID=$SLURM_JOB_ID\"\n        echo \"NODES=$SLURM_JOB_NODELIST\"\n    elif [[ -n \"$PBS_JOBID\" ]]; then\n        echo \"TORQUE\"\n        echo \"JOB_ID=$PBS_JOBID\"\n        echo \"NODES=$(cat $PBS_NODEFILE | sort -u | tr '\\n' ' ')\"\n    else\n        echo \"INTERACTIVE\"\n        echo \"JOB_ID=$$\"\n        echo \"NODES=$(hostname)\"\n    fi\n}\n\n# Wait for file with timeout\nwait_for_file() {\n    local file=\"$1\"\n    local timeout=\"${2:-300}\"\n    local elapsed=0\n    \n    while [[ ! -f \"$file\" ]] && [[ $elapsed -lt $timeout ]]; do\n        sleep 5\n        elapsed=$((elapsed + 5))\n        echo \"Waiting for $file ($elapsed/$timeout seconds)\"\n    done\n    \n    if [[ -f \"$file\" ]]; then\n        return 0\n    else\n        return 1\n    fi\n}\n\n# Get job statistics\nget_job_stats() {\n    local job_id=\"$1\"\n    \n    if command -v sacct &&gt; /dev/null; then\n        sacct -j \"$job_id\" --format=JobID,Elapsed,State,ExitCode,MaxRSS,MaxVMSize --noheader\n    elif command -v qstat &&gt; /dev/null; then\n        qstat -f \"$job_id\" | grep -E \"Job_Owner|resources_used|job_state\"\n    else\n        echo \"No scheduler found\"\n    fi\n}\n\n# Load module with error handling\nload_module() {\n    local module_name=\"$1\"\n    \n    if command -v module &&gt; /dev/null; then\n        module load \"$module_name\"\n        if [[ $? -eq 0 ]]; then\n            echo \"Loaded module: $module_name\"\n        else\n            echo \"Failed to load module: $module_name\"\n            return 1\n        fi\n    else\n        echo \"Module system not available\"\n        return 1\n    fi\n}\n\nexport -f log_message check_job_environment wait_for_file get_job_stats load_module"
+  },
+  {
+    "objectID": "shell_programming.html#arrays-for-hpc-data-management",
+    "href": "shell_programming.html#arrays-for-hpc-data-management",
+    "title": "",
+    "section": "Arrays for HPC Data Management",
+    "text": "Arrays for HPC Data Management\nManaging Job Arrays:\n#!/bin/bash\n\n# Array of job IDs for dependency tracking\ndeclare -a JOB_ARRAY\n\n# Submit multiple jobs and track IDs\nfor i in {1..10}; do\n    JOB_ID=$(sbatch --parsable \"job_${i}.slurm\")\n    JOB_ARRAY+=(\"$JOB_ID\")\n    echo \"Submitted: $JOB_ID\"\ndone\n\n# Convert array to comma-separated list\nJOB_LIST=$(IFS=,; echo \"${JOB_ARRAY[*]}\")\necho \"All jobs: $JOB_LIST\"\n\n# Submit dependent job\nif [[ ${#JOB_ARRAY[@]} -gt 0 ]]; then\n    sbatch --dependency=afterok:$JOB_LIST final_job.slurm\nfi\nAssociative Arrays for Node Properties:\n#!/bin/bash\n\ndeclare -A NODE_PROPERTIES\n\n# Get node information\nwhile read -r node; do\n    # Get CPU count\n    CPUS=$(sinfo -n \"$node\" -o \"%c\" --noheader 2&gt;/dev/null)\n    # Get memory\n    MEM=$(sinfo -n \"$node\" -o \"%m\" --noheader 2&gt;/dev/null)\n    # Get state\n    STATE=$(sinfo -n \"$node\" -o \"%t\" --noheader 2&gt;/dev/null)\n    \n    NODE_PROPERTIES[\"$node,cpus\"]=$CPUS\n    NODE_PROPERTIES[\"$node,mem\"]=$MEM\n    NODE_PROPERTIES[\"$node,state\"]=$STATE\ndone &lt;&lt;&lt; \"$(sinfo -o \"%n\" --noheader | head -20)\"\n\n# Display node properties\nfor node in \"${!NODE_PROPERTIES[@]}\"; do\n    echo \"$node: ${NODE_PROPERTIES[$node]}\"\ndone"
+  },
+  {
+    "objectID": "shell_programming.html#exit-codes-and-error-handling-in-hpc",
+    "href": "shell_programming.html#exit-codes-and-error-handling-in-hpc",
+    "title": "",
+    "section": "Exit Codes and Error Handling in HPC",
+    "text": "Exit Codes and Error Handling in HPC\nJob Failure Detection:\n#!/bin/bash\n# job_with_error_handling.sh\n\nset -euo pipefail\n\n# Trap errors\ntrap 'handle_error $? $LINENO' ERR\n\nhandle_error() {\n    local exit_code=\"$1\"\n    local line_no=\"$2\"\n    \n    echo \"ERROR: Job failed at line $line_no with exit code $exit_code\"\n    echo \"Job ID: ${SLURM_JOB_ID:-$PBS_JOBID}\"\n    \n    # Send alert\n    mail -s \"HPC Job Failed: ${SLURM_JOB_NAME:-Unknown}\" \\\n        \"admin@hpc.et\" &lt;&lt; EOF\nJob failed at $(date)\nExit code: $exit_code\nLine: $line_no\nNode: $(hostname)\nEOF\n    \n    exit \"$exit_code\"\n}\n\n# Check critical prerequisites\ncheck_prerequisites() {\n    local missing=0\n    \n    for cmd in mpirun python3 gcc; do\n        if ! command -v \"$cmd\" &&gt; /dev/null; then\n            echo \"Missing: $cmd\"\n            missing=1\n        fi\n    done\n    \n    if [[ $missing -eq 1 ]]; then\n        echo \"Prerequisites not met\"\n        exit 1\n    fi\n}\n\n# Main execution\nmain() {\n    check_prerequisites\n    \n    echo \"Starting job at $(date)\"\n    \n    # Your actual work\n    ./critical_application\n    \n    echo \"Job completed at $(date)\"\n}\n\nmain \"$@\"\nJob Wrapper with Retry Logic:\n#!/bin/bash\n# retry_wrapper.sh - Retry failed jobs\n\nMAX_RETRIES=3\nRETRY_DELAY=60\n\nrun_with_retry() {\n    local cmd=\"$1\"\n    local attempt=1\n    \n    while [[ $attempt -le $MAX_RETRIES ]]; do\n        echo \"Attempt $attempt of $MAX_RETRIES\"\n        \n        if eval \"$cmd\"; then\n            echo \"Command succeeded on attempt $attempt\"\n            return 0\n        else\n            echo \"Command failed (attempt $attempt)\"\n            if [[ $attempt -lt $MAX_RETRIES ]]; then\n                echo \"Waiting $RETRY_DELAY seconds before retry...\"\n                sleep $RETRY_DELAY\n            fi\n        fi\n        \n        ((attempt++))\n    done\n    \n    echo \"Command failed after $MAX_RETRIES attempts\"\n    return 1\n}\n\n# Usage\nrun_with_retry \"./my_application --input data.dat\""
+  },
+  {
+    "objectID": "shell_programming.html#text-processing-for-log-analysis",
+    "href": "shell_programming.html#text-processing-for-log-analysis",
+    "title": "",
+    "section": "Text Processing for Log Analysis",
+    "text": "Text Processing for Log Analysis\nParsing Slurm Accounting Data:\n#!/bin/bash\n# parse_sacct.sh - Parse and analyze job accounting\n\n# Get job data for last 7 days\nsacct -S \"now-7days\" --format=JobID,JobName,User,State,Elapsed,ReqMem,MaxRSS,NodeList \\\n    --noheader -P &gt; job_data.txt\n\n# Analyze by user\necho \"=== Jobs by User ===\"\nawk -F'|' '{print $3}' job_data.txt | sort | uniq -c | sort -rn\n\n# Analyze success rate\necho \"\"\necho \"=== Job Success Rate ===\"\nTOTAL=$(wc -l &lt; job_data.txt)\nSUCCESS=$(grep -c \"COMPLETED\" job_data.txt)\necho \"Total: $TOTAL\"\necho \"Success: $SUCCESS\"\necho \"Rate: $(echo \"scale=2; $SUCCESS * 100 / $TOTAL\" | bc)%\"\n\n# Analyze memory usage\necho \"\"\necho \"=== Memory Usage Analysis ===\"\nawk -F'|' '\n/COMPLETED/ {\n    req = $6\n    max = $7\n    gsub(/[^0-9]/, \"\", req)\n    gsub(/[^0-9]/, \"\", max)\n    if (req &gt; 0) {\n        efficiency = (max / req) * 100\n        printf \"Job %s: %.1f%% memory efficiency\\n\", $2, efficiency\n    }\n}\n' job_data.txt | head -20\nExtract Node Utilization:\n#!/bin/bash\n# node_utilization.sh - Calculate node utilization\n\n# Get job data with node lists\nsacct -S \"now-1day\" --format=JobID,State,NodeList --noheader -P | \\\n    grep COMPLETED | \\\n    awk -F'|' '\n    {\n        split($3, nodes, \",\")\n        for (node in nodes) {\n            node_count[nodes[node]]++\n        }\n    }\n    END {\n        for (node in node_count) {\n            printf \"%-20s %d jobs\\n\", node, node_count[node]\n        }\n    }' | sort -k2 -rn | head -20"
+  },
+  {
+    "objectID": "shell_programming.html#practical-hpc-project---weather-modeling",
+    "href": "shell_programming.html#practical-hpc-project---weather-modeling",
+    "title": "",
+    "section": "Practical HPC Project - Weather Modeling",
+    "text": "Practical HPC Project - Weather Modeling\nComplete Weather Model Workflow:\n#!/bin/bash\n#SBATCH --job-name=weather_ethiopia\n#SBATCH --nodes=8\n#SBATCH --ntasks=64\n#SBATCH --cpus-per-task=2\n#SBATCH --mem=128G\n#SBATCH --time=72:00:00\n#SBATCH --partition=compute\n#SBATCH --output=logs/weather_%j.out\n#SBATCH --error=logs/weather_%j.err\n\n# Weather modeling for Ethiopian Meteorology Institute\n# Author: Bontu Megersa\n\nset -euo pipefail\n\n# Configuration\nMODEL_DIR=\"/opt/models/wrf\"\nINPUT_DATA=\"/data/weather/$(date +%Y%m%d)\"\nOUTPUT_DIR=\"/results/weather/$(date +%Y%m%d)\"\nDOMAIN_FILE=\"ethiopia_domain.nl\"\nNML_FILE=\"namelist.input\"\n\n# Load environment\nmodule purge\nmodule load intel/2020\nmodule load openmpi/4.0\nmodule load netcdf/4.7\nmodule load wrf/4.2\n\n# Create output directory\nmkdir -p \"$OUTPUT_DIR\"/{logs,plots,forecast}\n\nlog_message() {\n    echo \"[$(date '+%Y-%m-%d %H:%M:%S')] $1\"\n}\n\nlog_message \"Starting WRF simulation for Ethiopian domain\"\n\n# Stage input data\nlog_message \"Staging input data\"\ncp \"$INPUT_DATA\"/* \"$TMPDIR/\" || {\n    log_message \"ERROR: Failed to stage input data\"\n    exit 1\n}\n\n# Run WPS (Weather Preprocessing System)\nlog_message \"Running WPS\"\ncd \"$MODEL_DIR/WPS\"\n./geogrid.exe || exit 1\n./ungrib.exe || exit 1\n./metgrid.exe || exit 1\n\n# Run WRF\nlog_message \"Running WRF model\"\ncd \"$MODEL_DIR/WRF/test/em_real\"\n\n# Update namelist for this run\nsed -i \"s/start_year = .*/start_year = $(date +%Y)/\" \"$NML_FILE\"\nsed -i \"s/start_month = .*/start_month = $(date +%m)/\" \"$NML_FILE\"\nsed -i \"s/start_day = .*/start_day = $(date +%d)/\" \"$NML_FILE\"\n\n# Run with MPI\nmpirun -np 64 ./wrf.exe\n\n# Process results\nlog_message \"Processing forecast data\"\n\n# Extract temperature forecasts for major cities\nCITIES=\"Addis_Ababa:9.03,38.74 Gondar:12.60,37.47 Jimma:7.67,36.83 Mekelle:13.50,39.47\"\n\nfor city in $CITIES; do\n    NAME=$(echo \"$city\" | cut -d: -f1)\n    COORDS=$(echo \"$city\" | cut -d: -f2)\n    LAT=$(echo \"$COORDS\" | cut -d, -f1)\n    LON=$(echo \"$COORDS\" | cut -d, -f2)\n    \n    ncl \"extract_point.ncl\" \"lat=$LAT\" \"lon=$LON\" \"city=\\\"$NAME\\\"\" \\\n        \"infile=\\\"wrfout_d01_*\\\"\"\n    \n    mv \"${NAME}_forecast.txt\" \"$OUTPUT_DIR/forecast/\"\ndone\n\n# Generate forecast plots\npython3 /opt/scripts/plot_forecast.py \\\n    --input wrfout_d01_* \\\n    --output \"$OUTPUT_DIR/plots\" \\\n    --variables temperature,precipitation,wind\n\n# Create summary report\ncat &gt; \"$OUTPUT_DIR/summary.txt\" &lt;&lt; EOF\nWeather Forecast Summary\nDate: $(date)\nDomain: Ethiopia\nModel: WRF 4.2\nResolution: 10km\n\nForecast available in:\n- Plots: $OUTPUT_DIR/plots/\n- Data: $OUTPUT_DIR/forecast/\n\nModel run completed at $(date)\nEOF\n\nlog_message \"Weather simulation completed\""
+  },
+  {
+    "objectID": "shell_programming.html#system-administration---backup-and-restore",
+    "href": "shell_programming.html#system-administration---backup-and-restore",
+    "title": "",
+    "section": "System Administration - Backup and Restore",
+    "text": "System Administration - Backup and Restore\nHPC Backup Script:\n#!/bin/bash\n# backup_hpc.sh - Backup critical HPC data\n\nBACKUP_DEST=\"/backup/hpc\"\nBACKUP_DATE=$(date +%Y%m%d)\nBACKUP_DIR=\"$BACKUP_DEST/$BACKUP_DATE\"\nRETENTION_DAYS=30\n\n# Directories to backup\nBACKUP_PATHS=(\n    \"/home\"\n    \"/project\"\n    \"/opt/slurm/etc\"\n    \"/opt/torque/server_priv\"\n    \"/etc/slurm\"\n    \"/etc/torque\"\n)\n\n# Create backup directory\nmkdir -p \"$BACKUP_DIR\"\n\nlog() {\n    echo \"[$(date '+%Y-%m-%d %H:%M:%S')] $1\"\n}\n\nlog \"Starting HPC backup to $BACKUP_DIR\"\n\n# Backup each directory\nfor path in \"${BACKUP_PATHS[@]}\"; do\n    if [[ -d \"$path\" ]]; then\n        BASENAME=$(basename \"$path\")\n        BACKUP_FILE=\"$BACKUP_DIR/${BASENAME}_${BACKUP_DATE}.tar.gz\"\n        \n        log \"Backing up: $path\"\n        tar -czf \"$BACKUP_FILE\" \"$path\" 2&gt;/dev/null\n        \n        if [[ $? -eq 0 ]]; then\n            log \"Success: $BASENAME\"\n        else\n            log \"ERROR: Failed to backup $BASENAME\"\n        fi\n    else\n        log \"Warning: $path does not exist\"\n    fi\ndone\n\n# Backup Slurm database\nif command -v mysqldump &&gt; /dev/null; then\n    log \"Backing up Slurm database\"\n    mysqldump slurm_acct_db &gt; \"$BACKUP_DIR/slurm_db_${BACKUP_DATE}.sql\"\nfi\n\n# Backup Torque server state\nif [[ -d \"/var/spool/torque/server_priv\" ]]; then\n    log \"Backing up Torque state\"\n    tar -czf \"$BACKUP_DIR/torque_state_${BACKUP_DATE}.tar.gz\" \\\n        /var/spool/torque/server_priv/jobs \\\n        /var/spool/torque/server_priv/nodes\nfi\n\n# Calculate backup size\nBACKUP_SIZE=$(du -sh \"$BACKUP_DIR\" | cut -f1)\nlog \"Backup size: $BACKUP_SIZE\"\n\n# Remove old backups\nlog \"Removing backups older than $RETENTION_DAYS days\"\nfind \"$BACKUP_DEST\" -type d -mtime +$RETENTION_DAYS -exec rm -rf {} \\;\n\nlog \"Backup completed successfully\"\n\n# Send report\nmail -s \"HPC Backup Report - $BACKUP_DATE\" admin@hpc.et &lt;&lt; EOF\nBackup completed at $(date)\nLocation: $BACKUP_DIR\nSize: $BACKUP_SIZE\nDirectories backed up: ${#BACKUP_PATHS[@]}\nEOF"
+  },
+  {
+    "objectID": "shell_programming.html#best-practices-for-hpc-scripting",
+    "href": "shell_programming.html#best-practices-for-hpc-scripting",
+    "title": "",
+    "section": "Best Practices for HPC Scripting",
+    "text": "Best Practices for HPC Scripting\nHPC-Specific Best Practices:\n#!/bin/bash\n# hpc_best_practices.sh - Template following best practices\n\n# 1. Always use strict error handling\nset -euo pipefail\n\n# 2. Define all variables at top\nreadonly SCRIPT_NAME=$(basename \"$0\")\nreadonly SCRIPT_DIR=$(cd \"$(dirname \"$0\")\" && pwd)\nreadonly LOG_FILE=\"${SCRIPT_DIR}/logs/${SLURM_JOB_ID:-$$}.log\"\n\n# 3. Use functions for reusable code\nsetup_environment() {\n    # Load modules only when needed\n    module purge\n    module load gcc/10.2\n    module load openmpi/4.1\n    \n    # Set temporary directories\n    export TMPDIR=\"/scratch/${SLURM_JOB_ID:-$$}/tmp\"\n    mkdir -p \"$TMPDIR\"\n}\n\ncleanup() {\n    # Clean up temporary files\n    rm -rf \"/scratch/${SLURM_JOB_ID:-$$}\"\n}\n\n# 4. Use traps for cleanup\ntrap cleanup EXIT\n\n# 5. Check for required resources\ncheck_resources() {\n    local required_mem_gb=32\n    local available_mem_gb=$(free -g | awk '/^Mem:/ {print $7}')\n    \n    if [[ $available_mem_gb -lt $required_mem_gb ]]; then\n        echo \"Error: Insufficient memory\" &gt;&2\n        exit 1\n    fi\n}\n\n# 6. Log everything\nlog() {\n    echo \"[$(date '+%Y-%m-%d %H:%M:%S')] $*\" | tee -a \"$LOG_FILE\"\n}\n\n# 7. Use version control for scripts\n# 8. Test on small scale before full production\n# 9. Document resource requirements\n# 10. Use job arrays for parameter sweeps\nChecklist for HPC Scripts: - [ ] Set set -euo pipefail - [ ] Define walltime limit - [ ] Request appropriate memory - [ ] Set email notifications - [ ] Use scratch space for temporary files - [ ] Clean up temporary files - [ ] Log job steps and errors - [ ] Test with small input first - [ ] Document module dependencies - [ ] Use absolute paths"
+  },
+  {
+    "objectID": "shell_programming.html#common-hpc-script-patterns",
+    "href": "shell_programming.html#common-hpc-script-patterns",
+    "title": "",
+    "section": "Common HPC Script Patterns",
+    "text": "Common HPC Script Patterns\nPattern 1: Master-Worker:\n#!/bin/bash\n#SBATCH --nodes=5\n#SBATCH --ntasks=5\n\n# Master node (rank 0) distributes work\nif [[ $SLURM_PROCID -eq 0 ]]; then\n    for worker in {1..4}; do\n        srun --ntasks=1 --nodes=1 ./worker_task \"$worker\" &\n    done\n    wait\nelse\n    # Worker nodes process\n    ./worker_process \"$SLURM_PROCID\"\nfi\nPattern 2: Pipeline:\n#!/bin/bash\n\n# Stage 1: Preprocess\nsbatch --parsable preprocess.slurm &gt; job1.id\n\n# Stage 2: Compute (depends on preprocess)\nJOB1=$(cat job1.id)\nsbatch --parsable --dependency=afterok:$JOB1 compute.slurm &gt; job2.id\n\n# Stage 3: Postprocess (depends on compute)\nJOB2=$(cat job2.id)\nsbatch --dependency=afterok:$JOB2 postprocess.slurm\nPattern 3: Checkpoint-Restart:\n#!/bin/bash\n\nCHECKPOINT_FILE=\"checkpoint.chk\"\nMAX_TIME=3600\n\nif [[ -f \"$CHECKPOINT_FILE\" ]]; then\n    echo \"Restarting from checkpoint\"\n    ./app --restore \"$CHECKPOINT_FILE\"\nelse\n    echo \"Starting fresh\"\n    ./app --checkpoint-interval 300 --checkpoint-file \"$CHECKPOINT_FILE\"\nfi"
+  },
+  {
+    "objectID": "shell_programming.html#troubleshooting-and-debugging",
+    "href": "shell_programming.html#troubleshooting-and-debugging",
+    "title": "",
+    "section": "Troubleshooting and Debugging",
+    "text": "Troubleshooting and Debugging\nCommon HPC Job Failures:\n\n\n\n\n\n\n\n\nSymptom\nLikely Cause\nSolution\n\n\n\n\nOut of memory\nRequested memory too low\nIncrease #SBATCH --mem\n\n\nTimeout\nWalltime too short\nIncrease --time\n\n\nNode allocation failed\nInsufficient resources\nCheck queue with sinfo\n\n\nModule not found\nModule path issue\nCheck module avail\n\n\nPermission denied\nFile ownership issue\nCheck ls -la\n\n\nMPI errors\nNetwork or version mismatch\nTest with mpirun --version\n\n\n\nDebug Script:\n#!/bin/bash\n# debug_hpc_job.sh - Debug failing HPC job\n\necho \"=== Debug Information ===\"\necho \"Job ID: ${SLURM_JOB_ID:-$PBS_JOBID}\"\necho \"Hostname: $(hostname)\"\necho \"Date: $(date)\"\necho \"User: $(whoami)\"\necho \"\"\n\necho \"=== Environment ===\"\nenv | sort | head -20\necho \"\"\n\necho \"=== Modules ===\"\nmodule list 2&gt;/dev/null || echo \"No module system\"\necho \"\"\n\necho \"=== Disk Space ===\"\ndf -h /home /scratch /project\necho \"\"\n\necho \"=== Memory ===\"\nfree -g\necho \"\"\n\necho \"=== Process Limits ===\"\nulimit -a\necho \"\"\n\necho \"=== Job Details ===\"\nif command -v scontrol &&gt; /dev/null; then\n    scontrol show job \"$SLURM_JOB_ID\"\nelif command -v qstat &&gt; /dev/null; then\n    qstat -f \"$PBS_JOBID\"\nfi"
+  },
+  {
+    "objectID": "shell_programming.html#vivim-for-hpc-script-editing",
+    "href": "shell_programming.html#vivim-for-hpc-script-editing",
+    "title": "",
+    "section": "vi/Vim for HPC Script Editing",
+    "text": "vi/Vim for HPC Script Editing\nEssential vi Commands for HPC Scripts:\nNavigation:\nh j k l    Move left/down/up/right\nw b e      Word forward/back/end\ngg G       First/last line\n:100       Go to line 100\nEditing HPC Scripts:\ndd         Delete line (remove a #SBATCH line)\nyy p       Copy and paste (duplicate job parameters)\n/pattern   Search for text\n:%s/old/new/g  Replace all\n:set syntax=bash  Enable syntax highlighting\nWorking with Large Scripts:\nCtrl+f     Page down\nCtrl+b     Page up\n/^#SBATCH  Find next SLURM directive\n:noh       Clear search highlighting\nSplit View for Multiple Files:\n:split     Horizontal split\n:vsplit    Vertical split\nCtrl+w w   Switch between splits\n:sp job1.slurm  Open another job script\nQuick Template:\n:r /opt/templates/slurm_template.sh  # Insert template"
+  },
+  {
+    "objectID": "shell_programming.html#resources-and-next-steps",
+    "href": "shell_programming.html#resources-and-next-steps",
+    "title": "",
+    "section": "Resources and Next Steps",
+    "text": "Resources and Next Steps\nDocumentation: - Slurm: https://slurm.schedmd.com/documentation.html - Torque: https://adaptivecomputing.com/cherry-services/torque-resource-manager/ - Bash Guide: https://mywiki.wooledge.org/BashGuide\nEthiopian HPC Resources: - Ethiopian Biotechnology Institute HPC - Addis Ababa University HPC Center - Ethiopian Space Science and Technology Institute\nPractice Exercises:\n\nBasic: Write a script to submit 10 jobs with different parameters\nIntermediate: Create a monitoring dashboard for cluster status\nAdvanced: Implement a complete weather modeling workflow\n\nNext Topics: - Parallel programming with MPI - GPU computing with CUDA - Containerization (Singularity/Apptainer) - Workflow managers (Nextflow, Snakemake)\nFinal Tips: 1. Always test on login node first (small scale) 2. Use --test-only flag with sbatch 3. Monitor jobs with seff (Slurm) or qstat -f 4. Keep scripts in version control 5. Document resource requirements"
+  },
+  {
+    "objectID": "shell_programming.html#conclusion",
+    "href": "shell_programming.html#conclusion",
+    "title": "",
+    "section": "Conclusion",
+    "text": "Conclusion\nKey Takeaways for SysAdmins:\n\nAutomate user management and monitoring\nImplement log rotation and backup strategies\nUse job arrays for parameter sweeps\nSet up email alerts for critical events\n\nKey Takeaways for HPC Users:\n\nUnderstand scheduler directives (PBS and Slurm)\nUse job dependencies for workflows\nImplement checkpoint-restart for long jobs\nMonitor resource usage with sacct/qstat\n\nCommon Patterns Covered:\n\nJob submission scripts for both schedulers\nArray jobs for parameter sweeps\nDependent jobs for workflows\nData staging and cleanup\nError handling and retry logic\n\nQuestions?"
+  }
+]
