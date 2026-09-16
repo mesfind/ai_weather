@@ -1,18 +1,15 @@
 ---
 layout: default
 title: "Welcome to AI-Weather Training"
-description: "Introduction to the AI-Weather training lesson, covering Python basics and setup prerequisites."
+description: "Introduction to the AI-Weather training lesson, covering basics and setup prerequisites."
 ---
 
 # Welcome to AI-Weather Training
 
-## Why Python?
-
-Python is a great programming language that is relatively easy to learn and also very easy to read. 
-
 ## The Lessons
 
-The data we are using for this lesson are from the Portal Project Teaching Database. 
+These essons are designed to provide an interactive learning experience over the AI weather training program, so we can move from concepts to pilot evaluation as part of an international community of practice. The 2026 program goals aim to help participants from weather and agricultural government institutions think through together how they could pilot an AI-based weather model in their operational workflows as part of forecast-to-farmer decision support. To achieve this, we have a track-based learning approach to engage participants (some sessions are joint across weather and agriculture, while others are separate to allow a deeper dive across the pipeline).  
+
 
 More details about the files we'll use and where to download them are available on the [Setup]({{ '/setup/' | relative_url }}) page.
 
@@ -23,6 +20,6 @@ More details about the files we'll use and where to download them are available 
 
 ## Getting Started
 
-To get started with installing Python, follow the directions given in the [Python section of the course Software page](https://mesfind.github.io/ai-weather).
+To get started with installing Python, follow the directions given in the [ Lesson section of the course page](https://mesfind.github.io/ai_weather).
 
 In addition to installing Python on your own computer, you will also need to download the data files used in the tutorials. Details for doing this are found in the [Setup]({{ '/setup/' | relative_url }}) page.
