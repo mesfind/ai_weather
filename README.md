@@ -19,6 +19,8 @@ Demos are designed to provide an interactive learning experience over the AI wea
 │   └── raw            <- The original, immutable data dump.
 │
 ├── docs               <- A default mkdocs project; see www.mkdocs.org for details
+│   └── _episodes      <-  md lesson for each demos
+│   └── _layouts       <-  layout of the lesson for the training on GitHub pages
 │
 ├── models             <- Trained and serialized models, model predictions, or model summaries
 │
@@ -33,6 +35,7 @@ Demos are designed to provide an interactive learning experience over the AI wea
 │
 ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
 │   └── figures        <- Generated graphics and figures to be used in reporting
+│   └── slide          <-  quarto revealjs slide for ppt 
 │
 ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
 │                         generated with `pip freeze > requirements.txt`
