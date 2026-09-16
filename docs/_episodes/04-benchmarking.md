@@ -28,7 +28,7 @@ keypoints:
 
 
 
-# Building an AI Forecast Benchmarking Pipeline
+# AI Forecast Benchmarking Pipeline
 
 When deploying Artificial Intelligence forecasting systems (like ECMWF's AIFS) in operational weather workflows, we must rigorously benchmark them against trusted baselines, such as historical climatology. 
 
