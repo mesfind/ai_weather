@@ -1,5 +1,5 @@
 ---
-title: Deep Learing Fundamentals
+title: Benchmarking 
 teaching: 1
 exercises: 0
 questions:
