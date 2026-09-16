@@ -19,5 +19,5 @@ keypoints:
 
 ## Temperature
 
-## Precipitation
+
 
