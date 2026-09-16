@@ -49,10 +49,11 @@ defaults:
       toc: true
 
 # --- Plugins ---
-plugins:
-  - jekyll-seo-tag
-  - jekyll-sitemap
+  plugins:
   - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+  - jekyll-redirect-from
 
 # --- Exclusions ---
 exclude:
