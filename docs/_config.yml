@@ -11,7 +11,7 @@ author: "Mesfin Diro"
 # --- URLs ---
 # Update these for your actual deployment
 url: "https://mesfindiro.github.io"
-baseurl: "/ai_weather"  # Leave empty if hosting at root domain
+baseurl: "/ai_weather"  
 
 # --- Repository ---
 repository: "mesfindiro/ai_weather"
