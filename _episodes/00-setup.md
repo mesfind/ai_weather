@@ -29,55 +29,52 @@ Conda is a package, dependency, and environment management tool that simplifies 
 
 A Conda environment is a self-contained directory that contains a specific collection of Conda packages. These environments help isolate different projects from each other, ensuring that dependencies for one project do not interfere with others.
 
-> **Best Practice:** Avoid installing packages into the base Conda environment. Create a new environment for each project to maintain strict isolation.
+> **Best Practice**
+> 
+> Avoid installing packages into the base Conda environment. Create a new environment for each project to maintain strict isolation.
+{: .tip}
 
 ### Creating Environments with Conda (Linux/macOS)
 
 To create a new Conda environment, use the following command:
 
-~~~bash
+```bash
 admin@MacBook~ $ conda create -n <env_name> python=<version#>
-~~~  
-{: .bash}
+```
 
 For example, to create a Conda environment named `ai-onset` with Python 3.12:
 
-~~~bash
+```bash
 admin@MacBook~ $ conda create --name ai-onset python=3.12
-~~~  
-{: .bash}
+```
 
 To activate the environment:
 
-~~~bash
+```bash
 admin@MacBook~ $ conda activate ai-onset
-~~~  
-{: .bash}
+```
 
 ### Installing Packages in Conda Environments
 
 Install packages within an environment using `conda` or `pip`:
 
-~~~bash
+```bash
 admin@MacBook~ $ conda install <package_name>
-~~~  
-{: .bash}
+```
 
 Or, if the package is not available via Conda:
 
-~~~bash
+```bash
 admin@MacBook~ $ pip install <package_name>
-~~~  
-{: .bash}
+```
 
 ### Exporting and Sharing Environments
 
 Export an environment configuration to a file for sharing with colleagues:
 
-~~~bash
+```bash
 admin@MacBook~ $ conda env export --no-builds --file environment.yaml
-~~~  
-{: .bash}
+```
 
 This creates a `YAML` file that lists all packages and dependencies used in the environment. Others can use this file to recreate the exact same environment.
 
@@ -85,17 +82,15 @@ This creates a `YAML` file that lists all packages and dependencies used in the 
 
 To deactivate a Conda environment:
 
-~~~bash
+```bash
 admin@MacBook~ $ conda deactivate
-~~~  
-{: .bash}
+```
 
 To remove an environment entirely:
 
-~~~bash
+```bash
 admin@MacBook~ $ conda env remove --name <env_name>
-~~~  
-{: .bash}
+```
 
 ---
 
@@ -107,30 +102,25 @@ The `venv` module, included in Python by default, is another tool for creating i
 
 1. **Open a Terminal**: On Linux/macOS, press `Ctrl + Alt + T` or search for `Terminal`.
 2. **Navigate to the Desired Directory**: Use `cd` to move to the project folder:
-   ~~~bash
+   ```bash
    admin@MacBook~ $ cd Documents/ai-onset
-   ~~~  
-   {: .bash}
+   ```
 3. **Create the Virtual Environment**:
-   ~~~bash
+   ```bash
    admin@MacBook~ $ python3 -m venv ai-onset
-   ~~~  
-   {: .bash}
+   ```
 4. **Activate the Virtual Environment** (Linux/macOS):
-   ~~~bash
+   ```bash
    admin@MacBook~ $ source ai-onset/bin/activate
-   ~~~  
-   {: .bash}
+   ```
 5. **Install Packages**: Install dependencies with `pip`:
-   ~~~bash
+   ```bash
    admin@MacBook~ $ pip install <package_name>
-   ~~~  
-   {: .bash}
+   ```
 6. **Deactivate the Virtual Environment**: When done, exit the environment:
-   ~~~bash
+   ```bash
    admin@MacBook~ $ deactivate
-   ~~~  
-   {: .bash}
+   ```
 
 ---
 
@@ -142,11 +132,10 @@ For complex scientific workflows, managing dependencies across different machine
 
 Participants can spin up a pre-configured Docker container and verify the installed libraries in just two lines of code:
 
-~~~bash
+```bash
 admin@MacBook~ $ docker run -it --gpus all climate-workshop:latest /bin/bash
 admin@MacBook~ $ python -c "import xarray, dask, cartopy; print('Environment ready!')"
-~~~  
-{: .bash}
+```
 
 *(Note: Replace `climate-workshop:latest` with your organization's actual container registry path.)*
 
@@ -154,56 +143,63 @@ admin@MacBook~ $ python -c "import xarray, dask, cartopy; print('Environment rea
 
 ## NVIDIA DGX Spark for Climate Workflows
 
-The **NVIDIA DGX Spark** is a desktop AI supercomputer powered by the GB10 Grace Blackwell superchip, featuring 128 GB of unified memory and 1 PetaFLOP of parallel throughput [[16]]. It is designed to bring datacenter-capable AI, machine learning, and data science workflows directly to your desk [[19]].
+The **NVIDIA DGX Spark** is a desktop AI supercomputer powered by the GB10 Grace Blackwell superchip, featuring 128 GB of unified memory and 1 PetaFLOP of parallel throughput. It is designed to bring datacenter-capable AI, machine learning, and data science workflows directly to your desk.
 
 ### What is Possible with a Spark?
+
 - **Ideal For**: Running benchmarks, blending forecasts, and training small bias correction models locally, *provided you already have your reforecast data*.
 - **Not Ideal For**: Large-scale reforecast data generation. This task requires massive I/O throughput and distributed parallelism that are better suited for traditional HPC clusters.
 
-For practical guides, playbooks, and interactive options to get started, visit the official [NVIDIA Build: DGX Spark](https://build.nvidia.com/spark) portal [[1]]. You can also explore the [DGX Spark User Guide](https://docs.nvidia.com/dgx/dgx-spark/common-use-cases.html) for common use cases [[3]].
+For practical guides, playbooks, and interactive options to get started, visit the official [NVIDIA Build: DGX Spark](https://build.nvidia.com/spark) portal. You can also explore the [DGX Spark User Guide](https://docs.nvidia.com/dgx/dgx-spark/common-use-cases.html) for common use cases.
 
-### Hardware Comparison: Spark vs. Cloud vs. HPC
+> **Hardware Comparison: Spark vs. Cloud vs. HPC**
+> 
+> For guidance on optimizing your workflow across these platforms, refer to internal hardware comparison resources alongside the official NVIDIA documentation.
+{: .info}
 
 | Feature | NVIDIA DGX Spark | Cloud (e.g., AWS, GCP) | Traditional HPC |
 | :--- | :--- | :--- | :--- |
 | **Best Use Case** | Local prototyping, bias correction, forecast blending | Scalable burst workloads, collaborative projects | Large-scale reforecast data generation, massive parallelism |
-| **Memory/Compute** | 128 GB unified memory, 1 PetaFLOP throughput [[16]] | Highly scalable, variable by instance type | Massive, distributed across compute nodes |
+| **Memory/Compute** | 128 GB unified memory, 1 PetaFLOP throughput | Highly scalable, variable by instance type | Massive, distributed across compute nodes |
 | **Data Transfer** | None (local data access) | High egress costs for large climate datasets | Managed within the facility's high-speed network |
 | **Accessibility** | Immediate, interactive, no queueing | Immediate, but requires setup and billing config | Requires job scheduling (e.g., Slurm) and queueing |
 | **Cost Model** | Upfront hardware cost, no ongoing compute fees | Pay-as-you-go, can become expensive for long runs | Institutional funding, allocation-based |
-
-> **Tip:** For guidance on optimizing your workflow across these platforms, refer to internal hardware comparison resources (e.g., Adam's talk on HPC vs. Edge AI) alongside the official NVIDIA documentation.
 
 ---
 
 ## Exercises
 
-### Exercise 1: Create and Use a `venv` Environment
-1. Create a new virtual environment named `myproject`.
-2. Activate it and install the `requests` library.
-3. Create a file `fetch_page.py` with the following content:
-   ~~~python
-   import requests
-   response = requests.get('https://www.example.com')
-   print(response.status_code)
-   ~~~  
-   {: .python}
-4. Run the script (`python fetch_page.py`) and then deactivate the environment.
+> **Exercise 1: Create and Use a `venv` Environment**
+> 
+> 1. Create a new virtual environment named `myproject`.
+> 2. Activate it and install the `requests` library.
+> 3. Create a file `fetch_page.py` with the following content:
+>    ```python
+>    import requests
+>    response = requests.get('https://www.example.com')
+>    print(response.status_code)
+>    ```
+> 4. Run the script (`python fetch_page.py`) and then deactivate the environment.
+{: .exercise}
 
-### Exercise 2: Conda Environment Setup on Windows (PowerShell)
-1. Verify Conda installation: `conda --version`
-2. Create a new environment named `ml-flow` with Python 3.10:  
-   `conda create --name ml-flow python=3.10`
-3. Activate it: `conda activate ml-flow`
-4. Install packages: `conda install numpy matplotlib`
-5. Verify installation: `conda list`
-6. Export the configuration: `conda env export --no-builds --file ml-flow.yaml`
-7. Clean up: `conda deactivate` followed by `conda env remove --name ml-flow`
+> **Exercise 2: Conda Environment Setup on Windows (PowerShell)**
+> 
+> 1. Verify Conda installation: `conda --version`
+> 2. Create a new environment named `ml-flow` with Python 3.10:  
+>    `conda create --name ml-flow python=3.10`
+> 3. Activate it: `conda activate ml-flow`
+> 4. Install packages: `conda install numpy matplotlib`
+> 5. Verify installation: `conda list`
+> 6. Export the configuration: `conda env export --no-builds --file ml-flow.yaml`
+> 7. Clean up: `conda deactivate` followed by `conda env remove --name ml-flow`
+{: .exercise}
 
-### Exercise 3: Docker & Spark Quick Start
-1. Ensure Docker is installed and running on your machine.
-2. Run the 2-line Docker test provided in the "Containerized Workflows" section above.
-3. Visit [build.nvidia.com/spark](https://build.nvidia.com/spark) and identify one playbook or use case that aligns with your current research or project goals.
+> **Exercise 3: Docker & Spark Quick Start**
+> 
+> 1. Ensure Docker is installed and running on your machine.
+> 2. Run the 2-line Docker test provided in the "Containerized Workflows" section above.
+> 3. Visit [build.nvidia.com/spark](https://build.nvidia.com/spark) and identify one playbook or use case that aligns with your current research or project goals.
+{: .exercise}
 
 ---
 
@@ -214,7 +210,7 @@ Below is the complete `workshop` environment configuration used for the Docker c
 <details>
 <summary>Click to expand <code>environment.yaml</code></summary>
 
-~~~yaml
+```yaml
 name: workshop
 channels:
   - conda-forge
@@ -244,4 +240,6 @@ dependencies:
       - bokeh==3.8.0
       - panel==1.8.1
 prefix: /opt/conda/envs/workshop
-~~~
+```
+</details>
+```
