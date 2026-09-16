@@ -1,16 +1,20 @@
 # ============================================================
-# AI WEATHER —  Lesson Template
+# AI WEATHER - Complete Configuration
 # ============================================================
 
 # --- Site Metadata ---
 title: "AI Weather"
-description: "A modern, hands-on lesson on applying AI to weather forecasting using Python."
-author: "Mesfin Diro"
+description: "A modern lesson on AI applications in weather forecasting using Python"
 email: "mesfin.diro@aau.edu.et"
+author: "Mesfin Diro"
+
+# --- URLs ---
+# Update these for your actual deployment
 url: "https://mesfindiro.github.io"
-baseurl: "/ai_weather"
+baseurl: "/ai_weather"  # Leave empty if hosting at root domain
+
+# --- Repository ---
 repository: "mesfindiro/ai_weather"
-license: "CC-BY 4.0"
 
 # --- Build Settings ---
 markdown: kramdown
@@ -23,37 +27,29 @@ kramdown:
       line_numbers: false
   smart_quotes: ["apos", "apos", "quot", "quot"]
 
-# --- SCSS ---
-sass:
-  sass_dir: _sass
-  style: compressed
-
 # --- Collections ---
 collections:
   episodes:
     output: true
-    permalink: /episodes/:slug/
+    permalink: /:slug/
 
-# --- Defaults ---
+# --- Default Front Matter ---
 defaults:
   - scope:
       path: ""
     values:
-      layout: "page"
-      toc: true
+      layout: "default"
   - scope:
       path: ""
       type: "episodes"
     values:
-      layout: "episode"
-      toc: true
+      layout: "default"
 
 # --- Plugins ---
-  plugins:
-  - jekyll-feed
-  - jekyll-sitemap
+plugins:
   - jekyll-seo-tag
-  - jekyll-redirect-from
+  - jekyll-sitemap
+  - jekyll-feed
 
 # --- Exclusions ---
 exclude:
@@ -66,10 +62,13 @@ exclude:
   - Gemfile.lock
   - node_modules/
   - requirements.txt
-  - "*.map"
   - README.md
   - CONTRIBUTING.md
   - CITATION
+  - "*.map"
 
 # --- Features ---
 mathjax: true
+
+# --- Timezone ---
+timezone: "Africa/Addis_Ababa"
