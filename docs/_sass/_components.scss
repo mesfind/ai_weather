@@ -1,0 +1,109 @@
+// --- Modern Callouts ---
+.callout {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  margin: 1.5rem 0;
+  border-left: 4px solid;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+
+  &::before {
+    content: '';
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: currentColor;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+  }
+
+  p:last-child { margin-bottom: 0; }
+
+  &.tip {
+    background-color: var(--callout-tip-bg);
+    border-color: var(--callout-tip-border);
+    color: var(--callout-tip-text);
+    &::before { mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'); }
+  }
+
+  &.warning {
+    background-color: var(--callout-warning-bg);
+    border-color: var(--callout-warning-border);
+    color: var(--callout-warning-text);
+    &::before { mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>'); }
+  }
+
+  &.danger {
+    background-color: var(--callout-danger-bg);
+    border-color: var(--callout-danger-border);
+    color: var(--callout-danger-text);
+    &::before { mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'); }
+  }
+}
+
+// --- Code Blocks ---
+pre {
+  background-color: #1e293b; // Slate 800 (always dark for code, looks professional)
+  color: #e2e8f0;
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  box-shadow: var(--shadow);
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background-color: var(--bg-code);
+  color: var(--color-primary);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+}
+
+pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+
+// Rouge Syntax Highlighting Overrides
+.highlight .c { color: #64748b; font-style: italic; } // Comment
+.highlight .k { color: #c084fc; } // Keyword
+.highlight .s { color: #86efac; } // String
+.highlight .n { color: #e2e8f0; } // Name
+
+// --- Tables ---
+.table-wrapper {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+th, td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+th {
+  background-color: var(--bg-surface);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+tr:last-child td { border-bottom: none; }

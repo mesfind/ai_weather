@@ -1,58 +1,43 @@
-#------------------------------------------------------------
-# ai-weather/docs/_config.yml
-# Values for this lesson.
-#------------------------------------------------------------
-
-# Which carpentry is this ("swc", "dc", "lc", or "incubator")?
-carpentry: "incubator"  # Use "incubator" if this is your own custom lesson, or "swc"/"dc" if affiliated
-
-# Overall title for pages.
+# docs/_config.yml
 title: "AI Weather"
+description: "A modern, state-of-the-art lesson on AI applications in Weather Forecasting."
+url: "https://mesfindiro.github.io" # Update with your actual GitHub Pages URL
+baseurl: "/ai_weather" # Update with your repo name, or leave blank if root
 
-# Contact email address.
-email: mesfindiro@gmail.com
+# Modern Markdown & Syntax Highlighting
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: 'highlight'
+    block:
+      line_numbers: false
 
-#------------------------------------------------------------
-# Generic settings (should not need to change).
-#------------------------------------------------------------
+# SOTA SCSS Configuration
+sass:
+  sass_dir: _sass
+  style: compressed
 
-# What kind of thing is this ("workshop" or "lesson")?
-kind: "lesson"
-
-# Magic to make URLs resolve both locally and on GitHub.
-repository: mesfindiro/ai_weather  
-
-# Surveys (optional, keep commented out if not using SurveyMonkey)
-# pre_survey: "https://www.surveymonkey.com/r/swc_pre_workshop_v1?workshop_id="
-# post_survey: "https://www.surveymonkey.com/r/swc_post_workshop_v1?workshop_id="
-
-# Start time in minutes (0 to be clock-independent, 540 to show a start at 09:00 am)
-start_time: 0
-
-# Specify that things in the episodes collection should be output.
+# Modern Lesson Collection
 collections:
   episodes:
     output: true
-    permalink: /:path/
-  extras:
-    output: true
+    permalink: /episodes/:title/
 
-# Set the default layout for things in the episodes collection.
+# Default Front Matter
 defaults:
-  - values:
-      root: ..
   - scope:
       path: ""
-      type: episodes
     values:
-      layout: episode
+      layout: "default"
+  - scope:
+      path: ""
+      type: "episodes"
+    values:
+      layout: "default"
 
-# Files and directories that are not to be copied.
-exclude:
-  - Makefile
-  - bin
-  - vendor  # Good practice to add for Jekyll
-
-# Turn off built-in syntax highlighting (Carpentries uses its own)
-highlighter: false
-mathjax: true
+# Native GitHub Pages Plugins
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
