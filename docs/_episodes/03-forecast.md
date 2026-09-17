@@ -22,10 +22,6 @@ keypoints:
 
 ## End-to-End Local Model Execution and Use-Case Application
 
-**Phase 1 Lead:** Aryan *(Action: Check 2025 AIFS version)*  
-**Support Leads:** Panchali (Onset/Cessation), Docko and Narayana (Temperature Exceedance), Koomi and Shruti (Precipitation Exceedance)  
-**Audience:** All Participants (Split into Use-Case Groups)  
-**Sub Team:** Sub Team 1  
 
 ### 1. Environment and Workflow Setup
 - Utilize the Jupyter notebook environment for interactive model execution.

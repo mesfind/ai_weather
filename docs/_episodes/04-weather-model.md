@@ -23,8 +23,6 @@ keypoints:
 
 ## Evaluating Models and Exploring the AI Almanac
 
-**Leads:** Sub Team 1 (Part 1) and Sub Team 2 (Part 2)  
-**Audience:** ALL TRACKS TOGETHER (Weather and Agricultural Services). Instructions and coding perspectives are designed to be accessible to both sides. Countries are paired across tracks.
 
 ### Part 1: The AI Weather Model Scorecard
 - **Objective:** Discuss how to choose between models across evaluation metrics based on their specific use case.
