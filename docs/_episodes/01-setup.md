@@ -1,5 +1,5 @@
 ---
-title: AI Forecasting
+title: Demo 1
 teaching: 1
 exercises: 0
 questions:
@@ -11,9 +11,10 @@ keypoints:
 - 
 ---
 
-# AI Weather Forecasting
+# Setting Up AI Weather Forecasting Lab
 
-## Onset 
+## Onset
+
 ## Censsion
 
 ## Temperature
