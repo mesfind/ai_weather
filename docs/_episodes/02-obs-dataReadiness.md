@@ -1,5 +1,5 @@
 ---
-title: Demo 2 - Observational Data Readiness
+title: Demo 2 
 teaching: 1
 exercises: 0
 questions:
