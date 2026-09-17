@@ -1,20 +1,14 @@
 ---
-title: Benchmarking 
+title: Demo 4
 teaching: 30
 exercises: 15
 questions:
-- "How do we systematically compare AI weather models against climatological baselines?"
-- "What are the best practices for safely loading and standardizing NetCDF datasets?"
-- "How can we dynamically discover and categorize model outputs for evaluation?"
+- "How do we systematically compare AI weather models?"
 objectives:
 - "Understand the core configuration parameters for onset and spell benchmarking."
-- "Implement robust `xarray` loading functions to handle inconsistent NetCDF dimensions."
-- "Build dynamic preset discovery to categorize deterministic vs. probabilistic AI models."
-- "Generate automated summary scoreboards from geospatial output files."
 keypoints:
 - "Standardizing time dimensions ('day' vs 'time') is critical for robust xarray operations."
-- "Dynamic file discovery using `pathlib` prevents hardcoded pipeline failures."
-- "Benchmarking requires clear separation between reference data (climatology) and target models (e.g., AIFS)."
+
 ---
 
 <!-- MathJax -->
@@ -28,7 +22,7 @@ keypoints:
 
 
 
-# AI Forecast Benchmarking Pipeline
+# The AI Wather Model Scorecard:  Part 1
 
 When deploying Artificial Intelligence forecasting systems (like ECMWF's AIFS) in operational weather workflows, we must rigorously benchmark them against trusted baselines, such as historical climatology. 
 
