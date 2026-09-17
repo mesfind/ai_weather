@@ -1,5 +1,5 @@
 ---
-title: Demo 7 
+title: Demo 7
 teaching: 1
 exercises: 0
 questions:
@@ -10,7 +10,7 @@ objectives:
 - "Conduct a collaborative self-assessment of readiness for integration."
 keypoints:
 - "Successful MVP implementation requires aligning AI models, data availability, and specific weather thresholds."
-- "Visual readiness assessments (green, yellow, red dots) effectively highlight pipeline integration blockers."
+- "Visual readiness assessments using color codes effectively highlight pipeline integration blockers."
 - "Cross-track collaboration is essential for defining feasible content and next steps."
 ---
 
@@ -28,12 +28,12 @@ keypoints:
 - Groups share findings across their working teams.
 - The weather track shares highlights of what they trialed with AI models and presents a list of feasible content to produce to support the MVP (building on discussions at lunch).
 
-### 2. Readiness Checklist & Visual Mapping
+### 2. Readiness Checklist and Visual Mapping
 - Have people sit together and complete a checklist focused on observations.
 - **Visual Exercise:** Place color dots on a chart to indicate readiness for integration along the pipeline:
-  - 🟢 **Green:** Ready for integration
-  - 🟡 **Yellow:** Needs work / Partial readiness
-  - 🔴 **Red:** Not ready / Blockers present
+  - **Green:** Ready for integration
+  - **Yellow:** Needs work / Partial readiness
+  - **Red:** Not ready / Blockers present
 
 ### 3. Self-Assessment of Readiness
 - Participants complete a final self-assessment of their overall readiness to move forward with the selected AI models, data, and thresholds.
