@@ -21,8 +21,6 @@ keypoints:
 
 ## Deciding on AI Models, Data, and Thresholds for Service Implementation
 
-**Lead:** Katie  
-**Audience:** ALL (Groups share across their working teams; countries paired across tracks)
 
 ### 1. Cross-Track Sharing
 - Groups share findings across their working teams.
