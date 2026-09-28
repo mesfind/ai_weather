@@ -91,6 +91,136 @@ Where:
 
 ---
 
+## Deterministic Evaluation Setup 
+
+Two verification windows were evaluated for each model
+
+## ROMP Run Summary
+
+### Configuration
+
+- **Package:** Rainy Season Onset Metrics Package (ROMP), version 0.0.1.
+- **Run mode:** Deterministic (`DET`).
+- **Project:** Test ROMP run with sample data.
+- **Start time:** 2026-09-28 13:42:33.
+- **Models evaluated:** AIFS, FuXi, and GraphCast.
+- **Reference/observation dataset:** ENACTS.
+- **Evaluation years:** 2015–2022.
+- **Computational resources:** 6 cores used from 10 available CPUs.
+- **Grid:** 49 latitudes × 61 longitudes at 0.2° resolution.
+- **Spatial products:** FAR, miss rate, yearly MAE, and mean MAE maps.
+- **CMZ averages:** Not calculated because the 0.2° resolution is unsupported.
+
+## Evaluation Setup
+
+Two verification windows were evaluated for each model:
+
+| Verification window | Window length | Matching tolerance |
+|---|---:|---:|
+| Days 1–15 after initialization | 15 days | 3 days |
+| Days 16–30 after initialization | 30 days | 5 days |
+
+The log confirms that the following spatial NetCDF and PNG products were successfully created:
+
+- `spatial_metrics_AIFS_1-15.nc`
+- `spatial_metrics_AIFS_16-30.nc`
+- `spatial_metrics_FuXi_1-15.nc`
+- `spatial_metrics_FuXi_16-30.nc`
+- `spatial_metrics_GraphCast_1-15.nc`
+- The corresponding spatial metric figures.
+
+## AIFS Results
+
+### Verification window: Days 1–15
+
+| Year | TP | FP | FN | TN |
+|---:|---:|---:|---:|---:|
+| 2015 | 193 | 170 | 344 | 480 |
+| 2016 | 243 | 247 | 217 | 617 |
+| 2017 | 347 | 443 | 132 | 475 |
+| 2018 | 251 | 280 | 155 | 542 |
+| 2019 | 994 | 1,362 | 355 | 1,620 |
+| 2020 | 880 | 836 | 652 | 2,099 |
+| 2021 | 758 | 1,354 | 625 | 3,991 |
+| 2022 | 489 | 700 | 874 | 4,130 |
+
+### Verification window: Days 16–30
+
+| Year | TP | FP | FN | TN |
+|---:|---:|---:|---:|---:|
+| 2015 | 22 | 48 | 372 | 382 |
+| 2016 | 18 | 83 | 283 | 450 |
+| 2017 | 40 | 63 | 233 | 271 |
+| 2018 | 13 | 42 | 293 | 349 |
+| 2019 | 199 | 350 | 663 | 763 |
+| 2020 | 394 | 320 | 867 | 1,170 |
+| 2021 | 387 | 684 | 1,052 | 2,493 |
+| 2022 | 412 | 799 | 1,266 | 2,527 |
+
+**Interpretation:** AIFS produced substantially more true positives in the days 1–15 window than in the days 16–30 window. The longer-lead window also produced many more misses, indicating weaker onset detection at extended lead times.
+
+## FuXi Results
+
+### Verification window: Days 1–15
+
+| Year | TP | FP | FN | TN |
+|---:|---:|---:|---:|---:|
+| 2015 | 138 | 130 | 418 | 501 |
+| 2016 | 177 | 178 | 346 | 623 |
+| 2017 | 268 | 351 | 232 | 546 |
+| 2018 | 223 | 268 | 180 | 557 |
+| 2019 | 183 | 248 | 209 | 376 |
+| 2020 | 223 | 279 | 266 | 361 |
+| 2021 | 160 | 319 | 250 | 892 |
+| 2022 | 111 | 164 | 274 | 851 |
+
+### Verification window: Days 16–30
+
+| Year | TP | FP | FN | TN |
+|---:|---:|---:|---:|---:|
+| 2015 | 10 | 44 | 485 | 380 |
+| 2016 | 24 | 67 | 391 | 487 |
+| 2017 | 28 | 46 | 363 | 341 |
+| 2018 | 5 | 15 | 348 | 369 |
+| 2019 | 11 | 29 | 372 | 173 |
+| 2020 | 15 | 39 | 360 | 213 |
+| 2021 | 47 | 87 | 405 | 603 |
+| 2022 | 23 | 75 | 447 | 580 |
+
+**Interpretation:** FuXi shows a marked reduction in true positives for the days 16–30 window, with high miss counts in every year. Its long-lead onset detection is therefore considerably weaker than its short-lead performance.
+
+## GraphCast Results
+
+### Verification window: Days 1–15
+
+| Year | TP | FP | FN | TN |
+|---:|---:|---:|---:|---:|
+| 2015 | 280 | 339 | 219 | 349 |
+| 2016 | 263 | 444 | 139 | 478 |
+| 2017 | 371 | 566 | 92 | 368 |
+| 2018 | 248 | 395 | 117 | 468 |
+| 2019 | 269 | 476 | 63 | 208 |
+| 2020 | 306 | 426 | 114 | 283 |
+| 2021 | 230 | 516 | 125 | 750 |
+| 2022 | 192 | 318 | 153 | 737 |
+
+**Interpretation:** Among the completed short-lead evaluations, GraphCast generally produced relatively few misses, particularly in 2017–2021. However, it also generated many false alarms, so its stronger detection rate came at the cost of lower forecast precision.
+
+The log excerpt ends while GraphCast is beginning the **days 16–30** evaluation; complete GraphCast long-lead results are not available in the supplied run output. citefile:1
+
+## Main Findings
+
+- The ROMP run completed the AIFS and FuXi evaluations for both verification windows.
+- GraphCast days 1–15 evaluation completed, but its days 16–30 evaluation is incomplete in the supplied log.
+- Short-lead forecasts generally performed better than long-lead forecasts.
+- Extending the verification period from days 1–15 to days 16–30 substantially increased the number of missed onsets for both AIFS and FuXi.
+- GraphCast had the strongest short-lead detection pattern among the completed results, but it produced frequent false alarms.
+- All spatial metric files were saved successfully for the completed model/window combinations.
+- No fatal error or traceback appears in the supplied output.
+
+
+
+
 **3. Area Under the ROC Curve (AUC)**
 
 The **Area Under the ROC Curve (AUC)** measures how well a forecast can **discriminate** between events that occur and those that don't.
