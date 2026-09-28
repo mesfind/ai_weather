@@ -12,9 +12,8 @@ objectives:
 - "Configure and run deterministic benchmarks (MAE, FAR, Miss Rate) and probabilistic benchmarks (BS, RPS, AUC, Reliability).,Use the swappable, per-run Python configuration system correctly, including CLI mode selection."
 - "Apply and diagnose Isotonic Distributional Regression (IDR) calibration on probabilistic onset forecasts.,Recognize and fix the most common configuration, data, and pipeline failure modes."
 keypoints:
-- "Model selection must be driven by specific use-case requirements and relevant evaluation metrics."
-- "Interactive tools like the AI Almanac facilitate cross-track collaboration and practical feedback."
-- "Pairing countries across weather and agricultural tracks ensures diverse and robust metric evaluation."
+- "Onset is derived identically from observations and forecasts using a wet-spell/dry-spell-veto rule, not read off raw model output."
+- "Deterministic and probabilistic tracks use non-comparable metrics (FAR/MAE/MR vs BS/RPS/AUC) and must never partially mix within one run."
 ---
 
 <!-- MathJax -->
