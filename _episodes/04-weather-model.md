@@ -219,7 +219,88 @@ The log excerpt ends while GraphCast is beginning the **days 16–30** evaluatio
 - No fatal error or traceback appears in the supplied output.
 
 
+# ROMP Probabilistic Onset Evaluation: AIFS_ENS
 
+## Run Configuration
+
+- **Command Executed**: `momp-run -p notebooks/config_et.in --mode prob`
+- **Model Evaluated**: AIFS_ENS (25 ensemble members)
+- **Evaluation Mode**: Probabilistic (CLI override)
+- **Observational Reference**: ENACTS rainfall data
+- **Spatial Domain**: 49 lats × 61 lons (2,989 valid grid points via `jjas_seasonal_mask_0p25.nc`)
+- **Verification Windows**: Days 1–15 and Days 16–30
+
+---
+
+## Processing Summary
+
+- **Temporal Scope**: 2015–2022 (8 years)
+- **Initializations**: 15 dates per year (May–July)
+- **Total Potential Forecasts**: ~1,120,875 per window
+- **Valid Forecasts Processed**: ~120,000+ unique member-forecast combinations per window
+- **Climatological Reference**: Multi-year climatology (8 years) using day-of-year onset comparison
+
+---
+
+## Skill Scores: Verification Window (Days 1–15)
+
+| Metric | AIFS_ENS Forecast | Climatology Reference |
+|--------|-------------------|-----------------------|
+| **Fair Brier Score** | 0.0959 | **0.0677** *(Lower is better)* |
+| **Fair RPS** | 0.4320 | **0.3164** *(Lower is better)* |
+| **AUC** | 0.699 | **0.886** *(Higher is better)* |
+
+### Bin-wise Fair Brier Skill Score (BSS)
+- **Days 1–5**: `-0.282`
+- **Days 6–10**: `-0.394`
+- **Days 11–15**: `-0.558`
+
+> **Overall Fair BSS**: `-0.415` &nbsp;|&nbsp; **Overall Fair RPSS**: `-0.366`
+
+---
+
+## Skill Scores: Verification Window (Days 16–30)
+
+| Metric | AIFS_ENS Forecast | Climatology Reference |
+|--------|-------------------|-----------------------|
+| **Fair Brier Score** | 0.0814 | **0.0533** *(Lower is better)* |
+| **Fair RPS** | 0.5205 | **0.2936** *(Lower is better)* |
+| **AUC** | 0.503 | **0.880** *(Higher is better)* |
+
+### Bin-wise Fair Brier Skill Score (BSS)
+- **Days 16–20**: `-0.551`
+- **Days 21–25**: `-0.521`
+- **Days 26–30**: `-0.502`
+
+> **Overall Fair BSS**: `-0.528` &nbsp;|&nbsp; **Overall Fair RPSS**: `-0.773`
+
+---
+
+## Reliability Analysis
+
+The model exhibits a strong systematic tendency to **under-predict** the probability of onset.
+
+| Window | Forecast Prob. Bin | N_Forecasts | Mean Forecast Prob. | Observed Reliability |
+|--------|--------------------|-------------|---------------------|----------------------|
+| **1–15 Days** | 0.0 – 0.1 | 111,238 | `0.006` | **`0.078`** |
+| **16–30 Days**| 0.0 – 0.1 | 127,466 | `0.000` | **`0.081`** |
+
+- **Interpretation**: When the model predicts a near-zero probability of onset, the actual observed onset rate is ~8%. The ensemble is consistently underforecasting onset events.
+
+---
+
+## Key Takeaways & Next Steps
+
+1. **Negative Skill Across the Board**  
+   AIFS_ENS probabilistic onset forecasts currently perform **worse than the climatological baseline** (consistently negative BSS and RPSS).
+2. **Skill Degradation with Lead Time**  
+   Forecast skill drops significantly in the 16–30 day window. The AUC approaches `0.50`, indicating virtually no discrimination skill beyond random chance at longer lead times.
+3. **Reliability Bias**  
+   The ensemble heavily under-predicts onset probabilities, assigning near-zero probabilities to events that occur ~8% of the time.
+4. **Recommended Next Steps**  
+   - Apply **ensemble calibration** (e.g., Logistic Regression, EMOS) to correct the underforecasting bias.
+   - Review onset detection thresholds and rainfall accumulation logic in the AIFS_ENS post-processing pipeline.
+   - Investigate if specific initialization dates or sub-regions are driving the bulk of the negative skill.
 
 **3. Area Under the ROC Curve (AUC)**
 
