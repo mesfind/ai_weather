@@ -1,8 +1,3 @@
-Here is a professionally rewritten, logically restructured, and coherent version of your document. The flow has been reorganized to group related concepts (e.g., moving the AUC definition into the main metrics section), typographical errors have been corrected, and the missing conceptual definitions (specifically for **Reliability/Calibration**) have been added to ensure completeness.
-
----
-
-```yaml
 ---
 title: "Demo 4: The AI Weather Model Scorecard"
 teaching: 30
@@ -22,7 +17,6 @@ keypoints:
   - "Onset is derived identically from observations and forecasts using a wet-spell/dry-spell veto rule, not read directly from raw model output."
   - "Deterministic and probabilistic tracks use non-comparable metric families (e.g., FAR/MAE/MR vs. BS/RPS/AUC) and must never be mixed within a single evaluation run."
 ---
-```
 
 <!-- MathJax -->
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
