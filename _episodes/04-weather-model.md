@@ -62,8 +62,8 @@ The pipeline enforces a strict separation between two evaluation tracks. Determi
 ### 1. Deterministic Track (Single Forecast)
 | Metric | Formula Concept | Interpretation |
 |--------|----------------|----------------|
-| **MAE** (Mean Absolute Error) | $\| \text{forecast\_onset} - \text{obs\_onset} \|$ | Average error in days. |
-| **FAR** (False Alarm Ratio) | $\frac{\text{false\_alarms}}{\text{hits} + \text{false\_alarms}}$ | Percentage of predicted onsets that did not occur. |
+| **MAE** (Mean Absolute Error) | $\|\text{forecast onset} - \text{obs onset} \|$ | Average error in days. |
+| **FAR** (False Alarm Ratio) | $\frac{\text{false alarms}}{\text{hits} + \text{false alarms}}$ | Percentage of predicted onsets that did not occur. |
 | **MR** (Miss Rate) | $\frac{\text{misses}}{\text{hits} + \text{misses}}$ | Percentage of actual onsets that were missed. |
 
 ### 2. Probabilistic Track (Ensemble Forecasts)
