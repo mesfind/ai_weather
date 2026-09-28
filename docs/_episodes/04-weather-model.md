@@ -91,8 +91,8 @@ Model assignments to specific tracks are defined centrally in the `BENCHMARK_MOD
 | **AIFS** | Deterministic | ECMWF | ~25 km (0.25°) |
 | **FuXi** | Deterministic | Fudan University | ~25 km |
 | **GraphCast** | Deterministic | Google DeepMind | ~25 km |
-| **AIFS-ENS** | Probabilistic (50 members) | ECMWF | ~50 km |
-| **GenCast** | Probabilistic (Diffusion, 52 members) | Google DeepMind | ~50 km |
+| **AIFS-ENS** | Probabilistic (50 members) | ECMWF | ~25 km |
+| **GenCast** | Probabilistic (Diffusion, 52 members) | Google DeepMind | ~25 km |
 
 ---
 
