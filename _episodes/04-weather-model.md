@@ -30,6 +30,59 @@ keypoints:
 - **Activity:** .
 - **Facilitation:** Ensure the coding instructions and conceptual explanations are easy to engage with for both weather and agricultural services participants.
 
+##  Metrics for probablistic forecast evaluation:
+
+**1. Brier Score**
+
+The **Brier Score (BS)** is the mean squared difference between predicted probabilities and actual outcomes. It measures the accuracy of probabilistic predictions for binary events.
+
+$$\text{Brier Score} = \frac{1}{N} \sum_{i=1}^{N} (p_i - o_i)^2$$
+
+Where:
+- $p_i$ = predicted probability for forecast $i$
+- $o_i$ = observed outcome (0 or 1) for forecast $i$
+- $N$ = total number of forecasts
+
+### Key Properties:
+- **Range**: 0 to 1
+- **Perfect score**: 0 (all forecasts are perfectly confident and correct)
+- **Worst score**: 1 (completely wrong confident forecasts)
+- **Lower is better**
+
+---
+
+**Ranked Probability Score (RPS)**
+
+The **Ranked Probability Score (RPS)** extends the Brier Score to **multiple categories**. It's ideal when your event can fall into multiple ordered bins (e.g., "Days 1-5", "Days 6-10", "Days 11-15").
+
+$$\text{RPS} = \frac{1}{K-1} \sum_{k=1}^{K-1} \left( \sum_{j=1}^{k} p_j - \sum_{j=1}^{k} o_j \right)^2$$
+
+Where:
+- $K$ = number of categories
+- $p_j$ = predicted probability for category $j$
+- $o_j$ = 1 if event occurred in category $j$, 0 otherwise
+
+### Key Properties:
+- **Range**: 0 to 1 (typically, can exceed 1 in extreme cases)
+- **Perfect score**: 0
+- **Sensitive to distance**: Penalizes forecasts more when they're "farther" from the correct category
+- **Lower is better**
+
+---
+
+**3. Area Under the ROC Curve (AUC)**
+
+The **Area Under the ROC Curve (AUC)** measures how well a forecast can **discriminate** between events that occur and those that don't.
+
+Think of it as answering: "If I pick a random case where the event occurred and a random case where it didn't, what's the probability that my forecast gives a higher probability to the event case?"
+
+### Key Properties:
+- **Range**: 0 to 1
+- **Perfect score**: 1.0 (perfect discrimination)
+- **No skill**: 0.5 (random guessing)
+- **Higher is better**
+
+
 ### Part 2: AI Almanac Exploration and Key Ingredients
 - **Objective:** Explore the AI Almanac and gather feedback on necessary components to assess metrics and use cases in an easy, interactive way.
 - **Activity:** 
