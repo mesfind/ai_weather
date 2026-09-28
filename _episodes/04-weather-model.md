@@ -32,8 +32,7 @@ By the end of this lesson, you will be able to:
 2. Configure and execute deterministic benchmarks (MAE, FAR, Miss Rate).
 3. Configure and execute probabilistic benchmarks (Brier Score, Ranked Probability Score, AUC, Reliability).
 4. Correctly utilize the swappable, per-run Python configuration system and CLI mode selection.
-5. Apply and validate Isotonic Distributional Regression (IDR) calibration for probabilistic onset forecasts.
-6. Diagnose and resolve common configuration, data, and pipeline errors.
+5. Diagnose and resolve common configuration, data, and pipeline errors.
 
 ---
 
