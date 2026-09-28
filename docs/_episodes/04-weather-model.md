@@ -25,7 +25,16 @@ keypoints:
 ## Evaluating AI Candidate Models 
 
 ### Part 1: The AI Weather Model Scorecard
-- **Objective:** Discuss how to choose between models across evaluation metrics based on their specific use case to inform definition and target forecast.
+- **Objective:**
+     - Discuss how to choose between models across evaluation metrics based on their specific use case to inform definition and target forecast.
+     - Identify top AI model candidates to further improve skill and ways they are getting the forecast wrong to inform bias correction techniques applied
+     - Identify locations of interest where AI models may have some skills at detecting onset this season to inform where dissemination opportunities are possible
+
+List of Models are"
+ - Deterministic- AIFS, Graphcaset and FuXi,
+ - Probabilistic- AIFS ensemble , GenCast
+
+
 
 ##  Metrics for probablistic forecast evaluation
 
