@@ -21,7 +21,7 @@ keypoints:
 
 # The AI Weather Model Scorecard
 
-This lesson documents the full ROMP (Rainy season Onset Metrics Package) / MOMP benchmarking workflow used to evaluate AI weather forecast models (AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall (ENACTS) for Ethiopian rainy season onset prediction — covering both deterministic and probabilistic evaluation tracks, the configuration system that drives them
+This lesson documents the full ROMP (Rainy season Onset Metrics Package) / MOMP benchmarking workflow used to evaluate AI weather forecast models (AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall (CHRIPS) for Ethiopian rainy season onset prediction — covering both deterministic and probabilistic evaluation tracks, the configuration system that drives them
 
 
 
