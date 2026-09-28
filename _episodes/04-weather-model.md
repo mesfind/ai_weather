@@ -35,6 +35,21 @@ List of Models are"
  - Probabilistic- AIFS ensemble , GenCast
 
 
+## Skill Score Definition
+
+
+To calculate Skill Scores, we use the climatology model as the reference baseline. A Skill Score (SS) is defined as:
+
+\[
+SS = 1 - \frac{\text{Metric}_{\text{model}}}{\text{Metric}_{\text{climatology}}}
+\]
+
+## Interpretation
+
+- \(SS = 1\): Perfect forecast.  
+- \(SS > 0\): The model outperforms climatology (positive skill).  
+- \(SS = 0\): The model performs identically to climatology.  
+- \(SS < 0\): The model performs worse than climatology (negative skill).
 
 ##  Metrics for probablistic forecast evaluation
 
