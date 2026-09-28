@@ -43,7 +43,7 @@ By the end of this lesson, you will be able to:
 
 ---
 
-## 🌍 Context: Why Onset Matters
+##  Why Onset Matters
 
 In Ethiopian agriculture, the **onset of the rainy season** (Kiremt: June–September) dictates planting dates for millions of smallholder farmers. A late or false onset signal can lead to crop failure from planting too early, lost growing days from planting too late, and regional food insecurity. 
 
@@ -55,7 +55,7 @@ In Ethiopian agriculture, the **onset of the rainy season** (Kiremt: June–Sept
 
 ---
 
-## 📊 Benchmarking Metrics
+## Benchmarking Metrics
 
 The pipeline enforces a strict separation between two evaluation tracks. Deterministic and probabilistic models produce fundamentally different outputs and require non-comparable metric families. **A single run must be exclusively one or the other—never a mix.**
 
@@ -89,7 +89,7 @@ $$
 
 ---
 
-## 🤖 Models in the Benchmark
+## Models in the Benchmark
 
 Model assignments to specific tracks are defined centrally in the `BENCHMARK_MODEL_CATALOG` within the infrastructure `config.py` to prevent duplication or inconsistency.
 
@@ -103,7 +103,7 @@ Model assignments to specific tracks are defined centrally in the `BENCHMARK_MOD
 
 ---
 
-## ⚙️ Evaluation Setup
+## Evaluation Setup
 
 Two verification windows are evaluated for each model to assess short-lead versus extended-lead performance:
 
