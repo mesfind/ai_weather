@@ -22,15 +22,12 @@ keypoints:
 
 # The AI Weather Model Scorecard
 
-## Evaluating Models and Exploring the AI Almanac
-
+## Evaluating AI Candidate Models 
 
 ### Part 1: The AI Weather Model Scorecard
-- **Objective:** Discuss how to choose between models across evaluation metrics based on their specific use case.
-- **Activity:** .
-- **Facilitation:** Ensure the coding instructions and conceptual explanations are easy to engage with for both weather and agricultural services participants.
+- **Objective:** Discuss how to choose between models across evaluation metrics based on their specific use case to inform definition and target forecast.
 
-##  Metrics for probablistic forecast evaluation:
+##  Metrics for probablistic forecast evaluation
 
 **1. Brier Score**
 
