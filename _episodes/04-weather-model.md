@@ -23,6 +23,16 @@ keypoints:
 
 This lesson documents the full ROMP (Rainy season Onset Metrics Package) / MOMP benchmarking workflow used to evaluate AI weather forecast models (AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall (CHRIPS) for Ethiopian rainy season onset prediction — covering both deterministic and probabilistic evaluation tracks, the configuration system that drives them
 
+## 🎯 Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+1. Understand the theoretical foundations of rainy season onset detection
+2. Configure and run deterministic benchmarks (MAE, FAR, Miss Rate)
+3. Configure and run probabilistic benchmarks (BS, RPS, AUC, Reliability)
+4. Use the swappable per-run Python configuration system and CLI mode selection correctly
+5. Apply and validate IDR calibration for probabilistic onset forecasts
+6. Diagnose and fix the most common configuration, data, and pipeline errors
 
 
 In Ethiopian agriculture, the **onset of the rainy season** (Kiremt: June–September) determines planting dates for millions of smallholder farmers. A late or false onset signal can lead to crop failure from planting too early, lost growing days from planting too late, and food insecurity at regional scale.
