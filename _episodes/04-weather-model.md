@@ -103,6 +103,17 @@ Think of it as answering: "If I pick a random case where the event occurred and 
 - **No skill**: 0.5 (random guessing)
 - **Higher is better**
 
+## Model Skill Rankings (Reference: Climatology = 0.0)
+
+| Model       | mean_mae_skill | false_alarm_rate_skill | miss_rate_skill | Overall_Skill_Score |
+|-------------|----------------|------------------------|-----------------|---------------------|
+| climatology | 0.000000       | 0.000000               | 0.000000        | 0.000000            |
+| AIFS_ENS    | 0.122734       | 0.473197               | -0.308828       | 0.095701            |
+| gencast     | -0.043218      | -0.389341              | 0.364237        | -0.022774           |
+| AIFS        | -0.201814      | -0.275234              | 0.323369        | -0.051226           |
+| fuxi        | -0.271470      | 0.203178               | -0.262507       | -0.110266           |
+| graphcast   | -0.290775      | -0.541115              | 0.329475        | -0.167472           |
+
 
 ### Part 2: AI Almanac Exploration and Key Ingredients
 - **Objective:** Explore the AI Almanac and gather feedback on necessary components to assess metrics and use cases in an easy, interactive way.
