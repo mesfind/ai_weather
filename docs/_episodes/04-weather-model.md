@@ -1,7 +1,7 @@
 ---
 title: Demo 4
 teaching: 30
-exercises: 15
+exercises: 60
 questions:
 - "How do we systematically benchmark AI weather models against local observations for rainy season onset?"
 - "How do deterministic and probabilistic evaluation tracks differ, and why must they stay strictly separated?"
@@ -20,6 +20,9 @@ keypoints:
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 # The AI Weather Model Scorecard
+
+This lesson documents the full ROMP (Rainy season Onset Metrics Package) / MOMP benchmarking workflow used to evaluate AI weather forecast models (AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall (ENACTS) for Ethiopian rainy season onset prediction — covering both deterministic and probabilistic evaluation tracks, the configuration system that drives them
+
 
 ## Evaluating AI Candidate Models 
 
