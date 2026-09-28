@@ -24,6 +24,52 @@ keypoints:
 This lesson documents the full ROMP (Rainy season Onset Metrics Package) / MOMP benchmarking workflow used to evaluate AI weather forecast models (AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall (ENACTS) for Ethiopian rainy season onset prediction — covering both deterministic and probabilistic evaluation tracks, the configuration system that drives them
 
 
+
+In Ethiopian agriculture, the **onset of the rainy season** (Kiremt: June–September) determines planting dates for millions of smallholder farmers. A late or false onset signal can lead to crop failure from planting too early, lost growing days from planting too late, and food insecurity at regional scale.
+
+**Onset is not read off raw model output** — it is derived identically from daily rainfall for observations, the reference model, and every forecast model, so the resulting quantities are genuinely comparable:
+
+- **Wet-spell trigger**: a candidate onset day requires at least `wet_init` mm of initial rainfall, followed by `wet_spell` consecutive days with ≥ `wet_threshold` mm/day.
+- **Dry-spell veto**: a candidate onset is invalidated if a dry spell (`dry_spell` consecutive days below `dry_threshold` mm/day) occurs within a `dry_extent`-day window afterward — this rejects false starts.
+- Applied per grid cell, per year, within a defined search window (`start_date`–`end_date`).
+
+### Benchmarking Metrics
+
+The pipeline enforces a hard separation between two evaluation tracks, because deterministic and probabilistic models produce fundamentally different outputs and require non-comparable metric families. **A run is always one or the other — never a mix.**
+
+#### Deterministic Track (Single Forecast)
+
+| Metric | Formula Concept | Interpretation |
+|--------|----------------|----------------|
+| **MAE** (Mean Absolute Error) | \|forecast_onset − obs_onset\| | Average error in days |
+| **FAR** (False Alarm Ratio) | false_alarms / (hits + false_alarms) | % of predicted onsets that didn't occur |
+| **MR** (Miss Rate) | misses / (hits + misses) | % of actual onsets that were missed |
+
+#### Probabilistic Track (Ensemble Forecasts)
+
+| Metric | Interpretation |
+|--------|----------------|
+| **BS** (Brier Score) / **BSS** (Skill Score) | Squared error of probability forecast; skill score is improvement over climatology |
+| **RPS** (Ranked Probability Score) / **RPSS** | Distance between forecast & observed CDF across ordered categories |
+| **AUC** (Area Under ROC Curve) | Discrimination ability (0.5 = no skill, 1.0 = perfect) |
+| **Reliability** | Calibration — does a 70% forecast probability correspond to a 70% observed frequency? |
+
+Both tracks report a final **skill score relative to a reference model** (climatology by default, or a named model) — the raw metric alone doesn't establish whether the AI model beats a naive climatological guess; the skill score does.
+
+### Models in the Benchmark
+
+| Model | Type | Origin | Resolution |
+|-------|------|--------|-----------|
+| **AIFS** | Deterministic | ECMWF | ~25 km (0.25°) |
+| **FuXi** | Deterministic | Fudan University | ~25 km |
+| **GraphCast** | Deterministic | Google DeepMind | ~25 km |
+| **AIFS-ENS** | Probabilistic (50 members) | ECMWF | ~50 km |
+| **GenCast** | Probabilistic (diffusion, 52 members) | Google DeepMind | ~50 km |
+
+Which models belong to which track is defined in exactly one place — `BENCHMARK_MODEL_CATALOG` in the infrastructure `config.py` — never duplicated per run.
+
+
+
 ## Evaluating AI Candidate Models 
 
 ### Part 1: The AI Weather Model Scorecard
