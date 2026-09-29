@@ -1,0 +1,191 @@
+# ==============================================================================
+# Rainy season Onset Metrics Package (ROMP) Configuration
+# Version: 0.0.1
+# Description: Workflow configuration for evaluating rainy season onset forecast 
+# ==============================================================================
+#
+# NOTE ON MODE SWITCHING:
+# This file no longer contains model lists or metric/plot flags for
+# deterministic vs. probabilistic evaluation. Those are derived
+# automatically from BENCHMARK_MODEL_CATALOG in config.py, based on the
+# `mode` variable below. Never hand-edit a model list or a metric flag
+# here — change `mode` (or set the ROMP_MODE environment variable, or
+# pass mode= to execute_momp_benchmark()) and everything downstream
+# (model_list, model_dir_list, FAR/MAE/MR, BS/RPS/AUC, plot flags) is
+# computed consistently in one place.
+# ==============================================================================
+
+import os
+from pathlib import Path
+
+# ------------------------------------------------------------------------------
+# DYNAMIC PATH RESOLUTION (Using pathlib for clean parent navigation)
+# ------------------------------------------------------------------------------
+# Resolve paths relative to this config file's location to avoid absolute paths.
+# File location: .../ai_weather/apps/benchmarking/ROMP/momp/params/config.in
+
+_CURRENT_DIR = Path(__file__).resolve().parent  # The 'params' directory
+
+# Using pathlib's .parents index to navigate up the directory tree.
+# .parents[0] -> momp
+# .parents[1] -> ROMP
+# .parents[2] -> benchmarking
+# .parents[3] -> apps
+# .parents[4] -> inner 'ai_weather'
+# .parents[5] -> outer 'ai_weather' (This is your defined Project Root)
+
+_PROJ_ROOT = os.getenv("PROJ_ROOT", str(_CURRENT_DIR.parents[5]))
+
+# ROMP root is inside the inner 'ai_weather' subdirectory
+_ROMP_ROOT = os.getenv("ROMP_ROOT", str(_CURRENT_DIR.parents[4] / "apps" / "benchmarking" / "ROMP"))
+
+# Data directory is assumed to be at the project root level
+_DATA_DIR = os.path.join(_PROJ_ROOT, "data")
+
+# Package directory (using 'momp' as it exists on your disk)
+pkg_dir = os.path.join(_ROMP_ROOT, "momp")
+
+# ------------------------------------------------------------------------------
+# 1. CORE STRUCTURE & DIMENSIONS
+# ------------------------------------------------------------------------------
+project_name = "deterministic or probabilistic benchmarking with ENACTS data"
+
+# Internal data layout (e.g., dimensions in the processed case).
+layout = ("model", "verification_window")
+
+# Evaluation mode: "det" / "deterministic" or "prob" / "probabilistic".
+# Priority when the pipeline resolves mode: explicit apply_overrides(mode=...)
+# call > this value > ROMP_MODE environment variable > "det" fallback.
+# Changing this ONE line (or setting ROMP_MODE) is the only thing needed
+# to switch modes — model_list, model_dir_list, model_var_list,
+# unit_cvt_list, file_pattern_list, probabilistic, members,
+# onset_percentage_threshold, FAR/MAE/MR, BS/RPS/AUC/Reliability/skill_score,
+# and every mode-dependent plot_* flag are all derived automatically from
+# BENCHMARK_MODEL_CATALOG in config.py via compute_mode_overrides().
+mode = os.environ.get("ROMP_MODE", "det")
+
+# ------------------------------------------------------------------------------
+# 2. OBSERVATION DATA SETTINGS
+# ------------------------------------------------------------------------------
+obs = "ENACTS"
+obs_dir = os.path.join(_DATA_DIR, "external/ENACTS")
+
+# Pattern to find files. {} is replaced by date/year components.
+obs_file_pattern = ("{}.nc",) 
+
+obs_var = "precip"
+obs_unit_cvt = None
+
+# ------------------------------------------------------------------------------
+# 3. REFERENCE MODEL (BENCHMARK) SETTINGS
+# ------------------------------------------------------------------------------
+ref_model = "climatology"
+ref_model_dir = os.path.join(_DATA_DIR, "external/ENACTS") 
+
+ref_model_file_pattern = "{}.nc"
+ref_model_var = "precip"
+ref_model_unit_cvt = None
+
+# ------------------------------------------------------------------------------
+# 4. FORECAST MODEL SETTINGS
+# ------------------------------------------------------------------------------
+# Intentionally empty. model_dir_list, model_var_list, unit_cvt_list, and
+# file_pattern_list are computed automatically from `mode` and
+# BENCHMARK_MODEL_CATALOG — do not set them here, they will be overwritten.
+
+# ------------------------------------------------------------------------------
+# 5. REGION DEFINITIONS
+# ------------------------------------------------------------------------------
+region = "Ethiopia"
+nc_mask = os.path.join(_DATA_DIR, "jjas_100mm_rainfall_mask_0p25.nc")
+shpfile_dir = os.path.join(_DATA_DIR, "external/shapefile")
+polygon = False
+
+# ------------------------------------------------------------------------------
+# 6. ONSET CRITERIA (Physics Logic)
+# ------------------------------------------------------------------------------
+wet_init = 1
+wet_threshold = 20
+wet_spell = 3
+dry_threshold = 1
+dry_spell = 7
+
+# Must be >= dry_spell
+dry_extent = 7 
+
+thresh_file = None
+thresh_var = None
+
+# Note: onset_percentage_threshold is ALSO set per-mode by
+# compute_mode_overrides() (0.5 for probabilistic, None for deterministic).
+# The mode-derived value takes precedence; this is just the base default.
+onset_percentage_threshold = 0.5
+
+# ------------------------------------------------------------------------------
+# 7. TEMPORAL SETTINGS (Dates & Years)
+# ------------------------------------------------------------------------------
+start_date = (2015, 5, 1)
+end_date = (2022, 7, 31)
+
+start_year_clim = 2015
+end_year_clim = 2022
+
+init_days = (0, 3)
+init_type = "weekly"
+
+date_filter_year = 2022 
+
+# ------------------------------------------------------------------------------
+# 8. EVALUATION & VERIFICATION PARAMETERS
+# ------------------------------------------------------------------------------
+verification_window_list = ((1, 15), (16, 30))
+tolerance_days_list = (3, 5)
+max_forecast_day = 30
+day_bins = ((1, 5), (6, 10), (11, 15), (16, 20), (21, 25), (26, 30))
+
+# ------------------------------------------------------------------------------
+# 9. METRICS SELECTION
+# ------------------------------------------------------------------------------
+# Intentionally empty. FAR, MAE, MR, probabilistic, members,
+# BS, RPS, AUC, Reliability, skill_score are ALL derived automatically
+# from `mode` via compute_mode_overrides() in config.py — do not set
+# them here, they will be overwritten on every get_cfg() call.
+
+# ------------------------------------------------------------------------------
+# 10. OUTPUT & GRAPHICS SETTINGS
+# ------------------------------------------------------------------------------
+dir_out = os.path.join(_DATA_DIR, "ROMP_OUT/et/output")
+dir_fig = os.path.join(_DATA_DIR, "ROMP_OUT/et/figure")
+
+save_fig = True                 
+save_nc_spatial_far_mr_mae = True 
+save_csv_score = True             
+save_nc_climatology = True        
+
+# Mode-independent plot settings only. plot_spatial_far_mr_mae,
+# plot_heatmap_bss_auc, plot_reliability, plot_panel_heatmap_error,
+# plot_panel_heatmap_skill, and plot_bar_bss_rpss_auc are ALL derived
+# automatically per mode by compute_mode_overrides() — do not set them
+# here, they will be overwritten.
+plot_climatology_onset = True      
+
+show_plot = False                  
+show_panel = True                  
+
+# ------------------------------------------------------------------------------
+# 11. PARALLELIZATION SETTINGS
+# ------------------------------------------------------------------------------
+parallel = True  
+
+# ------------------------------------------------------------------------------
+# 12. DEBUG SETTINGS
+# ------------------------------------------------------------------------------
+debug = False  
+
+# ------------------------------------------------------------------------------
+# PARAMS RESERVED FOR FUTURE VERSIONS
+# ------------------------------------------------------------------------------
+mok = (5, 15)
+years = None
+years_clim = None
+fallback_date = None

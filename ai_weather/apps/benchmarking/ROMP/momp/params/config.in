@@ -1,0 +1,184 @@
+# ==============================================================================
+# Rainy season Onset Metrics Package (ROMP) Configuration
+# Version: 0.0.1
+# Description: Workflow configuration for evaluating rainy season onset forecast 
+# ==============================================================================
+
+import os
+from pathlib import Path
+
+# ------------------------------------------------------------------------------
+# DYNAMIC PATH RESOLUTION (Using pathlib for clean parent navigation)
+# ------------------------------------------------------------------------------
+# Resolve paths relative to this config file's location to avoid absolute paths.
+# File location: .../ai_weather/apps/benchmarking/ROMP/momp/params/config.in
+
+_CURRENT_DIR = Path(__file__).resolve().parent  # The 'params' directory
+
+# Using pathlib's .parents index to navigate up the directory tree.
+# .parents[0] -> momp
+# .parents[1] -> ROMP
+# .parents[2] -> benchmarking
+# .parents[3] -> apps
+# .parents[4] -> inner 'ai_weather'
+# .parents[5] -> outer 'ai_weather' (This is your defined Project Root)
+
+_PROJ_ROOT = os.getenv("PROJ_ROOT", str(_CURRENT_DIR.parents[5]))
+
+# ROMP root is inside the inner 'ai_weather' subdirectory
+_ROMP_ROOT = os.getenv("ROMP_ROOT", str(_CURRENT_DIR.parents[4] / "apps" / "benchmarking" / "ROMP"))
+
+# Data directory is assumed to be at the project root level
+_DATA_DIR = os.path.join(_PROJ_ROOT, "data")
+
+# Package directory (using 'momp' as it exists on your disk)
+pkg_dir = os.path.join(_ROMP_ROOT, "momp")
+
+# ------------------------------------------------------------------------------
+# 1. CORE STRUCTURE & DIMENSIONS
+# ------------------------------------------------------------------------------
+project_name = "deterministic or probabilistic benchmarking with ENACTS data"
+
+# Internal data layout (e.g., dimensions in the processed case).
+layout = ("model", "verification_window")
+
+# List of models to process
+model_list = ("AIFS_ENS",)
+
+#deter_model_list = ("AIFS","graphcast",)
+#prob_model_list = ("AIFS_ENS","gencast",)
+
+# ------------------------------------------------------------------------------
+# 2. OBSERVATION DATA SETTINGS
+# ------------------------------------------------------------------------------
+obs = "CHRIPS_IMERG"
+obs_dir = os.path.join(_DATA_DIR, "external/CHIRPS_IMERG")
+
+# Pattern to find files. {} is replaced by date/year components.
+obs_file_pattern = ("{}.nc",) 
+
+obs_var = "RAINFALL"
+obs_unit_cvt = None
+
+# ------------------------------------------------------------------------------
+# 3. REFERENCE MODEL (BENCHMARK) SETTINGS
+# ------------------------------------------------------------------------------
+ref_model = "climatology"
+ref_model_dir = os.path.join(_DATA_DIR, "external/ENACTS") 
+
+ref_model_file_pattern = "{}.nc"
+ref_model_var = "precip"
+ref_model_unit_cvt = None
+
+# ------------------------------------------------------------------------------
+# 4. FORECAST MODEL SETTINGS
+# ------------------------------------------------------------------------------
+model_dir_list = (os.path.join(_DATA_DIR, "external/AIFS_ENS/0p25/"),)
+model_var_list = ("tp",)
+unit_cvt_list = (None,)
+file_pattern_list = ("{}.nc",) 
+
+# ------------------------------------------------------------------------------
+# 5. REGION DEFINITIONS
+# ------------------------------------------------------------------------------
+region = "Ethiopia"
+nc_mask = os.path.join(_DATA_DIR, "jjas_100mm_rainfall_mask_0p25.nc")
+shpfile_dir = os.path.join(_DATA_DIR, "external/shapefile")
+polygon = False
+
+# ------------------------------------------------------------------------------
+# 6. ONSET CRITERIA (Physics Logic)
+# ------------------------------------------------------------------------------
+wet_init = 1
+wet_threshold = 20
+wet_spell = 3
+dry_threshold = 1
+dry_spell = 7
+
+# Fixed: Changed from 0 to 7 to satisfy the rule "Must be >= dry_spell"
+dry_extent = 7 
+
+thresh_file = None
+thresh_var = None
+onset_percentage_threshold = 0.5
+
+# ------------------------------------------------------------------------------
+# 7. TEMPORAL SETTINGS (Dates & Years)
+# ------------------------------------------------------------------------------
+start_date = (2019, 5, 1)
+end_date = (2022, 7, 31)
+
+start_year_clim = 2015
+end_year_clim = 2022
+
+init_days = (0, 3)
+init_type = "weekly"
+
+# Fixed: Changed from 2024 to 2022 to match the evaluation/climatology data range
+date_filter_year = 2022 
+
+# ------------------------------------------------------------------------------
+# 8. EVALUATION & VERIFICATION PARAMETERS
+# ------------------------------------------------------------------------------
+verification_window_list = ((1, 15), (16, 30))
+tolerance_days_list = (3, 5)
+max_forecast_day = 30
+day_bins = ((1, 5), (6, 10), (11, 15), (16, 20), (21, 25), (26, 30))
+
+# ------------------------------------------------------------------------------
+# 9. METRICS SELECTION
+# ------------------------------------------------------------------------------
+# --- Deterministic Metrics ---
+FAR = True  
+MAE = True  
+MR  = True  
+
+# --- Probabilistic Metrics ---
+probabilistic = True
+members = "All"  
+
+BS          = True  
+RPS         = True  
+AUC         = True  
+Reliability = True  
+skill_score = True  
+
+# ------------------------------------------------------------------------------
+# 10. OUTPUT & GRAPHICS SETTINGS
+# ------------------------------------------------------------------------------
+dir_out = os.path.join(_DATA_DIR, "ROMP_OUT/et/output")
+dir_fig = os.path.join(_DATA_DIR, "ROMP_OUT/et/figure")
+
+save_fig = True                 
+save_nc_spatial_far_mr_mae = True 
+save_csv_score = True             
+save_nc_climatology = True        
+
+plot_spatial_far_mr_mae = True     
+plot_heatmap_bss_auc = True        
+plot_reliability = True            
+plot_climatology_onset = True      
+plot_panel_heatmap_error = True    
+plot_panel_heatmap_skill = True    
+plot_bar_bss_rpss_auc = True       
+
+show_plot = False                  
+show_panel = True                  
+
+# ------------------------------------------------------------------------------
+# 11. PARALLELIZATION SETTINGS
+# ------------------------------------------------------------------------------
+parallel = True  
+
+# ------------------------------------------------------------------------------
+# 12. DEBUG SETTINGS
+# ------------------------------------------------------------------------------
+debug = False  
+
+# ------------------------------------------------------------------------------
+# PARAMS RESERVED FOR FUTURE VERSIONS
+# ------------------------------------------------------------------------------
+mok = (5, 15)
+years = None
+years_clim = None
+fallback_date = None

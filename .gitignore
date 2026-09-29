@@ -1,0 +1,12 @@
+# Python environment
+/.venv/
+
+# macOS
+.DS_Store
+
+# External NetCDF data
+/data/external/**/*.nc
+/data/*.nc
+
+# Shapefile and GeoJSON data
+/data/external/shapefile/
