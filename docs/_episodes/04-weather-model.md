@@ -25,6 +25,7 @@ keypoints:
 
 This lesson documents the complete **ROMP** (Rainy season Onset Metrics Package) / **MOMP** benchmarking workflow. It is used to evaluate AI weather forecast models (e.g., AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall data (e.g., CHIRPS) for rainy season onset prediction. The workflow covers both deterministic and probabilistic evaluation tracks, as well as the configuration system that drives them.
 
+
 ## 🎯 Learning Objectives
 
 By the end of this lesson, you will be able to:
@@ -32,11 +33,20 @@ By the end of this lesson, you will be able to:
 2. Configure and execute deterministic benchmarks (MAE, FAR, Miss Rate).
 3. Configure and execute probabilistic benchmarks (Brier Score, Ranked Probability Score, AUC, Reliability).
 4. Correctly utilize the swappable, per-run Python configuration system and CLI mode selection.
+<<<<<<< HEAD
 5. Diagnose and resolve common configuration, data, and pipeline errors.
 
 ---
 
 ##  Why Onset Matters
+=======
+5. Apply and validate Isotonic Distributional Regression (IDR) calibration for probabilistic onset forecasts.
+6. Diagnose and resolve common configuration, data, and pipeline errors.
+
+---
+
+## 🌍 Context: Why Onset Matters
+>>>>>>> 8d081528374a8c9580df26688cbf3f60bc837801
 
 In Ethiopian agriculture, the **onset of the rainy season** (Kiremt: June–September) dictates planting dates for millions of smallholder farmers. A late or false onset signal can lead to crop failure from planting too early, lost growing days from planting too late, and regional food insecurity. 
 
@@ -48,15 +58,24 @@ In Ethiopian agriculture, the **onset of the rainy season** (Kiremt: June–Sept
 
 ---
 
+<<<<<<< HEAD
 ## Benchmarking Metrics
+=======
+##  Benchmarking Metrics
+>>>>>>> 8d081528374a8c9580df26688cbf3f60bc837801
 
 The pipeline enforces a strict separation between two evaluation tracks. Deterministic and probabilistic models produce fundamentally different outputs and require non-comparable metric families. **A single run must be exclusively one or the other—never a mix.**
 
 ### 1. Deterministic Track (Single Forecast)
 | Metric | Formula Concept | Interpretation |
 |--------|----------------|----------------|
+<<<<<<< HEAD
 | **MAE** (Mean Absolute Error) | $\|\text{forecast onset} - \text{obs onset} \|$ | Average error in days. |
 | **FAR** (False Alarm Ratio) | $\frac{\text{false alarms}}{\text{hits} + \text{false alarms}}$ | Percentage of predicted onsets that did not occur. |
+=======
+| **MAE** (Mean Absolute Error) | $\| \text{forecast\_onset} - \text{obs\_onset} \|$ | Average error in days. |
+| **FAR** (False Alarm Ratio) | $\frac{\text{false\_alarms}}{\text{hits} + \text{false\_alarms}}$ | Percentage of predicted onsets that did not occur. |
+>>>>>>> 8d081528374a8c9580df26688cbf3f60bc837801
 | **MR** (Miss Rate) | $\frac{\text{misses}}{\text{hits} + \text{misses}}$ | Percentage of actual onsets that were missed. |
 
 ### 2. Probabilistic Track (Ensemble Forecasts)
@@ -82,7 +101,11 @@ $$
 
 ---
 
+<<<<<<< HEAD
 ## Models in the Benchmark
+=======
+## 🤖 Models in the Benchmark
+>>>>>>> 8d081528374a8c9580df26688cbf3f60bc837801
 
 Model assignments to specific tracks are defined centrally in the `BENCHMARK_MODEL_CATALOG` within the infrastructure `config.py` to prevent duplication or inconsistency.
 
@@ -96,7 +119,11 @@ Model assignments to specific tracks are defined centrally in the `BENCHMARK_MOD
 
 ---
 
+<<<<<<< HEAD
 ## Evaluation Setup
+=======
+## ⚙️ Evaluation Setup
+>>>>>>> 8d081528374a8c9580df26688cbf3f60bc837801
 
 Two verification windows are evaluated for each model to assess short-lead versus extended-lead performance:
 
@@ -120,6 +147,7 @@ Two verification windows are evaluated for each model to assess short-lead versu
 - **Computational Resources:** 6 cores (of 10 available CPUs)
 - **Spatial Grid:** 49 latitudes × 61 longitudes at 0.2° resolution
 - **Spatial Products Generated:** FAR, Miss Rate, yearly MAE, and mean MAE maps *(Note: CMZ averages were not calculated as 0.2° resolution is unsupported for this specific aggregation).*
+<<<<<<< HEAD
 
 ### AIFS Results
 **Verification Window: Days 1–15**
@@ -198,6 +226,17 @@ Two verification windows are evaluated for each model to assess short-lead versu
 - GraphCast demonstrated the strongest short-lead detection pattern but suffered from frequent false alarms.
 - All spatial metric files (NetCDF and PNG) were saved successfully for completed model/window combinations, with no fatal errors or tracebacks in the output.
 
+=======
+
+
+### Deterministic Main Findings
+- The ROMP run successfully completed AIFS and FuXi evaluations for both verification windows.
+- Short-lead forecasts (Days 1–15) generally outperformed long-lead forecasts (Days 16–30).
+- Extending the verification period substantially increased the number of missed onsets for both AIFS and FuXi.
+- GraphCast demonstrated the strongest short-lead detection pattern but suffered from frequent false alarms.
+- All spatial metric files (NetCDF and PNG) were saved successfully for completed model/window combinations, with no fatal errors or tracebacks in the output.
+
+>>>>>>> 8d081528374a8c9580df26688cbf3f60bc837801
 ### Model Skill Rankings (Reference: Climatology = 0.0)
 | Model | Mean MAE Skill | False Alarm Rate Skill | Miss Rate Skill | Overall Skill Score |
 |-------|----------------|------------------------|-----------------|---------------------|
@@ -208,6 +247,10 @@ Two verification windows are evaluated for each model to assess short-lead versu
 | **FuXi** | -0.271470 | 0.203178 | -0.262507 | -0.110266 |
 | **GraphCast** | -0.290775 | -0.541115 | 0.329475 | -0.167472 |
 
+<<<<<<< HEAD
+=======
+---
+>>>>>>> 8d081528374a8c9580df26688cbf3f60bc837801
 
 # Part 2: Probabilistic Evaluation (AIFS-ENS)
 
@@ -227,6 +270,7 @@ Two verification windows are evaluated for each model to assess short-lead versu
 - **Climatological Reference:** Multi-year climatology (8 years) using day-of-year onset comparison
 
 ### Skill Scores: Verification Window (Days 1–15)
+<<<<<<< HEAD
 | Metric | AIFS-ENS Forecast | Climatology Reference |
 |--------|-------------------|-----------------------|
 | **Fair Brier Score** | 0.0959 | **0.0677** *(Lower is better)* |
@@ -251,6 +295,42 @@ Two verification windows are evaluated for each model to assess short-lead versu
 - Days 21–25: `-0.521`
 - Days 26–30: `-0.502`
 > **Overall Fair BSS:** `-0.528` | **Overall Fair RPSS:** `-0.773`
+=======
+| Metric | AIFS-ENS Forecast | Climatology Reference | Skill Score |
+|--------|-------------------|-----------------------|-------------|
+| **Fair Brier Score** | 0.1107 | 0.0953 *(Lower is better)* | **-0.1624** |
+| **Fair RPS** | 0.5439 | 0.4327 *(Lower is better)* | **-0.2570** |
+| **AUC** | 0.6921 | 0.8192 *(Higher is better)* | *N/A* |
+
+**Bin-wise Fair Brier Skill Score (BSS) & AUC:**
+- **Days 1–5**: BSS = `0.0636` | AUC = `0.8453` (Ref: `0.8702`)
+- **Days 6–10**: BSS = `-0.2131` | AUC = `0.6929` (Ref: `0.8128`)
+- **Days 11–15**: BSS = `-0.3203` | AUC = `0.5329` (Ref: `0.7680`)
+
+> **Overall Fair BSS**: `-0.1624` &nbsp;|&nbsp; **Overall Fair RPSS**: `-0.2570`
+
+![Days 1-15 BSS and AUC](image2.png)
+
+---
+
+### Skill Scores: Verification Window (Days 16–30)
+| Metric | AIFS-ENS Forecast | Climatology Reference | Skill Score |
+|--------|-------------------|-----------------------|-------------|
+| **Fair Brier Score** | 0.0828 | 0.0659 *(Lower is better)* | **-0.2576** |
+| **Fair RPS** | 0.5413 | 0.3643 *(Lower is better)* | **-0.4860** |
+| **AUC** | 0.5013 | 0.8052 *(Higher is better)* | *N/A* |
+
+**Bin-wise Fair Brier Skill Score (BSS) & AUC:**
+- **Days 16–20**: BSS = `-0.2848` | AUC = `0.5019` (Ref: `0.7783`)
+- **Days 21–25**: BSS = `-0.2542` | AUC = `0.5001` (Ref: `0.8079`)
+- **Days 26–30**: BSS = `-0.2178` | AUC = `0.5001` (Ref: `0.8209`)
+
+> **Overall Fair BSS**: `-0.2576` &nbsp;|&nbsp; **Overall Fair RPSS**: `-0.4860`
+
+![Days 16-30 BSS and AUC](image1.png)
+
+---
+>>>>>>> 8d081528374a8c9580df26688cbf3f60bc837801
 
 ### Reliability Analysis
 The model exhibits a strong systematic tendency to **under-predict** the probability of onset.
@@ -262,6 +342,7 @@ The model exhibits a strong systematic tendency to **under-predict** the probabi
 
 *Interpretation:* When the model predicts a near-zero probability of onset, the actual observed onset rate is approximately 8%. The ensemble is consistently under-forecasting onset events.
 
+<<<<<<< HEAD
 
 | Bin | clean_bins | Fair_Brier_Skill_Score | AUC | AUC_ref | Fair_Brier_Score_Forecast | Fair_Brier_Score_Climatology |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -289,6 +370,24 @@ The model exhibits a strong systematic tendency to **under-predict** the probabi
 3. **Reliability Bias:** The ensemble heavily under-predicts onset probabilities, assigning near-zero probabilities to events that occur ~8% of the time.
 4. **Recommended Next Steps:** 
    - Apply **ensemble calibration** (e.g., Isometric Distribution Regression, or EMOS) to correct the under-forecasting bias.
+=======
+**Reliability Diagrams:**
+
+*Days 1-15 Reliability:*
+![Days 1-15 Reliability](image4.png)
+
+*Days 16-30 Reliability:*
+![Days 16-30 Reliability](image3.png)
+
+---
+
+### Key Takeaways & Next Steps
+1. **Negative Skill Across the Board:** AIFS-ENS probabilistic onset forecasts currently perform worse than the climatological baseline (consistently negative BSS and RPSS across all windows).
+2. **Skill Degradation with Lead Time:** Forecast skill drops significantly in the 16–30 day window. The AUC approaches `0.50` (e.g., `0.5013`), indicating virtually no discrimination skill beyond random chance at longer lead times.
+3. **Reliability Bias:** The ensemble heavily under-predicts onset probabilities, assigning near-zero probabilities to events that occur ~8% of the time.
+4. **Recommended Next Steps:** 
+   - Apply **ensemble calibration** (e.g., Isotonic Distributional Regression [IDR] or EMOS) to correct the under-forecasting bias.
+>>>>>>> 8d081528374a8c9580df26688cbf3f60bc837801
    - Review onset detection thresholds and rainfall accumulation logic in the AIFS-ENS post-processing pipeline.
    - Investigate whether specific initialization dates or sub-regions are driving the bulk of the negative skill.
 
