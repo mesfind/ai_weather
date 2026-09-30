@@ -224,16 +224,6 @@ The model exhibits a strong systematic tendency to **under-predict** the probabi
    - Review onset detection thresholds and rainfall accumulation logic in the AIFS-ENS post-processing pipeline.
    - Investigate whether specific initialization dates or sub-regions are driving the bulk of the negative skill.
 
----
-
-# Part 3: AI Almanac Exploration and Key Ingredients
-
-### Objective
-Explore the AI Almanac and gather feedback on the necessary components required to assess metrics and use cases in an intuitive, interactive manner.
-
-### Activity
-- Guide participants to explore the AI Almanac interface. *(Note: Ethiopia and India onset data are pre-loaded as working examples).*
-- Have paired country groups share their ideas and feedback across both deterministic and probabilistic evaluation tracks.
 
 ### Wrap-up Discussion
 Conclude the session with a focused discussion on the **"key ingredients needed"** for successful, use-case-driven model assessment, ensuring that technical metrics translate into actionable agricultural insights.
