@@ -264,7 +264,7 @@ FuXi rarely issues an onset, so it has few false alarms but a very high miss rat
 ![FuXi days 1-15 spatial metrics](../fig/fig3a_fuxi_1_15.png)  
 *Figure 3a. FuXi, Days 1–15. Many grid cells are blank. Where MAE is defined it is low in the west, but miss-rate is dominated by dark blue in the north/east.*
 
-![FuXi days 16-30 spatial metrics](figures/fig3b_fuxi_16_30.png)  
+![FuXi days 16-30 spatial metrics](../fig/fig3b_fuxi_16_30.png)  
 *Figure 3b. FuXi, Days 16–30. Almost every cell is blank or dark blue in the miss-rate panel.*
 
 #### GraphCast Results
