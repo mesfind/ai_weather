@@ -1,9 +1,9 @@
 ---
-title: "Demo 4
+title: "Demo 4: The AI Weather Model Scorecard"
 teaching: 30
 exercises: 60
 questions:
-  - "How do we systematically benchmark AI weather models against local observations for rainy season onset"
+  - "How do we systematically benchmark AI weather models against local observations for rainy season onset?"
   - "How do deterministic and probabilistic evaluation tracks differ, and why must they remain strictly separated?"
   - "How do we configure, run, and troubleshoot the ROMP/MOMP pipeline reliably from the command line and within notebooks?"
   - "How does Isotonic Distributional Regression (IDR) calibration improve (or fail to improve) probabilistic onset forecasts, and how do we diagnose this?"
@@ -23,7 +23,7 @@ keypoints:
 
 # The AI Weather Model Scorecard
 
-This lesson documents the complete **ROMP** (Rainy season Onset Metrics Package) / **MOMP** benchmarking workflow. It is used to evaluate AI weather forecast models (AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall data (e.g., CHIRPS, ENACTS) for rainy season onset in Ethiopia's Kiremt season. The methodology is designed to be region-agnostic and easily transferable to other seasons and domains.
+This lesson documents the complete **ROMP** (Rainy season Onset Metrics Package) / **MOMP** benchmarking workflow. It is used to evaluate AI weather forecast models (AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall data (e.g., CHIRPS, ENACTS) for rainy season onset in Ethiopia's Kiremt season, and it is designed to transfer to other regions and seasons.
 
 ## Learning Objectives
 By the end of this lesson, you will be able to:
@@ -35,6 +35,7 @@ By the end of this lesson, you will be able to:
 6. Explain what calibration (IDR) can and cannot fix.
 7. Diagnose and resolve common configuration, data, and pipeline errors.
 
+---
 
 ## Lesson Roadmap
 
@@ -53,13 +54,14 @@ By the end of this lesson, you will be able to:
 | **Best Practices & Troubleshooting** | Making benchmarks defensible and fixing failures. |
 | **Exercises & AI Almanac Activity** | Hands-on practice and feedback. |
 
+---
 
 ## Why Onset Matters
 
 In Ethiopian agriculture, the onset of the rainy season (Kiremt: June–September) dictates planting dates for millions of smallholder farmers. A late or false onset signal can lead to crop failure from planting too early, lost growing days from planting too late, and regional food insecurity.
 
-![Figure 1: Mean rainy season onset date (day of year), 2003–2024. Onset arrives first in the southwest (mid-to-late May) and progressively later toward the north and east (July–August).](figures/fig1_mean_onset_ethiopia.png)
-*Figure 1. Mean rainy season onset date across Ethiopia. This strong spatial gradient is why skill must be examined per grid cell and not only as a national average.*
+![Map of mean onset date across Ethiopia](figures/fig1_mean_onset_ethiopia.png)  
+*Figure 1. Mean rainy season onset date (day of year), 2003–2024. Onset arrives first in the southwest (mid-to-late May) and progressively later toward the north and east (July–August). This strong spatial gradient is why skill must be examined per grid cell and not only as a national average.*
 
 **Onset is not read directly from raw model output.** To ensure genuine comparability, it is derived identically from daily rainfall data for observations, the reference model, and every forecast model using the following rules:
 
@@ -68,15 +70,17 @@ In Ethiopian agriculture, the onset of the rainy season (Kiremt: June–Septembe
 
 **Application:** These rules are applied per grid cell, per year, within a defined search window (`start_date` to `end_date`).
 
+---
 
 ## The ROMP Benchmarking Package
 
 ### Motivation
-* **Demand:** Model developers and forecasters need a reproducible, quantitative workflow for routinely evaluating model performance on onset.
-* **Region- and threshold-agnostic:** The package is not tied to Ethiopia. It can be applied to Kiremt rains, other regions, and any chosen model.
-* **Goal functionality:** Compare models across **location** (grid cell, region, country), **wet-spell thresholds**, **dry-spell thresholds**, and **lead times**.
+* **Demand:** Model developers and forecasters both want a reproducible, quantitative workflow for routinely evaluating model performance on onset.
+* **Region- and threshold-agnostic:** The package is not tied to Ethiopia. It can be applied to Kiremt rains and to other regions, and used with any model you choose.
+* **Goal functionality:** Compare models across **location** (grid cell, region, or country), **wet-spell thresholds**, **dry-spell thresholds**, and **lead times**.
 
 ### Design Capabilities
+We want your feedback, in person and online, to improve this package.
 
 | Capability | What it means in practice |
 | :--- | :--- |
@@ -86,16 +90,16 @@ In Ethiopian agriculture, the onset of the rainy season (Kiremt: June–Septembe
 | **Custom onset definition** | Wet-spell and dry-spell rules are user parameters. |
 | **Region-agnostic detection** | The same detection code runs for any domain and season window. |
 | **Lead-time evaluation** | Skill is reported per verification window and per lead-time bin. |
-| **Configuration-driven** | Each run is fully described by its config file, ensuring reproducibility. |
+| **Configuration-driven experiments** | Each run is fully described by its config file, so results can be reproduced. |
 
 ### ROMP Workflow
 ```text
 config file  -->  load observations + model reforecasts
-              -->  apply the SAME onset definition to both
-              -->  match forecast onset to observed onset (per grid cell, year, init date)
-              -->  compute metrics (DET or PROB track)
-              -->  calculate skill scores vs. climatology (or named reference model)
-              -->  generate maps, tables, heatmaps, and reliability diagrams
+             -->  apply the SAME onset definition to both
+             -->  match forecast onset to observed onset (per grid cell, year, init date)
+             -->  compute metrics (DET or PROB track)
+             -->  skill scores vs. climatology (or a named reference model)
+             -->  maps, tables, heatmaps, and reliability diagrams
 ```
 
 ### ROMP Specifications
@@ -112,7 +116,7 @@ config file  -->  load observations + model reforecasts
 **2. Data and Domain**
 * **Observations/Reference:** CHIRPS, ENACTS, or another gridded product.
 * **Forecasts:** Daily rainfall from each model's reforecasts, on a common grid (e.g., 0.25°).
-* **Mask:** A seasonal mask (e.g., `jjas_seasonal_mask_0p25.nc`) restricts evaluation to grid points where a rainy season occurs.
+* **Mask:** A seasonal mask (e.g., `jjas_seasonal_mask_0p25.nc`) restricts evaluation to the grid points where a rainy season occurs.
 * **Catalog:** Models are registered centrally in `BENCHMARK_MODEL_CATALOG`.
 
 **3. Verification Setup**
@@ -125,21 +129,23 @@ config file  -->  load observations + model reforecasts
 
 ## Core Concepts for Benchmarking
 
+These ideas underpin every table and map in the lesson. Make sure they are clear before interpreting results.
+
 ### Forecasts, Reforecasts, and Lead Time
-A **reforecast (hindcast)** is a forecast re-run for past dates with a fixed model version. Benchmarking uses reforecasts because they provide many years of forecasts with a consistent system, which is the only way to estimate skill for a seasonal event. 
+A **reforecast (hindcast)** is a forecast re-run for past dates with a fixed model version. Benchmarking uses reforecasts because they provide many years of forecasts with a consistent system, which is the only way to estimate skill for a seasonal event such as onset. 
 * **Initialization date:** When the forecast starts. 
 * **Lead time:** Days after initialization. Onset skill depends strongly on lead time and how close initialization is to the climatological onset date.
 
 ### Verification Data
-Observed onset is derived from a gridded rainfall product. This is the "truth", but it has its own errors. Model and observations must be on a common grid and calendar. Very coarse grids are noisier to score but smoother to predict.
+Observed onset is derived from a gridded rainfall product (e.g., CHIRPS, ENACTS). This product is the "truth" in the benchmark, but it has its own errors, so conclusions can change with the dataset. Model and observations must be on a common grid and calendar. Very coarse grids are noisier to score but smoother to predict.
 
 ### Events, Tolerance, and Contingency Counts
-Onset is a binary event per grid cell and year (did the season start?) with a timing attached (which day?). A **matching tolerance** decides how close in time a forecast onset must be to count as a hit. 
+Onset is a binary event per grid cell and year (did the season start within the search window?) with a timing attached (which day?). A **matching tolerance** decides how close in time a forecast onset must be to count as a hit. 
 * Counts of hits, false alarms, misses, and correct negatives form the basis for FAR and MR. 
 * MAE is computed *only* where both onsets exist, so it can look artificially good when a model rarely predicts onset. **Always read it with MR.**
 
 ### Ensembles and Probabilities
-An ensemble is a set of forecasts (members) from slightly different initial conditions. The forecast probability is the fraction of members that produce an onset in a bin. Because finite members make probabilities noisy, **fair scores** adjust for ensemble size.
+An ensemble is a set of forecasts (members) from slightly different initial conditions. The forecast probability of onset in a bin is the fraction of members that produce onset in that bin. Because finite members make probabilities noisy, **fair scores** adjust for ensemble size.
 
 Three separate qualities of a probabilistic forecast are measured:
 | Quality | Question | Metric |
@@ -153,6 +159,9 @@ Three separate qualities of a probabilistic forecast are measured:
 ### Reference Forecasts and Skill
 A model is only useful if it beats a reference that requires no model (default: climatology). Skill scores are relative to that reference. They change if the reference period or dataset changes, so **always document them**.
 
+### Sample Size and Uncertainty
+Skill estimates are averages over grid cells, years, and initialization dates. Fewer samples give noisier scores, and rare-event bins can be extremely uncertain. Eight years (2015–2022) is a short record; treat small differences between models as inconclusive unless supported by uncertainty estimates.
+
 ---
 
 ## Benchmarking Metrics
@@ -163,7 +172,7 @@ The pipeline enforces a strict separation between two evaluation tracks. Determi
 
 | Metric | Formula Concept | Interpretation |
 | :--- | :--- | :--- |
-| **MAE** (Mean Absolute Error) | $\| \text{forecast onset} - \text{obs onset} \|$ | Average error in days. |
+| **MAE** (Mean Absolute Error) | $\|\text{forecast onset} - \text{obs onset}\|$ | Average error in days. |
 | **FAR** (False Alarm Ratio) | $\frac{\text{false alarms}}{\text{hits} + \text{false alarms}}$ | Percentage of predicted onsets that did not occur. |
 | **MR** (Miss Rate) | $\frac{\text{misses}}{\text{hits} + \text{misses}}$ | Percentage of actual onsets that were missed. |
 
@@ -174,7 +183,7 @@ The pipeline enforces a strict separation between two evaluation tracks. Determi
 
 | Metric | Interpretation |
 | :--- | :--- |
-| **BS / BSS** (Brier Score / Skill) | Mean squared error of probability forecasts. BSS represents improvement over baseline. *(Lower is better for BS; Higher for BSS)* |
+| **BS / BSS** (Brier Score / Skill) | Mean squared error of probability forecasts. BSS represents improvement over a climatological baseline. *(Lower is better for BS; Higher for BSS)* |
 | **RPS / RPSS** (Ranked Prob. Score) | Distance between forecast and observed CDF across ordered categories. Penalizes forecasts "farther" from the correct category. *(Lower is better for RPS)* |
 | **AUC** (Area Under ROC Curve) | Discrimination ability: probability that the model assigns a higher probability to a random event case than a non-event case. Range: 0 to 1. *(Higher is better; 0.5 = no skill)* |
 | **Reliability** (Calibration) | Statistical consistency between forecast probabilities and observed frequencies. Visualized via a Reliability Diagram. |
@@ -240,28 +249,40 @@ For each model and verification window, the pipeline writes a three-panel map (`
 
 #### AIFS Results
 AIFS is the strongest deterministic model at short lead. Its errors grow quickly in Days 16–30.
-![Figure 2a: AIFS, Days 1–15. MAE is low across most of the western and central highlands. Errors and misses concentrate in the east and northeast.](figures/fig2a_aifs_1_15.png)
-![Figure 2b: AIFS, Days 16–30. MAE rises sharply almost everywhere, and the southwest false-alarm area becomes saturated.](figures/fig2b_aifs_16_30.png)
+![AIFS days 1-15 spatial metrics](figures/fig2a_aifs_1_15.png)  
+*Figure 2a. AIFS, Days 1–15. MAE is low across most of the western and central highlands. Errors and misses concentrate in the east and northeast.*
+
+![AIFS days 16-30 spatial metrics](figures/fig2b_aifs_16_30.png)  
+*Figure 2b. AIFS, Days 16–30. MAE rises sharply almost everywhere, and the southwest false-alarm area becomes saturated.*
 
 #### FuXi Results
 FuXi rarely issues an onset, so it has few false alarms but a very high miss rate, especially in Days 16–30.
-![Figure 3a: FuXi, Days 1–15. Many grid cells are blank. Where MAE is defined it is low in the west, but miss-rate is dominated by dark blue in the north/east.](figures/fig3a_fuxi_1_15.png)
-![Figure 3b: FuXi, Days 16–30. Almost every cell is blank or dark blue in the miss-rate panel.](figures/fig3b_fuxi_16_30.png)
+![FuXi days 1-15 spatial metrics](figures/fig3a_fuxi_1_15.png)  
+*Figure 3a. FuXi, Days 1–15. Many grid cells are blank. Where MAE is defined it is low in the west, but miss-rate is dominated by dark blue in the north/east.*
+
+![FuXi days 16-30 spatial metrics](figures/fig3b_fuxi_16_30.png)  
+*Figure 3b. FuXi, Days 16–30. Almost every cell is blank or dark blue in the miss-rate panel.*
 
 #### GraphCast Results
 GraphCast detects onset well in Days 1–15 but pays for it with frequent false alarms.
-![Figure 4a: GraphCast, Days 1–15. Miss rates are low over most of the country. The far-southwest false-alarm area is close to 100%.](figures/fig4a_graphcast_1_15.png)
-![Figure 4b: GraphCast, Days 16–30. MAE is high across the north. False alarms are large in the northwest and southwest.](figures/fig4b_graphcast_16_30.png)
+![GraphCast days 1-15 spatial metrics](figures/fig4a_graphcast_1_15.png)  
+*Figure 4a. GraphCast, Days 1–15. Miss rates are low over most of the country. The far-southwest false-alarm area is close to 100%.*
+
+![GraphCast days 16-30 spatial metrics](figures/fig4b_graphcast_16_30.png)  
+*Figure 4b. GraphCast, Days 16–30. MAE is high across the north. False alarms are large in the northwest and southwest.*
 
 #### Climatology Reference Maps
-![Figure 5a: Climatology reference, Days 1–15.](figures/fig5a_climatology_1_15.png)
-![Figure 5b: Climatology reference, Days 16–30. Climatology has low miss rates but false alarms of nearly 100% across the west.](figures/fig5b_climatology_16_30.png)
+![Climatology days 1-15 spatial metrics](figures/fig5a_climatology_1_15.png)  
+*Figure 5a. Climatology reference, Days 1–15.*
+
+![Climatology days 16-30 spatial metrics](figures/fig5b_climatology_16_30.png)  
+*Figure 5b. Climatology reference, Days 16–30. Climatology has low miss rates but false alarms of nearly 100% across the west.*
 
 ### Deterministic Skill Relative to Climatology
-![Figure 6: Portrait panel of delta MAE, FAR and MR for each deterministic model in each window relative to the reference.](figures/fig6_deterministic_skill_delta.png)
-*Figure 6. Change (Δ) in MAE, FAR, and MR. Days 1–15: all three models reduce MAE by roughly 3.6–4.9 days. Days 16–30: the MAE advantage largely vanishes or reverses.*
+![Portrait panel of delta MAE, FAR and MR](figures/fig6_deterministic_skill_delta.png)  
+*Figure 6. Change (Δ) in MAE, FAR, and MR for each deterministic model in each window. Days 1–15: all three models reduce MAE by roughly 3.6–4.9 days. Days 16–30: the MAE advantage largely vanishes or reverses.*
 
-> **💡 Instructor Note:** Figure 6 shows MAE improving over the reference in Days 1–15 for all three models. However, the *Model Skill Rankings* table below reports negative mean-MAE skill. These come from different summaries (per-window Δ vs. a single pooled score). Ask participants to find what could explain the difference (reference dataset, window, aggregation) before trusting either number.
+> **💡 Instructor Note:** Figure 6 shows MAE improving over the reference in Days 1–15 for all three models. However, the *Model Skill Rankings* table below reports negative mean-MAE skill. These come from different summaries (per-window Δ vs. a single pooled score). Ask participants to find what could explain the difference before trusting either number.
 
 ### Deterministic Main Findings
 1. Short-lead forecasts (Days 1–15) generally outperformed long-lead forecasts (Days 16–30).
@@ -311,8 +332,8 @@ momp-run -p notebooks/config_et.in --mode prob
 | **Days 6-10** | 0.1165 | 0.0961 | **-0.213** | 0.693 | 0.813 |
 | **Days 11-15** | 0.1307 | 0.0990 | **-0.320** | 0.533 | 0.768 |
 
-![Figure 7a: AIFS-ENS skill by 5-day bin, Days 1–15. Top row: BSS (%). Bottom row: AUC. Skill decays quickly with lead time.](figures/fig7a_aifs_ens_skill_1_15.png)
-*The only positive skill is in the first five days (BSS = +6.4%). Skill then falls below climatology and AUC drops from 0.85 to 0.53 by Days 11–15.*
+![AIFS-ENS skill heatmap days 1-15](figures/fig7a_aifs_ens_skill_1_15.png)  
+*Figure 7a. AIFS-ENS skill by 5-day bin, Days 1–15. Top row: BSS (%). Bottom row: AUC. Skill decays quickly with lead time.*
 
 ### Skill Scores: Verification Window (Days 16–30)
 
@@ -329,16 +350,20 @@ momp-run -p notebooks/config_et.in --mode prob
 | **Days 21-25** | 0.0807 | 0.0644 | **-0.254** | 0.500 | 0.808 |
 | **Days 26-30** | 0.0617 | 0.0507 | **-0.218** | 0.500 | 0.821 |
 
-![Figure 7b: AIFS-ENS skill by 5-day bin, Days 16–30. BSS stays negative in every bin, and AUC is 0.5 throughout.](figures/fig7b_aifs_ens_skill_16_30.png)
+![AIFS-ENS skill heatmap days 16-30](figures/fig7b_aifs_ens_skill_16_30.png)  
+*Figure 7b. AIFS-ENS skill by 5-day bin, Days 16–30. BSS stays negative in every bin, and AUC is 0.5 throughout.*
 
 > **⚠️ Watch Out:** The BSS gets less negative from Days 16–20 to 26–30 (−28% → −22%) even though AUC is flat at 0.5. This is a **base-rate effect**, not real skill. Brier scores are lower later in the window simply because the event is rarer. **Always read BSS together with AUC.**
 
 ### Data Files
-The skill tables are generated from these CSV files:
-* `binned_skill_scores_AIFS_ENS_1-15.csv`: Fair BS, BSS, and AUC per 5-day bin, Days 1–15.
-* `binned_skill_scores_AIFS_ENS_16-30.csv`: Fair BS, BSS, and AUC per 5-day bin, Days 16–30.
-* `overall_skill_scores_AIFS_ENS_1-15.csv`: Whole-window BS, BSS, RPS, RPSS, AUC, Days 1–15.
-* `overall_skill_scores_AIFS_ENS_16-30.csv`: Whole-window BS, BSS, RPS, RPSS, AUC, Days 16–30.
+The skill tables are generated from these CSV files, which you can open directly in a spreadsheet or load with `pandas`:
+
+| File | Contents |
+| :--- | :--- |
+| `binned_skill_scores_AIFS_ENS_1-15.csv` | Fair BS, BSS, and AUC per 5-day bin, Days 1–15. |
+| `binned_skill_scores_AIFS_ENS_16-30.csv` | Fair BS, BSS, and AUC per 5-day bin, Days 16–30. |
+| `overall_skill_scores_AIFS_ENS_1-15.csv` | Whole-window BS, BSS, RPS, RPSS, AUC, Days 1–15. |
+| `overall_skill_scores_AIFS_ENS_16-30.csv` | Whole-window BS, BSS, RPS, RPSS, AUC, Days 16–30. |
 
 ```python
 import pandas as pd
@@ -353,8 +378,11 @@ print(binned[["Bin", "Fair_Brier_Skill_Score", "AUC", "AUC_ref"]])
 ### Reliability Analysis
 A reliability diagram plots the forecast probability (x) against how often the event actually occurred (y). Points on the dashed 1:1 line are perfectly reliable.
 
-![Figure 8a: Reliability, Days 1–15. The curve is flatter than the diagonal. The ensemble is overconfident.](figures/fig8a_reliability_1_15.png)
-![Figure 8b: Reliability, Days 16–30. Nearly all forecasts are below 0.3, the curve has no upward trend. Probabilities carry almost no information.](figures/fig8b_reliability_16_30.png)
+![Reliability diagram AIFS-ENS days 1-15](figures/fig8a_reliability_1_15.png)  
+*Figure 8a. Reliability, Days 1–15. The curve is flatter than the diagonal. The ensemble is overconfident.*
+
+![Reliability diagram AIFS-ENS days 16-30](figures/fig8b_reliability_16_30.png)  
+*Figure 8b. Reliability, Days 16–30. Nearly all forecasts are below 0.3, the curve has no upward trend. Probabilities carry almost no information.*
 
 | Window | Forecast Prob. Bin | N_Forecasts | Mean Forecast Prob. | Observed Reliability |
 | :--- | :--- | :--- | :--- | :--- |
@@ -509,7 +537,7 @@ Days 11–15: $1 - (0.1307 / 0.0990) \approx -0.32$, so the ensemble is worse th
 ### Exercise 6: Design a Benchmark (5 min, discussion)
 You must compare two new models for a different country. Using the reporting checklist, list the five decisions you must make before running the package.
 
-
+---
 
 ## AI Almanac Exploration and Feedback
 
@@ -519,7 +547,7 @@ You must compare two new models for a different country. Using the reporting che
 1. Guide participants to explore the AI Almanac interface. *(Note: Ethiopia and India onset data are pre-loaded as working examples).*
 2. Have paired country groups share their ideas and feedback across both deterministic and probabilistic evaluation tracks.
 
-
+---
 
 ## Wrap-up Discussion & Summary
 
@@ -530,24 +558,3 @@ You must compare two new models for a different country. Using the reporting che
 * **Read metrics together:** FAR with MR and MAE; BSS with AUC and reliability.
 * **Calibration (IDR) can improve reliability**, but it cannot create missing discrimination.
 * **Resolution, period, tolerance, and sample size all affect scores.** Document them with every result.
-
-
-## Glossary
-
-| Term | Meaning |
-| :--- | :--- |
-| **Onset** | Start of the rainy season, detected from daily rainfall with wet-spell and dry-spell rules. |
-| **Reforecast** | Forecast re-run for past dates with a fixed model version. |
-| **Lead time** | Days between initialization and the forecast day. |
-| **Hit / False alarm / Miss** | Forecast onset within tolerance of observed / forecast but not observed / observed but not forecast. |
-| **MAE** | Mean absolute timing error of matched onsets, in days. |
-| **FAR** | Fraction of forecast onsets that did not occur. |
-| **MR** | Fraction of observed onsets that were not forecast. |
-| **BS / BSS** | Brier Score of a yes/no probability forecast, and its skill relative to a reference. |
-| **RPS / RPSS** | Ranked Probability Score over ordered onset-date categories, and its skill. |
-| **AUC** | Area under the ROC curve. 0.5 means no discrimination and 1.0 is perfect. |
-| **Reliability** | Agreement between forecast probability and observed frequency. |
-| **Fair score** | Score corrected for the finite number of ensemble members. |
-| **Climatology** | Reference forecast built from past observed onset dates. |
-| **IDR** | Isotonic Distributional Regression, a monotone non-parametric calibration method. |
-| **ROMP / MOMP** | Rainy season Onset Metrics Package / the benchmarking workflow it implements. |
