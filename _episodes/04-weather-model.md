@@ -1,5 +1,5 @@
 ---
-title: "Demo 4: The AI Weather Model Scorecard"
+title: "Demo 4"
 teaching: 30
 exercises: 60
 questions:
