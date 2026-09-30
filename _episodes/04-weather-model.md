@@ -148,6 +148,7 @@ Two verification windows are evaluated for each model to assess short-lead versu
 
 *Interpretation:* AIFS produced substantially more true positives in the Days 1–15 window. The longer-lead window (16–30 days) yielded significantly more misses, indicating weaker onset detection at extended lead times.
 
+
 ### FuXi Results
 **Verification Window: Days 1–15**
 | Year | TP | FP | FN | TN |
@@ -207,7 +208,6 @@ Two verification windows are evaluated for each model to assess short-lead versu
 | **FuXi** | -0.271470 | 0.203178 | -0.262507 | -0.110266 |
 | **GraphCast** | -0.290775 | -0.541115 | 0.329475 | -0.167472 |
 
----
 
 # Part 2: Probabilistic Evaluation (AIFS-ENS)
 
@@ -261,6 +261,27 @@ The model exhibits a strong systematic tendency to **under-predict** the probabi
 | **16–30 Days**| 0.0 – 0.1 | 127,466 | `0.000` | **`0.081`** |
 
 *Interpretation:* When the model predicts a near-zero probability of onset, the actual observed onset rate is approximately 8%. The ensemble is consistently under-forecasting onset events.
+
+
+| Bin | clean_bins | Fair_Brier_Skill_Score | AUC | AUC_ref | Fair_Brier_Score_Forecast | Fair_Brier_Score_Climatology |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Days 1-5 | 1-5 | 0.06364939053042407 | 0.8453465284161943 | 0.8702343335608851 | 0.08493696292065038 | 0.09071063986252488 |
+| Days 6-10 | 6-10 | -0.21314257966751038 | 0.6928838886000523 | 0.812769006640873 | 0.11653950001092497 | 0.09606414115220101 |
+| Days 11-15 | 11-15 | -0.32026660651904826 | 0.5328765934368814 | 0.7679712812651536 | 0.13067535045744413 | 0.09897648687940121 |
+| Days 16-20 | 16-20      | -0.2847614461024217    | 0.5019389993780577 | 0.7783476065296139 | 0.10609182593712836       | 0.08257706227018169          |
+| Days 21-25 | 21-25      | -0.25416225629961287   | 0.5001191558266032 | 0.8078705124925976 | 0.08072750938767101       | 0.06436767569920046          |
+| Days 26-30 | 26-30      | -0.217755927734691     | 0.5000758495145631 | 0.8209385679204685 | 0.06172845517796777       | 0.05069033438646202          |
+:Table: AIFS ENS for 1-30 binned skill scores
+
+
+| lead_range | Fair_Brier_Score | Fair_Brier_Skill_Score | Fair_RPS | Fair_RPS_Skill_Score | AUC | AUC_ref |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1-15 | 0.11071727 | -0.16238089 | 0.54385305 | -0.25703338 | 0.69214347 | 0.81915412 |
+| 16-30 | 0.08284926 | -0.25760973 | 0.54131802 | -0.48599530 | 0.50132079 | 0.80523556 |
+
+:Table:  AIFS ENS overall skill scores
+
+
 
 ### Key Takeaways & Next Steps
 1. **Negative Skill Across the Board:** AIFS-ENS probabilistic onset forecasts currently perform worse than the climatological baseline (consistently negative BSS and RPSS).
