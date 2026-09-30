@@ -37,7 +37,7 @@ By the end of this lesson, you will be able to:
 
 ---
 
-## 🌍 Context: Why Onset Matters
+##  Why Onset Matters
 
 In Ethiopian agriculture, the **onset of the rainy season** (Kiremt: June–September) dictates planting dates for millions of smallholder farmers. A late or false onset signal can lead to crop failure from planting too early, lost growing days from planting too late, and regional food insecurity. 
 
@@ -173,7 +173,7 @@ Two verification windows are evaluated for each model to assess short-lead versu
 
 > **Overall Fair BSS**: `-0.1624` &nbsp;|&nbsp; **Overall Fair RPSS**: `-0.2570`
 
-![Days 1-15 BSS and AUC](image2.png)
+![Days 1-15 BSS and AUC](../fig/image2.png)
 
 ---
 
@@ -191,7 +191,7 @@ Two verification windows are evaluated for each model to assess short-lead versu
 
 > **Overall Fair BSS**: `-0.2576` &nbsp;|&nbsp; **Overall Fair RPSS**: `-0.4860`
 
-![Days 16-30 BSS and AUC](image1.png)
+![Days 16-30 BSS and AUC](../fig/image1.png)
 
 ---
 
@@ -208,10 +208,10 @@ The model exhibits a strong systematic tendency to **under-predict** the probabi
 **Reliability Diagrams:**
 
 *Days 1-15 Reliability:*
-![Days 1-15 Reliability](image4.png)
+![Days 1-15 Reliability](../fig/image4.png)
 
 *Days 16-30 Reliability:*
-![Days 16-30 Reliability](image3.png)
+![Days 16-30 Reliability](../fig/image3.png)
 
 ---
 
