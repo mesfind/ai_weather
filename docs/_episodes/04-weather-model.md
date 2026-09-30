@@ -112,6 +112,7 @@ config file  ->  load observations + model reforecasts
              ->  maps, tables, heatmaps and reliability diagrams
 ```
 
+
 ### ROMP Specifications
 
 **1. Onset definition (set in the config)**
@@ -138,7 +139,7 @@ config file  ->  load observations + model reforecasts
 - Reference for skill scores: climatology by default, or a named model.
 - Run mode: `DET` or `PROB`, chosen in the config or overridden on the command line (`--mode prob`). Never both in the same run.
 
----
+
 
 ## Core Concepts for Benchmarking
 
@@ -233,6 +234,7 @@ SS = 1 - \frac{\text{Metric}_{\text{model}}}{\text{Metric}_{\text{reference}}}
 $$
 
 **Interpretation:**
+
 - $SS = 1$: Perfect forecast.
 - $SS > 0$: The model outperforms the reference (positive skill).
 - $SS = 0$: The model performs identically to the reference.
@@ -269,6 +271,7 @@ Two verification windows are evaluated for each model to assess short-lead versu
 ## Deterministic Evaluation
 
 ### ROMP Run Summary
+
 - **Package:** Rainy Season Onset Metrics Package (ROMP), v0.0.1
 - **Run Mode:** Deterministic (`DET`)
 - **Project:** Test ROMP run with sample data
