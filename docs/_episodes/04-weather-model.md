@@ -1,19 +1,21 @@
 ---
-title: Demo 4
+title: "Demo 4: The AI Weather Model Scorecard"
 teaching: 30
-exercises: 15
+exercises: 60
 questions:
-- "How do we systematically compare AI weather models across different evaluation metrics?"
-- "What are the key ingredients needed to assess metrics and use cases interactively?"
-- "How can we ensure model evaluation is accessible to both weather and agricultural services tracks?"
+  - "How do we systematically benchmark AI weather models against local observations for rainy season onset?"
+  - "How do deterministic and probabilistic evaluation tracks differ, and why must they remain strictly separated?"
+  - "How do we configure, run, and troubleshoot the ROMP/MOMP pipeline reliably from the command line and within notebooks?"
+  - "How does Isotonic Distributional Regression (IDR) calibration improve (or fail to improve) probabilistic onset forecasts, and how do we diagnose this?"
 objectives:
-- "Discuss how to choose between models across evaluation metrics based on specific use cases."
-- "Explore the AI Almanac and gather feedback on necessary components for interactive assessment."
-- "Facilitate cross-track collaboration by pairing countries to share ideas and evaluate thresholds."
+  - "Understand the onset detection algorithm and why it must be applied identically to observations and forecasts."
+  - "Configure and run deterministic benchmarks (MAE, FAR, Miss Rate) and probabilistic benchmarks (BS, RPS, AUC, Reliability)."
+  - "Utilize the swappable, per-run Python configuration system correctly, including CLI mode selection."
+  - "Apply and diagnose Isotonic Distributional Regression (IDR) calibration on probabilistic onset forecasts."
+  - "Recognize and resolve the most common configuration, data, and pipeline failure modes."
 keypoints:
-- "Model selection must be driven by specific use-case requirements and relevant evaluation metrics."
-- "Interactive tools like the AI Almanac facilitate cross-track collaboration and practical feedback."
-- "Pairing countries across weather and agricultural tracks ensures diverse and robust metric evaluation."
+  - "Onset is derived identically from observations and forecasts using a wet-spell/dry-spell veto rule, not read directly from raw model output."
+  - "Deterministic and probabilistic tracks use non-comparable metric families (e.g., FAR/MAE/MR vs. BS/RPS/AUC) and must never be mixed within a single evaluation run."
 ---
 
 <!-- MathJax -->
@@ -21,888 +23,285 @@ keypoints:
 
 # The AI Weather Model Scorecard
 
-## Evaluating Models and Exploring the AI Almanac
-
-
-### Part 1: The AI Weather Model Scorecard
-- **Objective:** Discuss how to choose between models across evaluation metrics based on their specific use case.
-- **Activity:** Highlight AfriClimate AI tests and allow participants to interactively play around with different metrics and thresholds.
-- **Facilitation:** Ensure the coding instructions and conceptual explanations are easy to engage with for both weather and agricultural services participants.
-
-### Part 2: AI Almanac Exploration and Key Ingredients
-- **Objective:** Explore the AI Almanac and gather feedback on necessary components to assess metrics and use cases in an easy, interactive way.
-- **Activity:** 
-  - Guide participants to explore the AI Almanac (Note: Ethiopia and India onset data are already loaded as examples).
-  - Have paired country groups share out ideas and feedback across tracks.
-- **Wrap-up Discussion:** Conclude the session with a focused discussion on the "key ingredients needed" for successful, use-case-driven model assessment.
-
-
----
-title: Demo 3
-teaching: 1
-exercises: 0
-questions:
-- "How do we set up and run AI weather models locally in a container?"
-- "What are the core commands needed to go from environment setup to generating a forecast figure?"
-- "How do we tailor the model execution to specific use cases like onset, cessation, or temperature exceedance?"
-objectives:
-- "Gain hands-on experience with the end-to-end process of running AI weather models locally."
-- "Execute a streamlined 4-command workflow to build a container, run a model, and generate use-case-specific outputs."
-keypoints:
-- "A streamlined 4-command workflow (build container, run model, get output, generate figure) simplifies local AI forecasting."
-- "Use-case flags in the code allow groups to tailor outputs for onset/cessation, temperature exceedance, or precipitation exceedance."
-- "Jupyter notebooks provide an interactive environment for executing and visualizing the AI weather models."
----
-
-<!-- MathJax -->
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-# Running Your First AI Weather Forecast
-
-## End-to-End Local Model Execution and Use-Case Application
-
-
-### 1. Environment and Workflow Setup
-- Utilize the Jupyter notebook environment for interactive model execution.
-- Introduce the distilled 4-command workflow designed to simplify the end-to-end process:
-  1. Build the container.
-  2. Run the model.
-  3. Get the output for discussion.
-  4. Generate the use-case-specific figure.
-
-### 2. Use-Case Group Execution
-- Split participants into their designated use-case groups. 
-- Ensure each group uses the specific flag in the code that distinguishes their use case:
-  - **Onset/Cessation:** Led by Mesfin, Aryan, supported by Panchali.
-  - **Temperature Exceedance:** Led by Docko, supported by Narayana.
-  - **Precipitation Exceedance (Short-run rainfall):** Led by Koomi, supported by Shruti.
-
-### 3. Output Generation and Discussion Prep
-- Groups execute their specific model runs within the container.
-- Participants generate the final figure (Command 4) and prepare their outputs for discussion and evaluation in subsequent sessions.
-
-
-
-# Complete Rainy Season Onset Benchmarking Lesson
-
-## Using the ROMP/MOMP Framework with AI Weather Models
-
----
-
-## 📋 Lesson Overview
-
-This lesson teaches you how to benchmark AI weather forecast models (AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall data (ENACTS) for Ethiopian rainy season onset prediction. You will learn both **deterministic** and **probabilistic** evaluation workflows using the ROMP (Rainy season Onset Metrics Package) framework.
-
----
+This lesson documents the complete **ROMP** (Rainy season Onset Metrics Package) / **MOMP** benchmarking workflow. It is used to evaluate AI weather forecast models (e.g., AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall data (e.g., CHIRPS) for rainy season onset prediction. The workflow covers both deterministic and probabilistic evaluation tracks, as well as the configuration system that drives them.
 
 ## 🎯 Learning Objectives
 
 By the end of this lesson, you will be able to:
-
-1. Understand the theoretical foundations of rainy season onset detection
-2. Configure and run deterministic benchmarks (MAE, FAR, Miss Rate)
-3. Configure and run probabilistic benchmarks (BSS, RPS, AUC, Reliability)
-4. Interpret spatial skill maps and model ranking scoreboards
-5. Customize onset criteria, regions, and verification windows
-6. Build interactive dashboards for forecast verification
+1. Understand the theoretical foundations of rainy season onset detection.
+2. Configure and execute deterministic benchmarks (MAE, FAR, Miss Rate).
+3. Configure and execute probabilistic benchmarks (Brier Score, Ranked Probability Score, AUC, Reliability).
+4. Correctly utilize the swappable, per-run Python configuration system and CLI mode selection.
+5. Diagnose and resolve common configuration, data, and pipeline errors.
 
 ---
 
-## Theoretical Background
+##  Why Onset Matters
 
-### What is Rainy Season Onset?
+In Ethiopian agriculture, the **onset of the rainy season** (Kiremt: June–September) dictates planting dates for millions of smallholder farmers. A late or false onset signal can lead to crop failure from planting too early, lost growing days from planting too late, and regional food insecurity. 
 
-In Ethiopian agriculture, the **onset of the rainy season** (Kiremt: June–September) determines planting dates for millions of smallholder farmers. A late or false onset signal can lead to:
+**Onset is not read directly from raw model output.** To ensure genuine comparability, it is derived identically from daily rainfall data for observations, the reference model, and every forecast model using the following rules:
 
-- Crop failure due to planting too early
-- Lost growing days due to planting too late
-- Food insecurity at regional scale
+- **Wet-spell trigger**: A candidate onset day requires at least `wet_init` mm of initial rainfall, followed by `wet_spell` consecutive days with ≥ `wet_threshold` mm/day.
+- **Dry-spell veto**: A candidate onset is invalidated if a dry spell (`dry_spell` consecutive days below `dry_threshold` mm/day) occurs within a `dry_extent`-day window afterward. This rejects false starts.
+- **Application**: These rules are applied per grid cell, per year, within a defined search window (`start_date` to `end_date`).
 
-**Onset Definition (used in ROMP):**
-The onset is declared when:
-- At least `wet_init` mm of rain falls (initial trigger)
-- Followed by `wet_spell` consecutive days with ≥ `wet_threshold` mm/day
-- Without a subsequent dry spell of `dry_spell` days with < `dry_threshold` mm/day
-- Within a defined search window (e.g., May 1 – September 30)
+---
 
-### Benchmarking Metrics
+## Benchmarking Metrics
 
-#### Deterministic Metrics (Single Forecast)
+The pipeline enforces a strict separation between two evaluation tracks. Deterministic and probabilistic models produce fundamentally different outputs and require non-comparable metric families. **A single run must be exclusively one or the other—never a mix.**
+
+### 1. Deterministic Track (Single Forecast)
 | Metric | Formula Concept | Interpretation |
 |--------|----------------|----------------|
-| **MAE** (Mean Absolute Error) | \|forecast_onset − obs_onset\| | Average error in days |
-| **FAR** (False Alarm Rate) | false_alarms / (hits + false_alarms) | % of predicted onsets that didn't occur |
-| **MR** (Miss Rate) | misses / (hits + misses) | % of actual onsets that were missed |
+| **MAE** (Mean Absolute Error) | $\|\text{forecast onset} - \text{obs onset} \|$ | Average error in days. |
+| **FAR** (False Alarm Ratio) | $\frac{\text{false alarms}}{\text{hits} + \text{false alarms}}$ | Percentage of predicted onsets that did not occur. |
+| **MR** (Miss Rate) | $\frac{\text{misses}}{\text{hits} + \text{misses}}$ | Percentage of actual onsets that were missed. |
 
-#### Probabilistic Metrics (Ensemble Forecasts)
+### 2. Probabilistic Track (Ensemble Forecasts)
 | Metric | Interpretation |
 |--------|----------------|
-| **BSS** (Brier Skill Score) | Improvement over climatology (higher = better) |
-| **RPS** (Ranked Probability Score) | Distance between forecast & observed CDF (lower = better) |
-| **AUC** (Area Under ROC Curve) | Discrimination ability (0.5 = no skill, 1.0 = perfect) |
-| **Reliability** | Calibration — does 70% probability ≈ 70% observed frequency? |
+| **BS** (Brier Score) / **BSS** (Skill Score) | Mean squared error of probability forecasts. BSS represents improvement over a climatological baseline. *(Lower is better for BS; Higher is better for BSS)* |
+| **RPS** (Ranked Probability Score) / **RPSS** | Measures the distance between the forecast and observed Cumulative Distribution Function (CDF) across ordered categories. Penalizes forecasts that are "farther" from the correct category. *(Lower is better for RPS)* |
+| **AUC** (Area Under ROC Curve) | Measures discrimination ability: the probability that the model assigns a higher probability to a randomly chosen event case than to a non-event case. Range: 0 to 1. Perfect: 1.0. No skill: 0.5. *(Higher is better)* |
+| **Reliability** (Calibration) | Measures the statistical consistency between forecast probabilities and observed frequencies. A perfectly reliable model predicts an event with 70% probability exactly 70% of the time it occurs. Typically visualized via a Reliability Diagram. |
 
-### Models in the Benchmark
+### 3. Skill Score Definition
+Raw metrics alone do not establish whether an AI model beats a naive baseline. Therefore, both tracks report a final **Skill Score (SS)** relative to a reference model (climatology by default, or a named model):
+
+$$
+SS = 1 - \frac{\text{Metric}_{\text{model}}}{\text{Metric}_{\text{reference}}}
+$$
+
+**Interpretation:**
+- $SS = 1$: Perfect forecast.
+- $SS > 0$: The model outperforms the reference (positive skill).
+- $SS = 0$: The model performs identically to the reference.
+- $SS < 0$: The model performs worse than the reference (negative skill).
+
+---
+
+## Models in the Benchmark
+
+Model assignments to specific tracks are defined centrally in the `BENCHMARK_MODEL_CATALOG` within the infrastructure `config.py` to prevent duplication or inconsistency.
 
 | Model | Type | Origin | Resolution |
-|-------|------|--------|-----------|
+|-------|------|--------|------------|
 | **AIFS** | Deterministic | ECMWF | ~25 km (0.25°) |
 | **FuXi** | Deterministic | Fudan University | ~25 km |
 | **GraphCast** | Deterministic | Google DeepMind | ~25 km |
-| **AIFS-ENS** | Probabilistic (50 members) | ECMWF | ~50 km |
-| **GenCast** | Probabilistic (diffusion) | Google DeepMind | ~50 km |
+| **AIFS-ENS** | Probabilistic (50 members) | ECMWF | ~25 km |
+| **GenCast** | Probabilistic (Diffusion, 52 members) | Google DeepMind | ~25 km |
 
 ---
 
-##  Project Structure & Setup
+## Evaluation Setup
 
-### Directory Layout
+Two verification windows are evaluated for each model to assess short-lead versus extended-lead performance:
 
-```
-ai-weather/
-├── ai_weather/
-│   ├── config.py                    # Central configuration
-│   └── benchmarking/
-│       ├── ROMP/
-│       │   └── momp/
-│       │       ├── driver.py        # Main execution entry point
-│       │       ├── app/             # High-level workflow
-│       │       ├── stats/           # Onset detection algorithms
-│       │       ├── metrics/         # Error & skill calculations
-│       │       ├── params/          # config.in + region_def.py
-│       │       ├── lib/             # Core utilities
-│       │       ├── io/              # NetCDF I/O
-│       │       ├── graphics/        # Plotting
-│       │       └── utils/           # Shared helpers
-│       └── benchmarking.py          # Benchmark utilities
-├── data/
-│   ├── external/
-│   │   ├── AIFS/                    # AIFS forecast NetCDFs
-│   │   ├── fuxi/                    # FuXi forecast NetCDFs
-│   │   ├── graphcast/               # GraphCast forecast NetCDFs
-│   │   ├── AIFS_ENS/               # AIFS Ensemble NetCDFs
-│   │   ├── gencast/                 # GenCast NetCDFs
-│   │   ├── ENACTS/                  # Reference observations
-│   │   ├── ENACTS_regridded_025/    # Regridded obs (0.25°)
-│   │   ├── CHIRPS_IMERG/           # Satellite rainfall
-│   │   ├── shapefile/               # Ethiopia boundaries
-│   │   └── jjas_100mm_rainfall_mask_0p25.nc
-│   └── ROMP_OUT/
-│       └── et/
-│           ├── output/              # NetCDF metric results
-│           └── figure/              # PNG/PDF plots
-├── notebooks/                       # Jupyter notebooks
-├── ui/
-│   ├── app.py                       # Streamlit main app
-│   └── pages/
-│       └── short_medium_benchmarking.py
-└── pyproject.toml
-```
-
-### Environment Setup
-
-```bash
-# Option A: Conda (recommended for scientific Python)
-conda create -n momp "python>=3.10" -y
-conda activate momp
-
-# Option B: venv
-python -m venv .venv-momp
-source .venv-momp/bin/activate  # Linux/Mac
-# .venv-momp\Scripts\activate.bat  # Windows
-
-# Install ROMP from source
-cd ai_weather/benchmarking/ROMP
-pip install -U pip
-pip install -e .  # Editable install for development
-
-# Verify
-python -c "import momp; print(momp.__file__)"
-```
-
-### Python Dependencies
-
-```
-numpy, pandas, xarray, netCDF4, matplotlib, scipy,
-geopandas, seaborn, regionmask, gcsfs, zarr, cartopy,
-loguru, python-dotenv, ipywidgets, tqdm
-```
+| Verification Window | Window Length | Matching Tolerance |
+|---------------------|---------------|--------------------|
+| Days 1–15 after initialization | 15 days | 3 days |
+| Days 16–30 after initialization | 30 days | 5 days |
 
 ---
 
-## Configuration System
+# Part 1: Deterministic Evaluation
 
-### Central Configuration (`config.py`)
+### ROMP Run Summary
+- **Package:** Rainy Season Onset Metrics Package (ROMP), v0.0.1
+- **Run Mode:** Deterministic (`DET`)
+- **Project:** Test ROMP run with sample data
+- **Start Time:** 2026-09-28 13:42:33
+- **Models Evaluated:** AIFS, FuXi, GraphCast
+- **Reference Dataset:** ENACTS
+- **Evaluation Years:** 2015–2022
+- **Computational Resources:** 6 cores (of 10 available CPUs)
+- **Spatial Grid:** 49 latitudes × 61 longitudes at 0.2° resolution
+- **Spatial Products Generated:** FAR, Miss Rate, yearly MAE, and mean MAE maps *(Note: CMZ averages were not calculated as 0.2° resolution is unsupported for this specific aggregation).*
 
-The `config.py` file defines all paths, catalogs, and default parameters:
+### AIFS Results
+**Verification Window: Days 1–15**
+| Year | TP | FP | FN | TN |
+|------|----|----|----|----|
+| 2015 | 193 | 170 | 344 | 480 |
+| 2016 | 243 | 247 | 217 | 617 |
+| 2017 | 347 | 443 | 132 | 475 |
+| 2018 | 251 | 280 | 155 | 542 |
+| 2019 | 994 | 1,362 | 355 | 1,620 |
+| 2020 | 880 | 836 | 652 | 2,099 |
+| 2021 | 758 | 1,354 | 625 | 3,991 |
+| 2022 | 489 | 700 | 874 | 4,130 |
 
-```python
-from pathlib import Path
-from typing import Dict, Any
-from dotenv import load_dotenv
-from loguru import logger
+**Verification Window: Days 16–30**
+| Year | TP | FP | FN | TN |
+|------|----|----|----|----|
+| 2015 | 22 | 48 | 372 | 382 |
+| 2016 | 18 | 83 | 283 | 450 |
+| 2017 | 40 | 63 | 233 | 271 |
+| 2018 | 13 | 42 | 293 | 349 |
+| 2019 | 199 | 350 | 663 | 763 |
+| 2020 | 394 | 320 | 867 | 1,170 |
+| 2021 | 387 | 684 | 1,052 | 2,493 |
+| 2022 | 412 | 799 | 1,266 | 2,527 |
 
-load_dotenv()
-
-# Project root detection
-PROJ_ROOT = Path(__file__).resolve().parents[1]
-
-# Key directories
-DATA_DIR = PROJ_ROOT / "data"
-EXTERNAL_DATA_DIR = DATA_DIR / "external"
-
-# ROMP/MOMP paths
-BMARK_ROOT = PROJ_ROOT / "ai_weather" / "benchmarking"
-ROMP_ROOT = BMARK_ROOT / "ROMP"
-MOMP_PKG_DIR = ROMP_ROOT / "momp"
-
-# Output directories
-ROMP_DEMO_ET_DIR = DATA_DIR / "ROMP_OUT" / "et"
-ROMP_DEMO_FIG_DIR = ROMP_DEMO_ET_DIR / "figure"
-ROMP_DEMO_OUT_DIR = ROMP_DEMO_ET_DIR / "output"
-```
-
-### 3.2 Model Catalog
-
-The catalog maps model names to their data directories and metadata:
-
-```python
-BENCHMARK_MODEL_CATALOG: Dict[str, Dict[str, Any]] = {
-    "AIFS": {
-        "label": "Deterministic · AIFS",
-        "dir": EXTERNAL_DATA_DIR / "AIFS",
-        "model_name": "AIFS",
-        "probabilistic": False,
-        "category": "Deterministic",
-        "slow": False,
-    },
-    "AIFS_ENS": {
-        "label": "Probabilistic · AIFS ENS",
-        "dir": EXTERNAL_DATA_DIR / "AIFS_ENS",
-        "model_name": "AIFS_ENS",
-        "probabilistic": True,
-        "category": "Probabilistic",
-        "slow": True,
-    },
-    "GraphCast": {
-        "label": "Deterministic · GraphCast",
-        "dir": EXTERNAL_DATA_DIR / "graphcast",
-        "model_name": "GraphCast",
-        "probabilistic": False,
-        "category": "Deterministic",
-        "slow": False,
-    },
-     "GenCast": {
-        "label": "Probabilistic · GenCast",
-        "dir": EXTERNAL_DATA_DIR / "gencast",
-        "model_name": "GenCast",
-        "probabilistic": True,
-        "category": "Probabilistic",
-        "slow": True,
-    },
-}
-```
-
-### 3.3 Onset Criteria Parameters
-
-| Parameter | Default | Meaning |
-|-----------|---------|---------|
-| `wet_init` | 1 mm | Minimum initial rainfall trigger |
-| `wet_threshold` | 20 mm | Daily rainfall threshold for "wet day" |
-| `wet_spell` | 3 days | Consecutive wet days required |
-| `dry_threshold` | 1 mm | Below this = "dry day" |
-| `dry_spell` | 7 days | Max dry spell allowed after onset |
-| `dry_extent` | 0 | Spatial dry extent check |
-| `start_date` | (2019, 5, 1) | Search window start |
-| `end_date` | (2022, 7, 31) | Search window end |
-| `verification_window_list` | ((1, 15),) | Forecast lead days |
-| `tolerance_days_list` | (3,) | ± days tolerance for onset match |
-
----
-
-## 📚 Module 4: Running the Benchmark (Jupyter Notebook)
-
-### Cell 1: Documentation (Markdown)
-
-```markdown
-# ROMP Benchmarking Notebook
-
-This notebook executes the MOMP driver pipeline for deterministic and
-probabilistic evaluation of AI weather models against ENACTS observations.
-
-## Workflow
-1. Load configuration → 2. Detect onset → 3. Compute metrics →
-4. Save NetCDF → 5. Generate figures
-```
-
-### Cell 2: Environment & Path Setup
-
-```python
-import os
-import sys
-import runpy
-from pathlib import Path
-
-# --- Determine Project Root ---
-if (Path.cwd() / "pyproject.toml").exists():
-    PROJ_ROOT = Path.cwd()
-elif (Path.cwd().parent / "pyproject.toml").exists():
-    PROJ_ROOT = Path.cwd().parent
-else:
-    PROJ_ROOT = Path().resolve().parent
-
-# --- Add config to path ---
-CONFIG_DIR = PROJ_ROOT / "ai_weather"
-if not CONFIG_DIR.exists():
-    CONFIG_DIR = PROJ_ROOT / "al_weather"
-if str(CONFIG_DIR) not in sys.path:
-    sys.path.insert(0, str(CONFIG_DIR))
-
-# --- Patch missing typing imports ---
-import builtins
-from typing import Dict, Any
-builtins.Dict = Dict
-builtins.Any = Any
-
-# --- Import config ---
-import config
-
-ROMP_ROOT = config.ROMP_ROOT.resolve()
-MOMP_PKG_DIR = config.MOMP_PKG_DIR.resolve()
-
-for p in [str(ROMP_ROOT), str(PROJ_ROOT)]:
-    if p not in sys.path:
-        sys.path.insert(0, p)
-
-import momp
-import momp.params as params
-from momp.lib.loader import get_cfg
-
-print(f"✓ Project Root : {PROJ_ROOT}")
-print(f"✓ ROMP Root    : {ROMP_ROOT}")
-print(f"✓ MOMP Pkg Dir : {MOMP_PKG_DIR}")
-```
-
-### Cell 3: Helper Functions
-
-```python
-def resolve_path(p):
-    """Resolve relative paths against PROJ_ROOT."""
-    if p and not str(p).startswith("/"):
-        return str(PROJ_ROOT / p)
-    return str(p)
+*Interpretation:* AIFS produced substantially more true positives in the Days 1–15 window. The longer-lead window (16–30 days) yielded significantly more misses, indicating weaker onset detection at extended lead times.
 
 
-def configure_benchmark_mode(cfg, mode="det"):
-    """Configure MOMP for deterministic or probabilistic evaluation."""
-    mode = mode.lower().strip()
-    is_prob = mode in ["prob", "probabilistic"]
-    target_category = "Probabilistic" if is_prob else "Deterministic"
+### FuXi Results
+**Verification Window: Days 1–15**
+| Year | TP | FP | FN | TN |
+|------|----|----|----|----|
+| 2015 | 138 | 130 | 418 | 501 |
+| 2016 | 177 | 178 | 346 | 623 |
+| 2017 | 268 | 351 | 232 | 546 |
+| 2018 | 223 | 268 | 180 | 557 |
+| 2019 | 183 | 248 | 209 | 376 |
+| 2020 | 223 | 279 | 266 | 361 |
+| 2021 | 160 | 319 | 250 | 892 |
+| 2022 | 111 | 164 | 274 | 851 |
 
-    selected_models = [
-        meta for meta in config.BENCHMARK_MODEL_CATALOG.values()
-        if meta.get("category") == target_category
-    ]
+**Verification Window: Days 16–30**
+| Year | TP | FP | FN | TN |
+|------|----|----|----|----|
+| 2015 | 10 | 44 | 485 | 380 |
+| 2016 | 24 | 67 | 391 | 487 |
+| 2017 | 28 | 46 | 363 | 341 |
+| 2018 | 5 | 15 | 348 | 369 |
+| 2019 | 11 | 29 | 372 | 173 |
+| 2020 | 15 | 39 | 360 | 213 |
+| 2021 | 47 | 87 | 405 | 603 |
+| 2022 | 23 | 75 | 447 | 580 |
 
-    if not selected_models:
-        raise ValueError(f"No models for category '{target_category}'.")
+*Interpretation:* FuXi shows a marked reduction in true positives for the Days 16–30 window, with high miss counts across all years. Its long-lead onset detection is considerably weaker than its short-lead performance.
 
-    model_names = tuple(meta["model_name"] for meta in selected_models)
-    model_dirs = tuple(resolve_path(meta["dir"]) for meta in selected_models)
-    num_models = len(selected_models)
+### GraphCast Results
+**Verification Window: Days 1–15**
+| Year | TP | FP | FN | TN |
+|------|----|----|----|----|
+| 2015 | 280 | 339 | 219 | 349 |
+| 2016 | 263 | 444 | 139 | 478 |
+| 2017 | 371 | 566 | 92 | 368 |
+| 2018 | 248 | 395 | 117 | 468 |
+| 2019 | 269 | 476 | 63 | 208 |
+| 2020 | 306 | 426 | 114 | 283 |
+| 2021 | 230 | 516 | 125 | 750 |
+| 2022 | 192 | 318 | 153 | 737 |
 
-    cfg.model_list = model_names
-    cfg.model_dir_list = model_dirs
-    cfg.model_var_list = ("tp",) * num_models
-    cfg.unit_cvt_list = (None,) * num_models
-    cfg.file_pattern_list = ("{}.nc",) * num_models
+*Interpretation:* Among the completed short-lead evaluations, GraphCast generally produced relatively few misses (particularly in 2017–2021). However, it also generated frequent false alarms, meaning its stronger detection rate came at the cost of lower forecast precision. *(Note: The log excerpt ends as GraphCast begins the Days 16–30 evaluation; complete long-lead results are unavailable in this run).*
 
-    if is_prob:
-        cfg.probabilistic = True
-        cfg.members = "All"
-        cfg.onset_percentage_threshold = 0.5
-        cfg.BS = True; cfg.RPS = True; cfg.AUC = True
-        cfg.Reliability = True; cfg.skill_score = True
-        cfg.FAR = False; cfg.MAE = False; cfg.MR = False
-        cfg.plot_heatmap_bss_auc = True
-        cfg.plot_reliability = True
-        cfg.plot_panel_heatmap_skill = True
-        cfg.plot_bar_bss_rpss_auc = True
-        cfg.plot_spatial_far_mr_mae = False
-        cfg.plot_panel_heatmap_error = False
-    else:
-        cfg.probabilistic = False
-        cfg.FAR = True; cfg.MAE = True; cfg.MR = True
-        cfg.BS = False; cfg.RPS = False; cfg.AUC = False
-        cfg.Reliability = False; cfg.skill_score = False
-        cfg.plot_spatial_far_mr_mae = True
-        cfg.plot_panel_heatmap_error = True
-        cfg.plot_heatmap_bss_auc = False
-        cfg.plot_reliability = False
-        cfg.plot_panel_heatmap_skill = False
-        cfg.plot_bar_bss_rpss_auc = False
+### Deterministic Main Findings
+- The ROMP run successfully completed AIFS and FuXi evaluations for both verification windows.
+- Short-lead forecasts (Days 1–15) generally outperformed long-lead forecasts (Days 16–30).
+- Extending the verification period substantially increased the number of missed onsets for both AIFS and FuXi.
+- GraphCast demonstrated the strongest short-lead detection pattern but suffered from frequent false alarms.
+- All spatial metric files (NetCDF and PNG) were saved successfully for completed model/window combinations, with no fatal errors or tracebacks in the output.
 
-    print(f"Configured {target_category} mode: {list(model_names)}")
-```
+### Model Skill Rankings (Reference: Climatology = 0.0)
+| Model | Mean MAE Skill | False Alarm Rate Skill | Miss Rate Skill | Overall Skill Score |
+|-------|----------------|------------------------|-----------------|---------------------|
+| **Climatology** | 0.000000 | 0.000000 | 0.000000 | 0.000000 |
+| **AIFS_ENS** | 0.122734 | 0.473197 | -0.308828 | 0.095701 |
+| **GenCast** | -0.043218 | -0.389341 | 0.364237 | -0.022774 |
+| **AIFS** | -0.201814 | -0.275234 | 0.323369 | -0.051226 |
+| **FuXi** | -0.271470 | 0.203178 | -0.262507 | -0.110266 |
+| **GraphCast** | -0.290775 | -0.541115 | 0.329475 | -0.167472 |
 
-### Cell 4: Main Execution Function
 
-```python
-def execute_momp_benchmark(mode="det"):
-    """Run the full MOMP benchmarking pipeline."""
-    print("=" * 60)
-    print(f"MOMP Benchmark [{mode.upper()} MODE]")
-    print("=" * 60)
+# Part 2: Probabilistic Evaluation (AIFS-ENS)
 
-    # Auth
-    os.environ.setdefault('EARTHDATA_AUTH', 'netrc')
-    try:
-        config.setup_earthdata_auth()
-    except Exception as e:
-        print(f"⚠ Auth warning: {e}")
+### Run Configuration
+- **Command Executed:** `momp-run -p notebooks/config_et.in --mode prob`
+- **Model Evaluated:** AIFS-ENS (25 ensemble members)
+- **Evaluation Mode:** Probabilistic (CLI override)
+- **Observational Reference:** ENACTS rainfall data
+- **Spatial Domain:** 49 lats × 61 lons (2,989 valid grid points via `jjas_seasonal_mask_0p25.nc`)
+- **Verification Windows:** Days 1–15 and Days 16–30
 
-    # Metadata patch for uninstalled package
-    import importlib.metadata
-    from importlib.metadata import PackageNotFoundError
-    original_version = importlib.metadata.version
-    original_distribution = importlib.metadata.distribution
+### Processing Summary
+- **Temporal Scope:** 2015–2022 (8 years)
+- **Initializations:** 15 dates per year (May–July)
+- **Total Potential Forecasts:** ~1,120,875 per window
+- **Valid Forecasts Processed:** ~120,000+ unique member-forecast combinations per window
+- **Climatological Reference:** Multi-year climatology (8 years) using day-of-year onset comparison
 
-    class DummyDist:
-        version = "0.0.1"
+### Skill Scores: Verification Window (Days 1–15)
+| Metric | AIFS-ENS Forecast | Climatology Reference |
+|--------|-------------------|-----------------------|
+| **Fair Brier Score** | 0.0959 | **0.0677** *(Lower is better)* |
+| **Fair RPS** | 0.4320 | **0.3164** *(Lower is better)* |
+| **AUC** | 0.699 | **0.886** *(Higher is better)* |
 
-    importlib.metadata.version = lambda p: "0.0.1" if p.lower() == "momp" else original_version(p)
-    importlib.metadata.distribution = lambda p: DummyDist() if p.lower() == "momp" else original_distribution(p)
+**Bin-wise Fair Brier Skill Score (BSS):**
+- Days 1–5: `-0.282`
+- Days 6–10: `-0.394`
+- Days 11–15: `-0.558`
+> **Overall Fair BSS:** `-0.415` | **Overall Fair RPSS:** `-0.366`
 
-    # Load config
-    cfg = get_cfg()
-    cfg.pkg_dir = str(MOMP_PKG_DIR)
-    cfg.work_dir = resolve_path(getattr(cfg, "work_dir", str(ROMP_ROOT)))
-    cfg.obs_dir = resolve_path(getattr(cfg, "obs_dir", "data/external/ENACTS_regridded_025"))
-    cfg.ref_model_dir = resolve_path(getattr(cfg, "ref_model_dir", "data/external/ENACTS"))
-    cfg.nc_mask = resolve_path(getattr(cfg, "nc_mask", "data/external/jjas_100mm_rainfall_mask_0p25.nc"))
+### Skill Scores: Verification Window (Days 16–30)
+| Metric | AIFS-ENS Forecast | Climatology Reference |
+|--------|-------------------|-----------------------|
+| **Fair Brier Score** | 0.0814 | **0.0533** *(Lower is better)* |
+| **Fair RPS** | 0.5205 | **0.2936** *(Lower is better)* |
+| **AUC** | 0.503 | **0.880** *(Higher is better)* |
 
-    if hasattr(cfg, "shpfile_dir") and cfg.shpfile_dir:
-        cfg.shpfile_dir = resolve_path(cfg.shpfile_dir)
+**Bin-wise Fair Brier Skill Score (BSS):**
+- Days 16–20: `-0.551`
+- Days 21–25: `-0.521`
+- Days 26–30: `-0.502`
+> **Overall Fair BSS:** `-0.528` | **Overall Fair RPSS:** `-0.773`
 
-    cfg.dir_out = str(config.ROMP_DEMO_OUT_DIR)
-    cfg.dir_fig = str(config.ROMP_DEMO_FIG_DIR)
+### Reliability Analysis
+The model exhibits a strong systematic tendency to **under-predict** the probability of onset.
 
-    # Configure mode
-    configure_benchmark_mode(cfg, mode=mode)
-    cfg.model_dir_list = tuple(resolve_path(d) for d in cfg.model_dir_list)
+| Window | Forecast Prob. Bin | N_Forecasts | Mean Forecast Prob. | Observed Reliability |
+|--------|--------------------|-------------|---------------------|----------------------|
+| **1–15 Days** | 0.0 – 0.1 | 111,238 | `0.006` | **`0.078`** |
+| **16–30 Days**| 0.0 – 0.1 | 127,466 | `0.000` | **`0.081`** |
 
-    # CRITICAL: Disable parallel for Jupyter
-    cfg.parallel = False
+*Interpretation:* When the model predicts a near-zero probability of onset, the actual observed onset rate is approximately 8%. The ensemble is consistently under-forecasting onset events.
 
-    # Sync to params
-    for attr in dir(cfg):
-        if not attr.startswith("_"):
-            setattr(params, attr, getattr(cfg, attr))
-    params.parallel = False
 
-    os.makedirs(cfg.dir_out, exist_ok=True)
-    os.makedirs(cfg.dir_fig, exist_ok=True)
+| Bin | clean_bins | Fair_Brier_Skill_Score | AUC | AUC_ref | Fair_Brier_Score_Forecast | Fair_Brier_Score_Climatology |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Days 1-5 | 1-5 | 0.06364939053042407 | 0.8453465284161943 | 0.8702343335608851 | 0.08493696292065038 | 0.09071063986252488 |
+| Days 6-10 | 6-10 | -0.21314257966751038 | 0.6928838886000523 | 0.812769006640873 | 0.11653950001092497 | 0.09606414115220101 |
+| Days 11-15 | 11-15 | -0.32026660651904826 | 0.5328765934368814 | 0.7679712812651536 | 0.13067535045744413 | 0.09897648687940121 |
+| Days 16-20 | 16-20      | -0.2847614461024217    | 0.5019389993780577 | 0.7783476065296139 | 0.10609182593712836       | 0.08257706227018169          |
+| Days 21-25 | 21-25      | -0.25416225629961287   | 0.5001191558266032 | 0.8078705124925976 | 0.08072750938767101       | 0.06436767569920046          |
+| Days 26-30 | 26-30      | -0.217755927734691     | 0.5000758495145631 | 0.8209385679204685 | 0.06172845517796777       | 0.05069033438646202          |
+:Table: AIFS ENS for 1-30 binned skill scores
 
-    print(f"  work_dir : {cfg.work_dir}")
-    print(f"  pkg_dir  : {cfg.pkg_dir}")
-    print(f"  obs_dir  : {cfg.obs_dir}")
-    print(f"  models   : {cfg.model_list}")
-    print(f"  parallel : {cfg.parallel}")
-    print("-" * 60)
 
-    # Run driver
-    driver_path = MOMP_PKG_DIR / "driver.py"
-    assert driver_path.exists(), f"Driver not found: {driver_path}"
+| lead_range | Fair_Brier_Score | Fair_Brier_Skill_Score | Fair_RPS | Fair_RPS_Skill_Score | AUC | AUC_ref |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1-15 | 0.11071727 | -0.16238089 | 0.54385305 | -0.25703338 | 0.69214347 | 0.81915412 |
+| 16-30 | 0.08284926 | -0.25760973 | 0.54131802 | -0.48599530 | 0.50132079 | 0.80523556 |
 
-    sys.stdout.flush()
-    try:
-        runpy.run_path(str(driver_path), run_name="__main__")
-        print(f"\n[{mode.upper()}] benchmark completed.")
-    except Exception as e:
-        print(f"\nFailed: {e}")
-        import traceback; traceback.print_exc()
-    finally:
-        importlib.metadata.version = original_version
-        importlib.metadata.distribution = original_distribution
-```
+:Table:  AIFS ENS overall skill scores
 
-### Cell 5: Execute
 
-```python
-# Run deterministic benchmark
-execute_momp_benchmark("det")
 
-# Run probabilistic benchmark (uncomment when ready)
-# execute_momp_benchmark("prob")
-```
+### Key Takeaways & Next Steps
+1. **Negative Skill Across the Board:** AIFS-ENS probabilistic onset forecasts currently perform worse than the climatological baseline (consistently negative BSS and RPSS).
+2. **Skill Degradation with Lead Time:** Forecast skill drops significantly in the 16–30 day window. The AUC approaches `0.50`, indicating virtually no discrimination skill beyond random chance at longer lead times.
+3. **Reliability Bias:** The ensemble heavily under-predicts onset probabilities, assigning near-zero probabilities to events that occur ~8% of the time.
+4. **Recommended Next Steps:** 
+   - Apply **ensemble calibration** (e.g., Isometric Distribution Regression, or EMOS) to correct the under-forecasting bias.
+   - Review onset detection thresholds and rainfall accumulation logic in the AIFS-ENS post-processing pipeline.
+   - Investigate whether specific initialization dates or sub-regions are driving the bulk of the negative skill.
 
 ---
 
-## Understanding the Pipeline
+# Part 3: AI Almanac Exploration and Key Ingredients
 
-### What `driver.py` Does (Step by Step)
+### Objective
+Explore the AI Almanac and gather feedback on the necessary components required to assess metrics and use cases in an intuitive, interactive manner.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    MOMP Driver Pipeline                       │
-├─────────────────────────────────────────────────────────────┤
-│ 1. Load config.in parameters                                │
-│ 2. Read observation NetCDF (ENACTS 0.25°)                   │
-│ 3. Read forecast model NetCDFs (AIFS, FuXi, GraphCast)     │
-│ 4. Apply spatial mask (Ethiopia highland JJAS mask)         │
-│ 5. Detect onset in observations → onset_DOY_obs             │
-│ 6. Detect onset in each model → onset_DOY_model            │
-│ 7. Compute metrics:                                         │
-│    • Deterministic: MAE, FAR, Miss Rate (per grid cell)     │
-│    • Probabilistic: BSS, RPS, AUC, Reliability             │
-│ 8. Save spatial metric NetCDFs to output/                   │
-│ 9. Generate figures (heatmaps, maps, reliability plots)     │
-│ 10. Save summary CSVs                                       │
-└─────────────────────────────────────────────────────────────┘
-```
+### Activity
+- Guide participants to explore the AI Almanac interface. *(Note: Ethiopia and India onset data are pre-loaded as working examples).*
+- Have paired country groups share their ideas and feedback across both deterministic and probabilistic evaluation tracks.
 
-### 5.2 Data Flow Diagram
-
-```
-ENACTS (obs)          Model Forecasts
-     │                     │
-     ▼                     ▼
-┌──────────┐        ┌──────────────┐
-│ Onset    │        │ Onset        │
-│ Detection│        │ Detection    │
-│ (obs)    │        │ (per model)  │
-└────┬─────┘        └──────┬───────┘
-     │                     │
-     ▼                     ▼
-┌─────────────────────────────────┐
-│     Comparison & Metrics        │
-│  • Per-grid-cell MAE/FAR/MR    │
-│  • Binned by lead time         │
-│  • Spatial aggregation         │
-└────────────┬────────────────────┘
-             │
-     ┌───────┴───────┐
-     ▼               ▼
-┌─────────┐   ┌──────────┐
-│ NetCDF  │   │ Figures  │
-│ Output  │   │ (PNG/PDF)│
-└─────────┘   └──────────┘
-```
-
----
-
-## Interpreting Results
-
-### Output Files
-
-After running, check:
-
-```python
-from pathlib import Path
-
-out_dir = Path(config.ROMP_DEMO_OUT_DIR)
-fig_dir = Path(config.ROMP_DEMO_FIG_DIR)
-
-print("=== NetCDF Outputs ===")
-for f in sorted(out_dir.glob("*.nc")):
-    print(f"  {f.name}  ({f.stat().st_size / 1024:.0f} KB)")
-
-print("\n=== Figures ===")
-for f in sorted(fig_dir.glob("*.png")):
-    print(f"  {f.name}")
-```
-
-### 6.2 Loading and Inspecting Results
-
-```python
-import xarray as xr
-import numpy as np
-import matplotlib.pyplot as plt
-
-# Load a spatial metrics file
-nc_files = sorted(out_dir.glob("spatial_metrics_*.nc"))
-if nc_files:
-    ds = xr.open_dataset(nc_files[0])
-    print(ds)
-    print(f"\nVariables: {list(ds.data_vars)}")
-    print(f"Coords: {list(ds.coords)}")
-```
-
-### 6.3 Model Ranking Scoreboard
-
-```python
-import pandas as pd
-
-def build_scoreboard():
-    """Aggregate results from all spatial metric NetCDFs."""
-    rows = []
-    for nc_path in sorted(out_dir.glob("spatial_metrics_*.nc")):
-        if "climatology" in nc_path.name.lower():
-            continue
-        try:
-            ds = xr.open_dataset(nc_path)
-            # Find MAE, FAR, MR variables
-            mae_var = next((v for v in ds.data_vars if "mae" in v.lower()), None)
-            far_var = next((v for v in ds.data_vars if "far" in v.lower() or "false_alarm" in v.lower()), None)
-            mr_var = next((v for v in ds.data_vars if "miss" in v.lower()), None)
-
-            if mae_var and far_var and mr_var:
-                model = nc_path.stem.replace("spatial_metrics_", "")
-                rows.append({
-                    "Model": model,
-                    "MAE (days)": float(ds[mae_var].mean(skipna=True)),
-                    "FAR (%)": float(ds[far_var].mean(skipna=True)) * 100,
-                    "Miss Rate (%)": float(ds[mr_var].mean(skipna=True)) * 100,
-                })
-        except Exception:
-            pass
-
-    if rows:
-        df = pd.DataFrame(rows)
-        df["Composite Score"] = (
-            df["MAE (days)"] +
-            0.08 * df["FAR (%)"] +
-            0.06 * df["Miss Rate (%)"]
-        )
-        return df.sort_values("Composite Score").reset_index(drop=True)
-    return pd.DataFrame()
-
-scoreboard = build_scoreboard()
-print(scoreboard.to_string(index=False))
-```
-
-### 6.4 Visualizing Spatial Skill
-
-```python
-def plot_spatial_metric(nc_path, var_keyword="mae", title=""):
-    """Plot a 2D spatial metric map."""
-    ds = xr.open_dataset(nc_path)
-    var_name = next((v for v in ds.data_vars if var_keyword in v.lower()), None)
-    if not var_name:
-        print(f"No variable matching '{var_keyword}' found.")
-        return
-
-    fig, ax = plt.subplots(figsize=(8, 6))
-    im = ds[var_name].plot(ax=ax, cmap="RdYlGn_r", add_colorbar=True)
-    ax.set_title(title or f"{var_name} — {Path(nc_path).stem}")
-    ax.set_xlabel("Longitude")
-    ax.set_ylabel("Latitude")
-    plt.tight_layout()
-    plt.savefig(fig_dir / f"lesson_{var_keyword}_map.png", dpi=150)
-    plt.show()
-
-# Example usage
-# plot_spatial_metric(nc_files[0], "mae", "AIFS Mean Absolute Error (days)")
-```
-
-### 6.5 Skill Location Identification
-
-```python
-def find_top_skill_locations(nc_path, top_n=10):
-    """Find grid cells with best forecast skill."""
-    ds = xr.open_dataset(nc_path)
-    mae_var = next((v for v in ds.data_vars if "mae" in v.lower()), None)
-    far_var = next((v for v in ds.data_vars if "far" in v.lower()), None)
-    mr_var = next((v for v in ds.data_vars if "miss" in v.lower()), None)
-
-    if not all([mae_var, far_var, mr_var]):
-        return pd.DataFrame()
-
-    lat_name = "lat" if "lat" in ds.coords else "latitude"
-    lon_name = "lon" if "lon" in ds.coords else "longitude"
-
-    df = pd.DataFrame({
-        "lat": ds[mae_var][lat_name].values.repeat(ds[mae_var][lon_name].size),
-        "lon": np.tile(ds[mae_var][lon_name].values, ds[mae_var][lat_name].size),
-        "MAE": ds[mae_var].values.reshape(-1),
-        "FAR": ds[far_var].values.reshape(-1),
-        "MR": ds[mr_var].values.reshape(-1),
-    }).dropna()
-
-    # Filter: MAE ≤ 7 days, FAR ≤ 35%, MR ≤ 60%
-    df = df[(df["MAE"] <= 7) & (df["FAR"] <= 0.35) & (df["MR"] <= 0.60)]
-    df["Skill"] = df["MAE"] + 0.08 * df["FAR"] * 100 + 0.06 * df["MR"] * 100
-
-    return df.sort_values("Skill").head(top_n).reset_index(drop=True)
-```
-
----
-
-## 📚 Module 7: Probabilistic Evaluation
-
-### 7.1 Ensemble Onset Probability
-
-For probabilistic models (AIFS-ENS, GenCast), each grid cell has multiple ensemble members. The onset probability is:
-
-```
-P(onset) = (number of members detecting onset) / (total members)
-```
-
-The `onset_percentage_threshold = 0.5` means onset is declared if ≥50% of members agree.
-
-### 7.2 Running Probabilistic Mode
-
-```python
-execute_momp_benchmark("prob")
-```
-
-### 7.3 Interpreting Probabilistic Outputs
-
-```python
-# After probabilistic run, check for:
-prob_files = sorted(out_dir.glob("*prob*.nc")) + sorted(out_dir.glob("*ens*.nc"))
-print(f"Probabilistic outputs: {[f.name for f in prob_files]}")
-
-# Reliability diagram interpretation:
-# - Perfect reliability: points on the diagonal
-# - Overconfident: curve below diagonal (forecast prob > observed freq)
-# - Underconfident: curve above diagonal
-```
-
-### 7.4 Brier Skill Score Interpretation
-
-| BSS Value | Interpretation |
-|-----------|----------------|
-| > 0 | Better than climatology |
-| = 0 | No improvement over climatology |
-| < 0 | Worse than climatology |
-| = 1 | Perfect forecast |
-
----
-
-## 📚 Module 8: Building the Streamlit Dashboard
-
-### 8.1 Architecture
-
-The Streamlit app (`app.py`) uses a modular page system:
-
-```python
-PAGE_MODULE_MAPPING = {
-    "SM_Benchmarking": "ui.pages.short_medium_benchmarking",
-    # ... other pages ...
-}
-```
-
-### 8.2 Benchmarking Page Structure
-
-The `short_medium_benchmarking.py` page has four sections:
-
-1. **Model Selection** — Radio buttons for Deterministic/Probabilistic, cards for each model
-2. **Run Section** — Button triggers `subprocess.run()` calling `run_momp.py --mode det|prob`
-3. **Spatial Analysis** — Interactive NetCDF variable plotting, figure galleries
-4. **Model Ranking** — Composite score table from all spatial metric outputs
-
-### 8.3 Running the Dashboard
-
-```bash
-cd ai-weather
-streamlit run ui/app.py
-```
-
-### 8.4 Key Dashboard Functions
-
-```python
-# From benchmarking.py — dynamically discovers available presets
-def get_benchmark_presets() -> dict[str, dict]:
-    """Scans ROMP_DEMO_OUT_DIR for real NetCDF outputs."""
-    nc_files = sorted(ROMP_DEMO_OUT_DIR.glob("*.nc"))
-    presets = {}
-    for f in nc_files:
-        key = f.stem
-        is_ens = "ENS" in f.name or "probabilistic" in f.name.upper()
-        presets[key] = {
-            "label": f.stem.replace("_", " ").title(),
-            "category": "Probabilistic AI" if is_ens else "Deterministic AI",
-            "file_path": str(f.resolve()),
-        }
-    return presets
-```
-
-### 8.5 Subprocess Execution Pattern
-
-```python
-def run_momp_benchmark(mode: str) -> Dict[str, Any]:
-    """Execute run_momp.py as a subprocess (avoids Jupyter deadlock)."""
-    cmd = [sys.executable, str(run_momp_path), "--mode", mode]
-    proc = subprocess.run(
-        cmd, cwd=str(PROJECT_ROOT),
-        capture_output=True, text=True,
-        timeout=1800,  # 30 min
-    )
-    return {"ok": proc.returncode == 0, "stdout": proc.stdout, "stderr": proc.stderr}
-```
-
----
-
-## 📚 Module 9: Advanced Customization
-
-### 9.1 Custom Region Definitions
-
-Edit `params/region_def.py` or provide a shapefile:
-
-```python
-# In config.in or cfg object:
-cfg.region = "Ethiopia"
-cfg.shpfile_dir = str(SHAPEFILE_DIR)
-cfg.polygon = False  # Set True for custom polygon
-cfg.nc_mask = str(DEFAULT_MASK_NC)  # Spatial mask NetCDF
-```
-
-### 9.2 Changing Onset Criteria
-
-```python
-# More lenient onset (earlier detection):
-cfg.wet_threshold = 15  # Lower threshold
-cfg.wet_spell = 2       # Fewer consecutive days needed
-cfg.dry_spell = 10      # Allow longer dry spells
-
-# Stricter onset (fewer false alarms):
-cfg.wet_threshold = 25
-cfg.wet_spell = 5
-cfg.dry_spell = 5
-```
-
-### 9.3 Custom Verification Windows
-
-```python
-# Evaluate at multiple lead times:
-cfg.verification_window_list = ((1, 5), (6, 10), (11, 15), (16, 30))
-cfg.tolerance_days_list = (1, 3, 5, 7)
-cfg.day_bins = ((1, 5), (6, 10), (11, 15), (16, 30))
-```
-
-### 9.4 Adding a New Model
-
-Add to `BENCHMARK_MODEL_CATALOG` in `config.py`:
-
-```python
-"PanguWeather": {
-    "label": "Deterministic · Pangu-Weather",
-    "dir": EXTERNAL_DATA_DIR / "pangu",
-    "model_name": "PanguWeather",
-    "probabilistic": False,
-    "category": "Deterministic",
-    "slow": False,
-},
-```
-
----
-
-## Troubleshooting
-
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| Button does nothing in Jupyter | `parallel=True` deadlock | Set `cfg.parallel = False` |
-| `NameError: Dict` | Missing typing import in config.py | Add `from typing import Dict, Any` |
-| `pkg_dir = .../ROMPmomp` | Missing slash in config.in | Override: `cfg.pkg_dir = str(MOMP_PKG_DIR)` |
-| Auth hang | Interactive password prompt | Use `~/.netrc` file |
-| `FileNotFoundError` for NetCDF | Wrong data paths | Check `data/external/` contents |
-| Empty figures | No data in mask region | Verify mask aligns with model grid |
-| Cartopy crashes | Missing system libraries | `conda install -c conda-forge cartopy` |
-
----
-
-
----
-
-*© 2026 Ethiopian Meteorological Institute | Human-Centered Weather Forecasts Initiative | University of Chicago*
+### Wrap-up Discussion
+Conclude the session with a focused discussion on the **"key ingredients needed"** for successful, use-case-driven model assessment, ensuring that technical metrics translate into actionable agricultural insights.
