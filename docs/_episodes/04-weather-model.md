@@ -21,6 +21,10 @@ keypoints:
   - "Results depend on explicit choices (thresholds, tolerance, resolution, period, reference). Report them with every score."
 ---
 
+<!-- MathJax -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
 # The AI Weather Model Scorecard
 
 This lesson documents the complete **ROMP** (Rainy season Onset Metrics Package) / **MOMP** benchmarking workflow. It is used to evaluate AI weather forecast models (AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall data (e.g., CHIRPS, ENACTS) for rainy season onset in Ethiopia's Kiremt season, and it is designed to transfer to other regions and seasons.
