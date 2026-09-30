@@ -696,23 +696,3 @@ Explore the AI Almanac and gather feedback on the necessary components required 
 5. Read metrics together: FAR with MR and MAE, and BSS with AUC and reliability.
 6. Calibration such as IDR can improve reliability, but it cannot create missing discrimination.
 7. Resolution, period, tolerance and sample size all affect scores. Document them with every result.
-
-## Glossary
-
-| Term | Meaning |
-|------|---------|
-| **Onset** | Start of the rainy season, detected from daily rainfall with wet-spell and dry-spell rules |
-| **Reforecast** | Forecast re-run for past dates with a fixed model version |
-| **Lead time** | Days between initialization and the forecast day |
-| **Hit / False alarm / Miss** | Forecast onset within tolerance of observed / forecast but not observed / observed but not forecast |
-| **MAE** | Mean absolute timing error of matched onsets, in days |
-| **FAR** | Fraction of forecast onsets that did not occur |
-| **MR** | Fraction of observed onsets that were not forecast |
-| **BS / BSS** | Brier Score of a yes/no probability forecast, and its skill relative to a reference |
-| **RPS / RPSS** | Ranked Probability Score over ordered onset-date categories, and its skill |
-| **AUC** | Area under the ROC curve. 0.5 means no discrimination and 1.0 is perfect |
-| **Reliability** | Agreement between forecast probability and observed frequency |
-| **Fair score** | Score corrected for the finite number of ensemble members |
-| **Climatology** | Reference forecast built from past observed onset dates |
-| **IDR** | Isotonic Distributional Regression, a monotone non-parametric calibration method |
-| **ROMP / MOMP** | Rainy season Onset Metrics Package / the benchmarking workflow it implements |
