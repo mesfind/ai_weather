@@ -261,7 +261,7 @@ fallback_date = None
 # calibartion with idr 
 #================================
 
-apply_idr_calibration = True
+apply_idr_calibration = False
 # ==============================================================================
 # SANITY CHECKS (warn early instead of failing later with an empty map)
 # ==============================================================================

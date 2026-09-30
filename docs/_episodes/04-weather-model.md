@@ -128,6 +128,9 @@ The pipeline enforces a strict separation between two evaluation tracks. Determi
 |--------|----------------|----------------|
 | **MAE** (Mean Absolute Error) | $\|\text{forecast onset} - \text{obs onset} \|$ | Average error in days. |
 | **FAR** (False Alarm Ratio) | $\frac{\text{false alarms}}{\text{hits} + \text{false alarms}}$ | Percentage of predicted onsets that did not occur. |
+=======
+| **MAE** (Mean Absolute Error) | $\| \text{forecast onset} - \text{obs\_onset} \|$ | Average error in days. |
+| **FAR** (False Alarm Ratio) | $\frac{\text{false alarms}}{\text{hits} + \text{false\_alarms}}$ | Percentage of predicted onsets that did not occur. |
 | **MR** (Miss Rate) | $\frac{\text{misses}}{\text{hits} + \text{misses}}$ | Percentage of actual onsets that were missed. |
 
 **How deterministic scoring works**
@@ -411,6 +414,7 @@ A reliability diagram plots the forecast probability (x) against how often the e
    - Review onset detection thresholds and rainfall accumulation logic in the AIFS-ENS post-processing pipeline.
    - Investigate whether specific initialization dates or sub-regions are driving the bulk of the negative skill.
 
+<<<<<<< HEAD
 ---
 
 ## Composite Metric Plots
@@ -493,6 +497,8 @@ Explore the AI Almanac and gather feedback on the necessary components required 
 ### Activity
 - Guide participants to explore the AI Almanac interface. *(Note: Ethiopia and India onset data are pre-loaded as working examples).*
 - Have paired country groups share their ideas and feedback across both deterministic and probabilistic evaluation tracks.
+=======
+>>>>>>> 4ed739ed3a1f672dbd385d2284e7dcf3f88b2406
 
 ### Wrap-up Discussion
 Conclude the session with a focused discussion on the **"key ingredients needed"** for successful, use-case-driven model assessment, ensuring that technical metrics translate into actionable agricultural insights.
