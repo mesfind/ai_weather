@@ -1,26 +1,3 @@
----
-title: "Demo 4
-teaching: 30
-exercises: 60
-questions:
-  - "How do we systematically benchmark AI weather models against local observations for rainy season onset?"
-  - "How do deterministic and probabilistic evaluation tracks differ, and why must they remain strictly separated?"
-  - "How do we configure, run, and troubleshoot the ROMP/MOMP pipeline reliably from the command line and within notebooks?"
-  - "How does Isotonic Distributional Regression (IDR) calibration improve (or fail to improve) probabilistic onset forecasts, and how do we diagnose this?"
-objectives:
-  - "Explain why a reproducible onset benchmarking package is needed and what it can compare (location, thresholds, lead time, model)."
-  - "Understand the onset detection algorithm and why it must be applied identically to observations and forecasts."
-  - "Configure and run deterministic benchmarks (MAE, FAR, Miss Rate) and probabilistic benchmarks (BS, RPS, AUC, Reliability)."
-  - "Interpret skill scores, spatial maps and composite plots relative to a climatological reference."
-  - "Apply and diagnose Isotonic Distributional Regression (IDR) calibration on probabilistic onset forecasts."
-  - "Recognize and resolve the most common configuration, data, and pipeline failure modes."
-keypoints:
-  - "Onset is derived identically from observations and forecasts using a wet-spell/dry-spell veto rule, not read directly from raw model output."
-  - "Deterministic and probabilistic tracks use non-comparable metric families (e.g., FAR/MAE/MR vs. BS/RPS/AUC) and must never be mixed within a single evaluation run."
-  - "Skill is always relative to a reference. Read FAR, MR and MAE together, and read BSS together with AUC and reliability."
-  - "Results depend on explicit choices (thresholds, tolerance, resolution, period, reference). Report them with every score."
----
-
 # The AI Weather Model Scorecard
 
 This lesson documents the complete **ROMP** (Rainy season Onset Metrics Package) / **MOMP** benchmarking workflow. It is used to evaluate AI weather forecast models (AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall data (e.g., CHIRPS, ENACTS) for rainy season onset in Ethiopia's Kiremt season. The methodology is designed to be region-agnostic and easily transferable to other seasons and domains.
