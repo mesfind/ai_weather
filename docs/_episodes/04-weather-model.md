@@ -3,7 +3,7 @@ title: "Demo 4
 teaching: 30
 exercises: 60
 questions:
-  - "How do we systematically benchmark AI weather models against local observations for rainy season onset?"
+  - "How do we systematically benchmark AI weather models against local observations for rainy season onset"
   - "How do deterministic and probabilistic evaluation tracks differ, and why must they remain strictly separated?"
   - "How do we configure, run, and troubleshoot the ROMP/MOMP pipeline reliably from the command line and within notebooks?"
   - "How does Isotonic Distributional Regression (IDR) calibration improve (or fail to improve) probabilistic onset forecasts, and how do we diagnose this?"
@@ -35,7 +35,6 @@ By the end of this lesson, you will be able to:
 6. Explain what calibration (IDR) can and cannot fix.
 7. Diagnose and resolve common configuration, data, and pipeline errors.
 
----
 
 ## Lesson Roadmap
 
@@ -54,7 +53,6 @@ By the end of this lesson, you will be able to:
 | **Best Practices & Troubleshooting** | Making benchmarks defensible and fixing failures. |
 | **Exercises & AI Almanac Activity** | Hands-on practice and feedback. |
 
----
 
 ## Why Onset Matters
 
@@ -70,7 +68,6 @@ In Ethiopian agriculture, the onset of the rainy season (Kiremt: June–Septembe
 
 **Application:** These rules are applied per grid cell, per year, within a defined search window (`start_date` to `end_date`).
 
----
 
 ## The ROMP Benchmarking Package
 
@@ -512,7 +509,7 @@ Days 11–15: $1 - (0.1307 / 0.0990) \approx -0.32$, so the ensemble is worse th
 ### Exercise 6: Design a Benchmark (5 min, discussion)
 You must compare two new models for a different country. Using the reporting checklist, list the five decisions you must make before running the package.
 
----
+
 
 ## AI Almanac Exploration and Feedback
 
@@ -522,7 +519,7 @@ You must compare two new models for a different country. Using the reporting che
 1. Guide participants to explore the AI Almanac interface. *(Note: Ethiopia and India onset data are pre-loaded as working examples).*
 2. Have paired country groups share their ideas and feedback across both deterministic and probabilistic evaluation tracks.
 
----
+
 
 ## Wrap-up Discussion & Summary
 
@@ -534,7 +531,6 @@ You must compare two new models for a different country. Using the reporting che
 * **Calibration (IDR) can improve reliability**, but it cannot create missing discrimination.
 * **Resolution, period, tolerance, and sample size all affect scores.** Document them with every result.
 
----
 
 ## Glossary
 

@@ -213,7 +213,7 @@ thresh_var = None
 # ==============================================================================
 start_date = (2007, 5, 1)
 end_date = (2023, 7, 31)
-start_year_clim = 2003
+start_year_clim = 2007
 end_year_clim = 2024
 init_days = (0, 3)
 init_type = "weekly"
