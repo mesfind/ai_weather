@@ -1,5 +1,5 @@
 ---
-title: "Demo 4: The AI Weather Model Scorecard"
+title: "Demo 4
 teaching: 30
 exercises: 60
 questions:
@@ -8,14 +8,17 @@ questions:
   - "How do we configure, run, and troubleshoot the ROMP/MOMP pipeline reliably from the command line and within notebooks?"
   - "How does Isotonic Distributional Regression (IDR) calibration improve (or fail to improve) probabilistic onset forecasts, and how do we diagnose this?"
 objectives:
+  - "Explain why a reproducible onset benchmarking package is needed and what it can compare (location, thresholds, lead time, model)."
   - "Understand the onset detection algorithm and why it must be applied identically to observations and forecasts."
   - "Configure and run deterministic benchmarks (MAE, FAR, Miss Rate) and probabilistic benchmarks (BS, RPS, AUC, Reliability)."
-  - "Utilize the swappable, per-run Python configuration system correctly, including CLI mode selection."
+  - "Interpret skill scores, spatial maps and composite plots relative to a climatological reference."
   - "Apply and diagnose Isotonic Distributional Regression (IDR) calibration on probabilistic onset forecasts."
   - "Recognize and resolve the most common configuration, data, and pipeline failure modes."
 keypoints:
   - "Onset is derived identically from observations and forecasts using a wet-spell/dry-spell veto rule, not read directly from raw model output."
   - "Deterministic and probabilistic tracks use non-comparable metric families (e.g., FAR/MAE/MR vs. BS/RPS/AUC) and must never be mixed within a single evaluation run."
+  - "Skill is always relative to a reference. Read FAR, MR and MAE together, and read BSS together with AUC and reliability."
+  - "Results depend on explicit choices (thresholds, tolerance, resolution, period, reference). Report them with every score."
 ---
 
 <!-- MathJax -->
@@ -23,22 +26,56 @@ keypoints:
 
 # The AI Weather Model Scorecard
 
-This lesson documents the complete **ROMP** (Rainy season Onset Metrics Package) / **MOMP** benchmarking workflow. It is used to evaluate AI weather forecast models (e.g., AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall data (e.g., CHIRPS) for rainy season onset prediction. The workflow covers both deterministic and probabilistic evaluation tracks, as well as the configuration system that drives them.
+This lesson documents the complete **ROMP** (Rainy season Onset Metrics Package) / **MOMP** benchmarking workflow. It is used to evaluate AI weather forecast models (AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall data (e.g., CHIRPS, ENACTS) for **rainy season onset** in Ethiopia's Kiremt season, and it is designed to transfer to other regions and seasons.
 
-## 🎯 Learning Objectives
+## Learning Objectives
 
 By the end of this lesson, you will be able to:
-1. Understand the theoretical foundations of rainy season onset detection.
-2. Configure and execute deterministic benchmarks (MAE, FAR, Miss Rate).
-3. Configure and execute probabilistic benchmarks (Brier Score, Ranked Probability Score, AUC, Reliability).
-4. Correctly utilize the swappable, per-run Python configuration system and CLI mode selection.
-5. Diagnose and resolve common configuration, data, and pipeline errors.
-6. Explain why the package exists, what it can compare (location, thresholds, lead time, model) and how the ROMP workflow is organised.
-7. Interpret composite metric plots and compare preliminary results across resolutions (0.25° vs 1°).
+
+1. Explain the motivation for the package and the four dimensions it compares: location, wet-spell threshold, dry-spell threshold and lead time.
+2. Describe how onset is detected and why the same rules must be applied to observations and forecasts.
+3. Configure and execute deterministic benchmarks (MAE, FAR, Miss Rate).
+4. Configure and execute probabilistic benchmarks (Brier Score, Ranked Probability Score, AUC, Reliability).
+5. Interpret skill scores, spatial maps, reliability diagrams and composite plots against climatology.
+6. Explain what calibration (IDR) can and cannot fix.
+7. Diagnose and resolve common configuration, data, and pipeline errors.
+
+## Lesson Roadmap
+
+| Section | Purpose |
+|---------|---------|
+| Why Onset Matters | The user need and the definition of onset |
+| The ROMP Benchmarking Package | Motivation, capabilities, workflow and configuration |
+| Core Concepts for Benchmarking | Vocabulary needed to interpret any result |
+| Benchmarking Metrics | Deterministic and probabilistic metrics and skill scores |
+| Models and Evaluation Setup | What is compared, over which windows |
+| Deterministic Evaluation | Worked example with maps and skill vs. climatology |
+| Probabilistic Evaluation | Worked example with skill scores and reliability |
+| Calibration with IDR | Diagnosing and improving probabilities |
+| Composite Metric Plots | Summarising many results at once |
+| Preliminary Model Results | Reference results to replicate and investigate |
+| Best Practices and Troubleshooting | Making benchmarks defensible and fixing failures |
+| Exercises and AI Almanac Activity | Hands-on practice and feedback |
 
 ---
 
-## ROMP Overview
+## Why Onset Matters
+
+In Ethiopian agriculture, the **onset of the rainy season** (Kiremt: June–September) dictates planting dates for millions of smallholder farmers. A late or false onset signal can lead to crop failure from planting too early, lost growing days from planting too late, and regional food insecurity. 
+
+![Mean rainy season onset date (day of year) across Ethiopia, 2003–2024. Onset is earliest (mid-to-late May) in the southwestern highlands and progressively later toward the north and east, reaching late July–August in the northeast lowlands.](../fig/climatology_onset_2003-2024.png){alt="Map of mean onset date across Ethiopia"}
+
+*Figure 1. Mean rainy season onset date (day of year), 2003–2024. Onset arrives first in the southwest (mid-to-late May) and progressively later toward the north and east (July–August). This strong spatial gradient is why skill must be examined per grid cell and not only as a national average.*
+
+**Onset is not read directly from raw model output.** To ensure genuine comparability, it is derived identically from daily rainfall data for observations, the reference model, and every forecast model using the following rules:
+
+- **Wet-spell trigger**: A candidate onset day requires at least `wet_init` mm of initial rainfall, followed by `wet_spell` consecutive days with ≥ `wet_threshold` mm/day.
+- **Dry-spell veto**: A candidate onset is invalidated if a dry spell (`dry_spell` consecutive days below `dry_threshold` mm/day) occurs within a `dry_extent`-day window afterward. This rejects false starts.
+- **Application**: These rules are applied per grid cell, per year, within a defined search window (`start_date` to `end_date`).
+
+---
+
+## The ROMP Benchmarking Package
 
 ### Motivation for a Benchmarking Package
 
@@ -103,19 +140,50 @@ config file  ->  load observations + model reforecasts
 
 ---
 
-##  Why Onset Matters
+## Core Concepts for Benchmarking
 
-In Ethiopian agriculture, the **onset of the rainy season** (Kiremt: June–September) dictates planting dates for millions of smallholder farmers. A late or false onset signal can lead to crop failure from planting too early, lost growing days from planting too late, and regional food insecurity. 
+These ideas underpin every table and map in the lesson. Make sure they are clear before interpreting results.
 
-![Mean rainy season onset date (day of year) across Ethiopia, 2003–2024. Onset is earliest (mid-to-late May) in the southwestern highlands and progressively later toward the north and east, reaching late July–August in the northeast lowlands.](figures/climatology_onset_2003-2024.png){alt="Map of mean onset date across Ethiopia"}
+### Forecasts, Reforecasts and Lead Time
 
-*Figure 1. Mean rainy season onset date (day of year), 2003–2024. Onset arrives first in the southwest (mid-to-late May) and progressively later toward the north and east (July–August). This strong spatial gradient is why skill must be examined per grid cell and not only as a national average.*
+- A **reforecast** (hindcast) is a forecast re-run for past dates with a fixed model version. Benchmarking uses reforecasts because they provide many years of forecasts with a consistent system, which is the only way to estimate skill for a seasonal event such as onset.
+- An **initialization date** is when the forecast starts. **Lead time** is the number of days after initialization. Onset skill depends strongly on lead time and on how close the initialization is to the climatological onset date.
+- Verification is therefore organised by **lead-time windows**: Days 1–15 and Days 16–30 for deterministic models, and 5-day bins within those windows for probabilistic models.
 
-**Onset is not read directly from raw model output.** To ensure genuine comparability, it is derived identically from daily rainfall data for observations, the reference model, and every forecast model using the following rules:
+### Verification Data
 
-- **Wet-spell trigger**: A candidate onset day requires at least `wet_init` mm of initial rainfall, followed by `wet_spell` consecutive days with ≥ `wet_threshold` mm/day.
-- **Dry-spell veto**: A candidate onset is invalidated if a dry spell (`dry_spell` consecutive days below `dry_threshold` mm/day) occurs within a `dry_extent`-day window afterward. This rejects false starts.
-- **Application**: These rules are applied per grid cell, per year, within a defined search window (`start_date` to `end_date`).
+- Observed onset is derived from a gridded rainfall product (e.g., CHIRPS, ENACTS). This product is the "truth" in the benchmark, but it has its own errors, so conclusions can change with the dataset.
+- Model and observations must be on a **common grid and calendar**. Very coarse grids are noisier to score but smoother to predict (see Preliminary Model Results).
+
+### Events, Tolerance and Contingency Counts
+
+- Onset is a **binary event per grid cell and year** (did the season start within the search window?) with a **timing** attached (which day).
+- A **matching tolerance** decides how close in time a forecast onset must be to count as a hit. Tolerance is a scientific choice that trades strictness against usability, and it is longer at longer lead time.
+- Counts of hits, false alarms, misses and correct negatives are the basis for FAR and MR. MAE is computed only where both onsets exist, so it can look good when a model rarely predicts onset. Always read it with MR.
+
+### Ensembles and Probabilities
+
+- An ensemble is a set of forecasts (members) from slightly different initial conditions or noise. The **forecast probability** of onset in a bin is the fraction of members that produce onset in that bin.
+- With a finite number of members, probabilities are noisy, so **fair** scores adjust for ensemble size.
+- Three separate qualities of a probabilistic forecast are measured:
+
+| Quality | Question | Metric |
+|---------|----------|--------|
+| **Accuracy** | How close are the probabilities to what happened? | BS, RPS (and skill scores) |
+| **Discrimination** | Can the forecast separate event from non-event cases? | AUC |
+| **Reliability** | Do stated probabilities match observed frequencies? | Reliability diagram |
+
+A forecast can discriminate well and still be unreliable. Reliability can be corrected by calibration. Discrimination cannot.
+
+### Reference Forecasts and Skill
+
+- A model is only useful if it beats a **reference** that needs no model. The default reference is **climatology**, the distribution of onset dates over past years.
+- Skill scores are relative to that reference. They change if the reference period or dataset changes, so always document them.
+
+### Sample Size and Uncertainty
+
+- Skill estimates are averages over grid cells, years and initialization dates. Fewer samples give noisier scores, and rare-event bins can be extremely uncertain (see the error bars on the reliability diagram for Days 16–30).
+- Eight years (2015–2022) is a short record. Treat small differences between models as inconclusive unless supported by uncertainty estimates.
 
 ---
 
@@ -128,9 +196,6 @@ The pipeline enforces a strict separation between two evaluation tracks. Determi
 |--------|----------------|----------------|
 | **MAE** (Mean Absolute Error) | $\|\text{forecast onset} - \text{obs onset} \|$ | Average error in days. |
 | **FAR** (False Alarm Ratio) | $\frac{\text{false alarms}}{\text{hits} + \text{false alarms}}$ | Percentage of predicted onsets that did not occur. |
-=======
-| **MAE** (Mean Absolute Error) | $\| \text{forecast onset} - \text{obs\_onset} \|$ | Average error in days. |
-| **FAR** (False Alarm Ratio) | $\frac{\text{false alarms}}{\text{hits} + \text{false\_alarms}}$ | Percentage of predicted onsets that did not occur. |
 | **MR** (Miss Rate) | $\frac{\text{misses}}{\text{hits} + \text{misses}}$ | Percentage of actual onsets that were missed. |
 
 **How deterministic scoring works**
@@ -172,7 +237,9 @@ $$
 
 ---
 
-## Models in the Benchmark
+## Models and Evaluation Setup
+
+### Models in the Benchmark
 
 Model assignments to specific tracks are defined centrally in the `BENCHMARK_MODEL_CATALOG` within the infrastructure `config.py` to prevent duplication or inconsistency.
 
@@ -181,23 +248,22 @@ Model assignments to specific tracks are defined centrally in the `BENCHMARK_MOD
 | **AIFS** | Deterministic | ECMWF | ~25 km (0.25°) |
 | **FuXi** | Deterministic | Fudan University | ~25 km |
 | **GraphCast** | Deterministic | Google DeepMind | ~25 km |
-| **AIFS-ENS** | Probabilistic (50 members) | ECMWF | ~25 km |
+| **AIFS-ENS** | Probabilistic (50 members; 25 used in the run below) | ECMWF | ~25 km |
 | **GenCast** | Probabilistic (Diffusion, 52 members) | Google DeepMind | ~25 km |
 
----
 
-## Evaluation Setup
+### Evaluation Windows
 
 Two verification windows are evaluated for each model to assess short-lead versus extended-lead performance:
 
 | Verification Window | Window Length | Matching Tolerance |
 |---------------------|---------------|--------------------|
 | Days 1–15 after initialization | 15 days | 3 days |
-| Days 16–30 after initialization | 30 days | 5 days |
+| Days 16–30 after initialization | 15 days | 5 days |
 
 ---
 
-# Part 1: Deterministic Evaluation
+## Deterministic Evaluation
 
 ### ROMP Run Summary
 - **Package:** Rainy Season Onset Metrics Package (ROMP), v0.0.1
@@ -227,11 +293,11 @@ Blank (white) grid cells inside the country outline mean the metric is undefined
 
 AIFS is the strongest deterministic model at short lead. Its errors grow quickly in Days 16–30.
 
-![AIFS spatial MAE, false alarm rate and miss rate, days 1-15](figures/spatial_metrics_AIFS_1-15.png){alt="AIFS days 1-15 spatial metrics"}
+![AIFS spatial MAE, false alarm rate and miss rate, days 1-15](../fig/spatial_metrics_AIFS_1-15.png){alt="AIFS days 1-15 spatial metrics"}
 
 *Figure 2a. AIFS, Days 1–15. MAE is low (light) across most of the western and central highlands. Errors and misses concentrate in the east and northeast, where onset is late and the season is short. False alarms are highest in the far southwest, where the rainy season starts earliest.*
 
-![AIFS spatial MAE, false alarm rate and miss rate, days 16-30](figures/spatial_metrics_AIFS_16-30.png){alt="AIFS days 16-30 spatial metrics"}
+![AIFS spatial MAE, false alarm rate and miss rate, days 16-30](../fig/spatial_metrics_AIFS_16-30.png){alt="AIFS days 16-30 spatial metrics"}
 
 *Figure 2b. AIFS, Days 16–30. MAE rises sharply almost everywhere, and the southwest false-alarm area becomes saturated (close to 100 %). Miss rates in the east are similar to Days 1–15.*
 
@@ -239,11 +305,11 @@ AIFS is the strongest deterministic model at short lead. Its errors grow quickly
 
 FuXi rarely issues an onset, so it has few false alarms but a very high miss rate, especially in Days 16–30.
 
-![FuXi spatial metrics, days 1-15](figures/spatial_metrics_FuXi_1-15.png){alt="FuXi days 1-15 spatial metrics"}
+![FuXi spatial metrics, days 1-15](../fig/spatial_metrics_FuXi_1-15.png){alt="FuXi days 1-15 spatial metrics"}
 
 *Figure 3a. FuXi, Days 1–15. Many grid cells are blank because FuXi produced no matched onset there. Where MAE is defined it is low in the west, but the miss-rate panel is dominated by dark blue across the north and east.*
 
-![FuXi spatial metrics, days 16-30](figures/spatial_metrics_FuXi_16-30.png){alt="FuXi days 16-30 spatial metrics"}
+![FuXi spatial metrics, days 16-30](../fig/spatial_metrics_FuXi_16-30.png){alt="FuXi days 16-30 spatial metrics"}
 
 *Figure 3b. FuXi, Days 16–30. Almost every cell is either blank or dark blue in the miss-rate panel. The few cells with an MAE value are mostly dark red. This illustrates why a low false-alarm rate can simply reflect a model that rarely predicts onset at all.*
 
@@ -251,29 +317,29 @@ FuXi rarely issues an onset, so it has few false alarms but a very high miss rat
 
 GraphCast detects onset well in Days 1–15 but pays for it with frequent false alarms.
 
-![GraphCast spatial metrics, days 1-15](figures/spatial_metrics_GraphCast_1-15.png){alt="GraphCast days 1-15 spatial metrics"}
+![GraphCast spatial metrics, days 1-15](../fig/spatial_metrics_GraphCast_1-15.png){alt="GraphCast days 1-15 spatial metrics"}
 
 *Figure 4a. GraphCast, Days 1–15. Miss rates are low over most of the country (light blue) apart from the east. The far-southwest false-alarm area is close to 100 %, reflecting GraphCast's tendency to over-predict onset.*
 
-![GraphCast spatial metrics, days 16-30](figures/spatial_metrics_GraphCast_16-30.png){alt="GraphCast days 16-30 spatial metrics"}
+![GraphCast spatial metrics, days 16-30](../fig/spatial_metrics_GraphCast_16-30.png){alt="GraphCast days 16-30 spatial metrics"}
 
-*Figure 4b. GraphCast, Days 16–30. Maps are now available for this window. MAE is high across the north, where it is defined, and many cells are blank. False alarms are large in the northwest and southwest.*
+*Figure 4b. GraphCast, Days 16–30. MAE is high across the north, where it is defined, and many cells are blank. False alarms are large in the northwest and southwest.*
 
 ### Climatology Reference Maps
 
 Every skill score is measured against climatology, so inspect the reference maps too. A forecast model must beat these to add value.
 
-![Climatology reference spatial metrics, days 1-15](figures/spatial_metrics_climatology_1-15.png){alt="Climatology days 1-15 spatial metrics"}
+![Climatology reference spatial metrics, days 1-15](../fig/spatial_metrics_climatology_1-15.png){alt="Climatology days 1-15 spatial metrics"}
 
 *Figure 5a. Climatology reference, Days 1–15.*
 
-![Climatology reference spatial metrics, days 16-30](figures/spatial_metrics_climatology_16-30.png){alt="Climatology days 16-30 spatial metrics"}
+![Climatology reference spatial metrics, days 16-30](../fig/spatial_metrics_climatology_16-30.png){alt="Climatology days 16-30 spatial metrics"}
 
 *Figure 5b. Climatology reference, Days 16–30. Climatology has low miss rates because it always predicts an onset, but it pays for this with false alarms of nearly 100 % across the west and dark-red MAE in the east. This trade-off is why FAR, MR and MAE must be read together.*
 
 ### Deterministic Skill Relative to Climatology
 
-![Change in MAE, FAR and MR relative to climatology for AIFS, FuXi and GraphCast in the 1-15 and 16-30 day windows](figures/panel_portrait_mae_far_mr_AIFS_30day.png){alt="Portrait panel of delta MAE, FAR and MR"}
+![Change in MAE, FAR and MR relative to climatology for AIFS, FuXi and GraphCast in the 1-15 and 16-30 day windows](../fig/panel_portrait_mae_far_mr_AIFS_30day.png){alt="Portrait panel of delta MAE, FAR and MR"}
 
 *Figure 6. Change (Δ) in MAE (days), FAR (%) and MR (%) for each deterministic model in each window. Blue cells are reductions and red cells are increases relative to the reference. Days 1–15: all three models reduce MAE by roughly 3.6–4.9 days (FuXi −4.87, AIFS −4.05, GraphCast −3.58). Days 16–30: the MAE advantage largely vanishes (AIFS −0.70, GraphCast +0.33) or reverses (FuXi +2.11). The FAR and MR changes are small in percentage points (all within ±0.6).*
 
@@ -286,7 +352,7 @@ Every skill score is measured against climatology, so inspect the reference maps
 - No single metric is enough. FAR, MR and MAE must be read together, and always against climatology.
 - All spatial metric files (NetCDF and PNG) were saved successfully for completed model/window combinations, with no fatal errors or tracebacks in the output.
 
-### Model Skill Rankings (Reference: Climatology = 0.0)
+### Model Skill Rankings from the Original Test Run (Reference: Climatology = 0.0)
 | Model | Mean MAE Skill | False Alarm Rate Skill | Miss Rate Skill | Overall Skill Score |
 |-------|----------------|------------------------|-----------------|---------------------|
 | **Climatology** | 0.000000 | 0.000000 | 0.000000 | 0.000000 |
@@ -296,7 +362,9 @@ Every skill score is measured against climatology, so inspect the reference maps
 | **FuXi** | -0.271470 | 0.203178 | -0.262507 | -0.110266 |
 | **GraphCast** | -0.290775 | -0.541115 | 0.329475 | -0.167472 |
 
-# Part 2: Probabilistic Evaluation (AIFS-ENS)
+---
+
+## Probabilistic Evaluation (AIFS-ENS)
 
 ### Run Configuration
 - **Command Executed:** `momp-run -p notebooks/config_et.in --mode prob`
@@ -335,7 +403,7 @@ Every skill score is measured against climatology, so inspect the reference maps
 
 The only positive skill is in the first five days (BSS = +6.4 %). Skill then falls below climatology and AUC drops from 0.85 to 0.53 by Days 11–15.
 
-![Heatmap of Brier Skill Score and AUC for AIFS-ENS in day bins 1-5, 6-10 and 11-15. BSS is +6.4, -21 and -32 percent; AUC is 0.85, 0.69 and 0.53 with climatology values in brackets 0.87, 0.81, 0.77.](figures/skill_scores_heatmap_AIFS_ENS_1-15.png){alt="AIFS-ENS skill heatmap days 1-15"}
+![Heatmap of Brier Skill Score and AUC for AIFS-ENS in day bins 1-5, 6-10 and 11-15. BSS is +6.4, -21 and -32 percent; AUC is 0.85, 0.69 and 0.53 with climatology values in brackets 0.87, 0.81, 0.77.](../fig/skill_scores_heatmap_AIFS_ENS_1-15.png){alt="AIFS-ENS skill heatmap days 1-15"}
 
 *Figure 7a. AIFS-ENS skill by 5-day bin, Days 1–15. Top row: BSS (%). Bottom row: AUC (climatology reference in brackets). Skill decays quickly with lead time.*
 
@@ -357,7 +425,7 @@ The only positive skill is in the first five days (BSS = +6.4 %). Skill then fal
 
 > **Overall Fair BSS:** `-0.258` | **Overall Fair RPSS:** `-0.486`
 
-![Heatmap of Brier Skill Score and AUC for AIFS-ENS in day bins 16-20, 21-25 and 26-30. BSS is -28, -25 and -22 percent; AUC is 0.5 in every bin against climatology values of 0.78, 0.81 and 0.82.](figures/skill_scores_heatmap_AIFS_ENS_16-30.png){alt="AIFS-ENS skill heatmap days 16-30"}
+![Heatmap of Brier Skill Score and AUC for AIFS-ENS in day bins 16-20, 21-25 and 26-30. BSS is -28, -25 and -22 percent; AUC is 0.5 in every bin against climatology values of 0.78, 0.81 and 0.82.](../fig/skill_scores_heatmap_AIFS_ENS_16-30.png){alt="AIFS-ENS skill heatmap days 16-30"}
 
 *Figure 7b. AIFS-ENS skill by 5-day bin, Days 16–30. BSS stays negative in every bin, and AUC is 0.5 throughout, meaning the ensemble cannot discriminate onset from non-onset.*
 
@@ -369,17 +437,17 @@ The skill tables above are generated from these CSV files, which you can open di
 
 | File | Contents |
 |------|----------|
-| [`binned_skill_scores_AIFS_ENS_1-15.csv`](data/binned_skill_scores_AIFS_ENS_1-15.csv) | Fair BS, BSS and AUC per 5-day bin, Days 1–15 |
-| [`binned_skill_scores_AIFS_ENS_16-30.csv`](data/binned_skill_scores_AIFS_ENS_16-30.csv) | Fair BS, BSS and AUC per 5-day bin, Days 16–30 |
-| [`overall_skill_scores_AIFS_ENS_1-15.csv`](data/overall_skill_scores_AIFS_ENS_1-15.csv) | Whole-window BS, BSS, RPS, RPSS, AUC, Days 1–15 |
-| [`overall_skill_scores_AIFS_ENS_16-30.csv`](data/overall_skill_scores_AIFS_ENS_16-30.csv) | Whole-window BS, BSS, RPS, RPSS, AUC, Days 16–30 |
+| [`binned_skill_scores_AIFS_ENS_1-15.csv`](../../data/ROMP_OUT/et/output/binned_skill_scores_AIFS_ENS_1-15.csv) | Fair BS, BSS and AUC per 5-day bin, Days 1–15 |
+| [`binned_skill_scores_AIFS_ENS_16-30.csv`](../../data/ROMP_OUT/et/output/binned_skill_scores_AIFS_ENS_16-30.csv) | Fair BS, BSS and AUC per 5-day bin, Days 16–30 |
+| [`overall_skill_scores_AIFS_ENS_1-15.csv`](../../data/ROMP_OUT/et/output/overall_skill_scores_AIFS_ENS_1-15.csv) | Whole-window BS, BSS, RPS, RPSS, AUC, Days 1–15 |
+| [`overall_skill_scores_AIFS_ENS_16-30.csv`](../../data/ROMP_OUT/et/output/overall_skill_scores_AIFS_ENS_16-30.csv) | Whole-window BS, BSS, RPS, RPSS, AUC, Days 16–30 |
 
 ```python
 import pandas as pd
 
 binned = pd.concat([
-    pd.read_csv("data/binned_skill_scores_AIFS_ENS_1-15.csv"),
-    pd.read_csv("data/binned_skill_scores_AIFS_ENS_16-30.csv"),
+    pd.read_csv("../../data/ROMP_OUT/et/output/binned_skill_scores_AIFS_ENS_1-15.csv"),
+    pd.read_csv("../../data/ROMP_OUT/et/output/binned_skill_scores_AIFS_ENS_16-30.csv"),
 ])
 print(binned[["Bin", "Fair_Brier_Skill_Score", "AUC", "AUC_ref"]])
 ```
@@ -388,11 +456,11 @@ print(binned[["Bin", "Fair_Brier_Skill_Score", "AUC", "AUC_ref"]])
 
 A reliability diagram plots the forecast probability (x) against how often the event actually occurred (y). Points on the dashed 1:1 line are perfectly reliable. Grey bars (log scale, right axis) show how many forecasts fall in each probability bin.
 
-![Reliability diagram for AIFS-ENS days 1-15. The blue curve lies above the diagonal for forecast probabilities below about 0.7 and below it above that, ending near 0.8 observed frequency at forecast probability 0.96.](figures/reliability_AIFS_ENS_1-15.png){alt="Reliability diagram AIFS-ENS days 1-15"}
+![Reliability diagram for AIFS-ENS days 1-15. The blue curve lies above the diagonal for forecast probabilities below about 0.7 and below it above that, ending near 0.8 observed frequency at forecast probability 0.96.](../fig/reliability_AIFS_ENS_1-15.png){alt="Reliability diagram AIFS-ENS days 1-15"}
 
 *Figure 8a. Reliability, Days 1–15. The curve is flatter than the diagonal. Near-zero forecasts verify about 10 % of the time (under-forecast), and forecasts near 1.0 verify only about 80 % of the time (over-forecast). The ensemble is **overconfident**. Most forecasts sit in the lowest probability bin.*
 
-![Reliability diagram for AIFS-ENS days 16-30. Almost all forecasts are below 0.2 probability; observed frequency is about 0.08 in the lowest bin, falls to zero for forecast probabilities of 0.35 to 0.45, and the last point has very wide error bars.](figures/reliability_AIFS_ENS_16-30.png){alt="Reliability diagram AIFS-ENS days 16-30"}
+![Reliability diagram for AIFS-ENS days 16-30. Almost all forecasts are below 0.2 probability; observed frequency is about 0.08 in the lowest bin, falls to zero for forecast probabilities of 0.35 to 0.45, and the last point has very wide error bars.](../fig/reliability_AIFS_ENS_16-30.png){alt="Reliability diagram AIFS-ENS days 16-30"}
 
 *Figure 8b. Reliability, Days 16–30. Nearly all forecasts are below 0.3, the curve has no upward trend, and the last points have huge error bars from small samples. Probabilities carry almost no information, matching the AUC ≈ 0.5.*
 
@@ -414,6 +482,38 @@ A reliability diagram plots the forecast probability (x) against how often the e
    - Review onset detection thresholds and rainfall accumulation logic in the AIFS-ENS post-processing pipeline.
    - Investigate whether specific initialization dates or sub-regions are driving the bulk of the negative skill.
 
+---
+
+## Calibration with IDR
+
+**Isotonic Distributional Regression (IDR)** is a non-parametric post-processing method. It learns a monotone mapping from the raw ensemble forecast to a calibrated predictive distribution, using past forecast-observation pairs. Because the mapping is monotone, a higher raw signal never produces a lower probability.
+
+### What IDR Can and Cannot Do
+
+| IDR can | IDR cannot |
+|---------|------------|
+| Correct systematic overconfidence and bias in probabilities | Create discrimination that the raw ensemble does not have |
+| Improve reliability, and often BSS and RPSS | Rescue a lead time where AUC is already ≈ 0.5 |
+| Work without assuming a fixed distribution shape | Work well with very few training samples |
+
+### How to Diagnose Its Effect
+
+Compare raw and calibrated forecasts on the same verification data:
+
+1. **Reliability diagram:** the curve should move toward the 1:1 line.
+2. **BSS and RPSS:** these should increase where the raw forecasts were overconfident.
+3. **AUC:** this should change little. A large change suggests a problem in the workflow.
+4. **Sample size:** check error bars and the number of forecasts per bin.
+
+### Avoiding Over-Optimistic Results
+
+- Train and test on **different years** (e.g., leave-one-year-out cross-validation). Calibrating and scoring on the same years overstates skill.
+- Calibrate per lead-time bin, since the error structure changes with lead time.
+- Report both raw and calibrated scores.
+
+> **Apply to this lesson:** in Days 1–15 the raw AIFS-ENS is overconfident but has real discrimination (AUC 0.85 in Days 1–5), so calibration is likely to help. In Days 16–30, AUC is 0.5, so calibration should not be expected to add skill.
+
+---
 
 ## Composite Metric Plots
 
@@ -427,13 +527,13 @@ Read composite plots with care. They hide the spatial detail in the maps and the
 
 ---
 
-# Part 3: Preliminary Model Results
+## Preliminary Model Results
 
-> These results are **preliminary**. The goal is to replicate and further investigate them. They use **2019–2024** and compare climatology, AIFS and GenCast at two resolutions. This is a different period and model set from the hands-on runs in Parts 1 and 2 (2015–2022), so do not expect the numbers to match.
+> These results are **preliminary**. The goal is to replicate and further investigate them. They use **2019–2024** and compare climatology, AIFS and GenCast at two resolutions. This is a different period and model set from the hands-on deterministic and probabilistic runs above (2015–2022), so do not expect the numbers to match.
 
 <!-- Add the corresponding map and skill figures for these results when available. -->
 
-## 0.25° Resolution
+### 0.25° Resolution
 
 **Deterministic maps, Days 1–15 (2019–2024):** climatology, AIFS and GenCast. Deterministic scores improve over climatology, but the **miss rate is very high**.
 
@@ -448,7 +548,7 @@ Read composite plots with care. They hide the spatial detail in the maps and the
 
 Probabilistic scores improve over climatology, especially for Days 1–15. However, **raw model probabilities are not well calibrated**, so calibration and blending have potential to improve them further.
 
-## 1° Resolution
+### 1° Resolution
 
 **Deterministic maps, Days 1–15 and 16–30 (2019–2024):** climatology, AIFS and GenCast. Results are similar to 0.25°, with high miss rates.
 
@@ -464,12 +564,14 @@ Improvements over climatology are higher at coarser resolution, but these estima
 ### Discussion Questions
 
 1. Why might skill against climatology look better at 1° than at 0.25°? Consider sample size and spatial averaging.
-2. AIFS-ENS in Part 2 has negative BSS but GenCast here has positive BSS. List the differences in years, resolution, model and reference dataset that could explain this.
+2. AIFS-ENS in the probabilistic evaluation has negative BSS but GenCast here has positive BSS. List the differences in years, resolution, model and reference dataset that could explain this.
 3. Both DET and PROB results show a high miss rate. What would you change in the onset definition (thresholds, tolerance) to test whether that is a model problem or a definition problem?
 
 ---
 
-# Part 4: Other Concepts to Discuss When Benchmarking
+## Best Practices and Troubleshooting
+
+### Best Practices for Defensible Benchmarks
 
 | Concept | Why it matters |
 |---------|----------------|
@@ -478,16 +580,94 @@ Improvements over climatology are higher at coarser resolution, but these estima
 | **Lead time and initialization dates** | Skill depends on when the forecast starts relative to onset. |
 | **Matching tolerance** | A larger tolerance raises hits and hides timing error. Report it with every result. |
 | **Reference choice** | Climatology, persistence or another model give different skill scores. |
-| **Base rate** | BSS can move only because the event becomes rarer (see the watch-out in Part 2). |
+| **Base rate** | BSS can move only because the event becomes rarer (see the watch-out in the probabilistic evaluation section). |
 | **Resolution and sample size** | Coarse grids give higher skill but noisier estimates. |
 | **Spatial aggregation** | Grid-cell metrics differ from regional or national averages. |
 | **Calibration and blending** | Post-processing (IDR, EMOS) can fix reliability but not missing discrimination. |
 | **Separate DET and PROB tracks** | Metric families are not comparable. Never mix them in one run. |
 | **Reproducibility** | Keep the config file, package version and data versions with every result. |
 
+### Reporting Checklist
+
+Every benchmark result should state:
+
+- [ ] Onset definition parameters (`wet_init`, `wet_spell`, `wet_threshold`, `dry_spell`, `dry_threshold`, `dry_extent`, search window)
+- [ ] Verification dataset and its resolution
+- [ ] Model, reforecast period, initialization dates and number of members
+- [ ] Lead-time windows and matching tolerance
+- [ ] Reference used for skill (and its period)
+- [ ] Track (`DET` or `PROB`), and whether forecasts were calibrated
+- [ ] Package version and the config file used
+
+### Troubleshooting Common Failure Modes
+
+| Symptom | Likely cause | What to check |
+|---------|--------------|---------------|
+| Run stops or results look meaningless after switching tracks | DET and PROB mixed in one run | Set the mode in the config or with `--mode`, and run each track separately |
+| Model is missing from the output | Not registered for that track | `BENCHMARK_MODEL_CATALOG` in `config.py` |
+| Many blank (white) grid cells | No onset detected or no matched events, so a metric is undefined | Onset thresholds, search window, mask, data coverage |
+| Extremely high miss rate for one model | Model rarely reaches the wet-spell threshold (e.g., drizzle bias) | Rainfall distribution vs. observations, `wet_threshold` |
+| Very high false-alarm rate in the wet southwest | Season starts early there and the model triggers onset too often | Compare against the climatology map |
+| Grid or shape errors when loading data | Forecast and observation grids or masks differ | Common grid, mask file and resolution |
+| Regional (CMZ) aggregation not produced | Resolution not supported for that aggregation | Run summary log (a note appears at 0.2° in this lesson) |
+| Skill changes when only the period changes | Small sample or different climatological reference | Number of years, reference period |
+| Positive BSS but AUC ≈ 0.5 | Base-rate effect, not real skill | Read BSS together with AUC and reliability |
+| Results cannot be reproduced | Config, data or package version not recorded | Reporting checklist above |
+
 ---
 
-# Part 5: AI Almanac Exploration and Key Ingredients
+## Exercises
+
+### Exercise 1: Read the Configuration (10 min)
+
+Open `notebooks/config_et.in`.
+
+1. Identify the onset parameters, the verification windows, the matching tolerance and the run mode.
+2. Predict what happens to FAR and MR if `wet_threshold` is increased. Explain your reasoning.
+
+### Exercise 2: Interpret the Deterministic Maps (15 min)
+
+Use Figures 2–5.
+
+1. Where is the miss rate highest for AIFS in Days 1–15, and why might onset be harder to forecast there?
+2. Compare FuXi and GraphCast. Which one over-predicts onset and which one under-predicts it?
+3. Why can a model with a lower FAR than climatology still be a poor forecast?
+
+### Exercise 3: Reconcile Two Summaries (10 min)
+
+Figure 6 shows MAE improvements over the reference for all models in Days 1–15, but the skill ranking table shows negative mean-MAE skill. List at least three reasons the two could differ (reference dataset, years, aggregation, run version) and describe what you would check.
+
+### Exercise 4: Compute a Skill Score by Hand (10 min)
+
+Open `binned_skill_scores_AIFS_ENS_1-15.csv`.
+
+1. For the Days 1–5 bin, compute $1 - BS_{forecast}/BS_{climatology}$ from the two Brier score columns.
+2. Compare with the `Fair_Brier_Skill_Score` column.
+3. Repeat for Days 11–15 and explain the sign.
+
+<details>
+<summary>Check your answer</summary>
+
+Days 1–5: 1 − 0.0849 / 0.0907 ≈ 0.064 (BSS ≈ +6.4 %). Days 11–15: 1 − 0.1307 / 0.0990 ≈ −0.32, so the ensemble is worse than climatology because its Brier score is higher.
+
+</details>
+
+### Exercise 5: Diagnose Reliability (10 min)
+
+Use Figures 8a and 8b.
+
+1. Is the Days 1–15 ensemble over- or under-confident? Give the evidence from the curve.
+2. Why are the points in Figure 8b so uncertain?
+3. Would calibration help more in Days 1–15 or Days 16–30? Justify with AUC.
+
+### Exercise 6: Design a Benchmark (5 min, discussion)
+
+You must compare two new models for a different country. Using the reporting checklist, list the five decisions you must make before running the package.
+
+---
+
+## AI Almanac Exploration and Feedback
+
 
 ### Objective
 Explore the AI Almanac and gather feedback on the necessary components required to assess metrics and use cases in an intuitive, interactive manner.
@@ -497,4 +677,36 @@ Explore the AI Almanac and gather feedback on the necessary components required 
 - Have paired country groups share their ideas and feedback across both deterministic and probabilistic evaluation tracks.
 
 ### Wrap-up Discussion
-Conclude the session with a focused discussion on the **"key ingredients needed"** for successful, use-case-driven model assessment, ensuring that technical metrics translate into actionable agricultural insights.
+
+
+---
+
+## Summary
+
+1. Onset is a derived quantity. It must be detected with the same wet-spell and dry-spell rules in observations and forecasts.
+2. ROMP is configuration-driven, so results can be reproduced and compared across location, thresholds, lead time and models.
+3. Deterministic (FAR, MR, MAE) and probabilistic (BS, RPS, AUC, reliability) tracks are separate and their metrics cannot be compared directly.
+4. Skill exists only relative to a reference. In the examples, models beat climatology at short lead and lose that advantage by Days 16–30.
+5. Read metrics together: FAR with MR and MAE, and BSS with AUC and reliability.
+6. Calibration such as IDR can improve reliability, but it cannot create missing discrimination.
+7. Resolution, period, tolerance and sample size all affect scores. Document them with every result.
+
+## Glossary
+
+| Term | Meaning |
+|------|---------|
+| **Onset** | Start of the rainy season, detected from daily rainfall with wet-spell and dry-spell rules |
+| **Reforecast** | Forecast re-run for past dates with a fixed model version |
+| **Lead time** | Days between initialization and the forecast day |
+| **Hit / False alarm / Miss** | Forecast onset within tolerance of observed / forecast but not observed / observed but not forecast |
+| **MAE** | Mean absolute timing error of matched onsets, in days |
+| **FAR** | Fraction of forecast onsets that did not occur |
+| **MR** | Fraction of observed onsets that were not forecast |
+| **BS / BSS** | Brier Score of a yes/no probability forecast, and its skill relative to a reference |
+| **RPS / RPSS** | Ranked Probability Score over ordered onset-date categories, and its skill |
+| **AUC** | Area under the ROC curve. 0.5 means no discrimination and 1.0 is perfect |
+| **Reliability** | Agreement between forecast probability and observed frequency |
+| **Fair score** | Score corrected for the finite number of ensemble members |
+| **Climatology** | Reference forecast built from past observed onset dates |
+| **IDR** | Isotonic Distributional Regression, a monotone non-parametric calibration method |
+| **ROMP / MOMP** | Rainy season Onset Metrics Package / the benchmarking workflow it implements |
