@@ -192,6 +192,7 @@ A forecast can discriminate well and still be unreliable. Reliability can be cor
 The pipeline enforces a strict separation between two evaluation tracks. Deterministic and probabilistic models produce fundamentally different outputs and require non-comparable metric families. **A single run must be exclusively one or the other—never a mix.**
 
 ### 1. Deterministic Track (Single Forecast)
+
 | Metric | Formula Concept | Interpretation |
 |--------|----------------|----------------|
 | **MAE** (Mean Absolute Error) | $\|\text{forecast onset} - \text{obs onset} \|$ | Average error in days. |
@@ -208,6 +209,7 @@ The pipeline enforces a strict separation between two evaluation tracks. Determi
 Because the three metrics trade off against each other, a model that never predicts onset has zero false alarms but a 100 % miss rate. A model that always predicts onset has zero misses but many false alarms. Climatology behaves like the second case (Figure 5).
 
 ### 2. Probabilistic Track (Ensemble Forecasts)
+
 | Metric | Interpretation |
 |--------|----------------|
 | **BS** (Brier Score) / **BSS** (Skill Score) | Mean squared error of probability forecasts. BSS represents improvement over a climatological baseline. *(Lower is better for BS; Higher is better for BSS)* |
@@ -223,6 +225,7 @@ Because the three metrics trade off against each other, a model that never predi
 4. A model can have good AUC but poor reliability. Calibration methods such as Isotonic Distributional Regression (IDR) can fix reliability but cannot create discrimination that is not there.
 
 ### 3. Skill Score Definition
+
 Raw metrics alone do not establish whether an AI model beats a naive baseline. Therefore, both tracks report a final **Skill Score (SS)** relative to a reference model (climatology by default, or a named model):
 
 $$
