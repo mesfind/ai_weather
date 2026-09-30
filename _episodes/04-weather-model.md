@@ -200,6 +200,7 @@ SS = 1 - \frac{\text{Metric}_{\text{model}}}{\text{Metric}_{\text{reference}}}
 $$
 
 **Interpretation:**
+
 * $SS = 1$: Perfect forecast.
 * $SS > 0$: The model outperforms the reference (positive skill).
 * $SS = 0$: The model performs identically to the reference.
@@ -221,11 +222,11 @@ Model assignments to specific tracks are defined centrally in the `BENCHMARK_MOD
 | **GenCast** | Probabilistic (Diffusion, 52 members) | Google DeepMind | ~25 km |
 
 ### Evaluation Windows
+
 | Verification Window | Window Length | Matching Tolerance |
 | :--- | :--- | :--- |
 | Days 1–15 after initialization | 15 days | 3 days |
 | Days 16–30 after initialization | 15 days | 5 days |
-
 ---
 
 ## Deterministic Evaluation
@@ -239,6 +240,7 @@ Model assignments to specific tracks are defined centrally in the `BENCHMARK_MOD
 * **Spatial Grid:** 49 lats × 61 lons at 0.2° resolution
 
 ### How to Read the Spatial Metric Maps
+
 For each model and verification window, the pipeline writes a three-panel map (`spatial_metrics_<model>_<window>.png`):
 
 | Panel | Colour scale | What "good" looks like |
@@ -252,6 +254,7 @@ For each model and verification window, the pipeline writes a three-panel map (`
 ### Model Results
 
 #### AIFS Results
+
 AIFS is the strongest deterministic model at short lead. Its errors grow quickly in Days 16–30.
 ![AIFS days 1-15 spatial metrics](../fig/fig2a_aifs_1_15.png)  
 *Figure 2a. AIFS, Days 1–15. MAE is low across most of the western and central highlands. Errors and misses concentrate in the east and northeast.*
@@ -260,6 +263,7 @@ AIFS is the strongest deterministic model at short lead. Its errors grow quickly
 *Figure 2b. AIFS, Days 16–30. MAE rises sharply almost everywhere, and the southwest false-alarm area becomes saturated.*
 
 #### FuXi Results
+
 FuXi rarely issues an onset, so it has few false alarms but a very high miss rate, especially in Days 16–30.
 ![FuXi days 1-15 spatial metrics](../fig/fig3a_fuxi_1_15.png)  
 *Figure 3a. FuXi, Days 1–15. Many grid cells are blank. Where MAE is defined it is low in the west, but miss-rate is dominated by dark blue in the north/east.*
