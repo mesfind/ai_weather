@@ -10,13 +10,13 @@
     "peak_gpu_gb": 16.0
   },
   "atlas_crps": {
-    "load_s": 60,
+    "load_s": 40.7,
     "run_s": 1095.2,
     "lead_days": 10,
     "members": 3,
     "peak_gpu_gb": 32.9,
     "measured": "2026-09-30",
-    "note": "First load took 1910 s, almost all of it the one-time 12.5 GB weight download; load_s here is a placeholder until re-timed with cached weights. run_s includes the ARCO download."
+    "note": "First run also downloads the 12.5 GB weights once (~31 min extra). load_s measured 2026-10-06 with cached weights. run_s includes the ARCO download."
   },
   "aurora15": {
     "load_s": 15.3,
@@ -37,13 +37,13 @@
     "note": "Start 2026-05-15 (open-data IFS lacks the wave inputs for July 2025). Weights and fixed fields cached; run_s includes IFS download from ECMWF's Azure mirror (AWS was throttling)."
   },
   "aifs2_ens": {
-    "load_s": 30,
+    "load_s": 9.9,
     "run_s": 324.2,
     "lead_days": 10,
     "members": 3,
     "peak_gpu_gb": 24.8,
     "measured": "2026-10-02",
-    "note": "Start 2026-05-15. First load 342 s incl. one-time weight download; load_s is a placeholder. run_s includes IFS download from ECMWF's Azure mirror."
+    "note": "Start 2026-05-15. First run also downloads the weights once (~5 min extra). load_s measured 2026-10-06 with cached weights. run_s includes IFS download from ECMWF's Azure mirror."
   },
   "neuralgcm": {
     "load_s": 6.8,
