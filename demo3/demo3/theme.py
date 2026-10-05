@@ -77,6 +77,7 @@ div.stButton > button[kind="primary"] {{ background: {NAVY}; border-color: {NAVY
   border-radius: 8px; height: 2.8rem; }}
 div.stButton > button[kind="primary"]:hover {{ background: {NAVY_DARK}; border-color: {NAVY_DARK}; }}
 .stTabs [aria-selected="true"] {{ color: #c2410c !important; }}
+div[data-testid="stRadio"] label p {{ color: {INK} !important; }}
 </style>
 """
 
