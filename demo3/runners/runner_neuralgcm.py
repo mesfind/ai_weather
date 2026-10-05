@@ -14,6 +14,8 @@ import time
 import numpy as np
 import xarray as xr
 
+from _e2s import peak_gpu_gb
+
 CHECKPOINT = "gs://neuralgcm/models/v1_precip/stochastic_precip_2_8_deg.pkl"
 ARCO = "gs://gcp-public-data-arco-era5/ar/full_37-1h-0p25deg-chunk-1.zarr-v3"
 
@@ -55,7 +57,7 @@ def run(init, lead_hours, members, report):
         ds = model.data_to_xarray(pred, times=np.arange(steps) * 6)
         out.append(ds)
     run_s = round(time.time() - t1, 1)
-    report(f"Forecast finished in {run_s:.0f} s", 0.95, run_s=run_s)
+    report(f"Forecast finished in {run_s:.0f} s", 0.95, run_s=run_s, peak_gpu_gb=peak_gpu_gb())
 
     ds = xr.concat(out, dim="ensemble").rename(time="lead_time", latitude="lat", longitude="lon")
     res = xr.Dataset({"z500": ds.geopotential.sel(level=500, drop=True)})

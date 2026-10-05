@@ -11,6 +11,25 @@ import xarray as xr
 PRECIP_VARS = ("tp06", "tp1h")
 
 
+def peak_gpu_gb() -> float | None:
+    """Peak GPU memory of this process in GB, counting both PyTorch and JAX
+    (GraphCast and NeuralGCM run on JAX, which torch's counter can't see)."""
+    peaks = []
+    try:
+        import torch
+        if torch.cuda.is_available():
+            peaks.append(torch.cuda.max_memory_allocated())
+    except ImportError:
+        pass
+    try:
+        import jax
+        peaks += [(d.memory_stats() or {}).get("peak_bytes_in_use", 0)
+                  for d in jax.local_devices() if d.platform == "gpu"]
+    except ImportError:
+        pass
+    return round(max(peaks) / 1e9, 1) if any(peaks) else None
+
+
 def run_e2s(model_cls, data, init: pd.Timestamp, lead_hours: int, members: int, report,
             *, ensemble: bool = False, step_hours: int = 6, seed: int = 0,
             precip_fix=None, device: str = "cuda") -> xr.Dataset:
@@ -44,7 +63,7 @@ def run_e2s(model_cls, data, init: pd.Timestamp, lead_hours: int, members: int, 
     else:
         run.deterministic([init.to_pydatetime()], nsteps, model, data, io, output_coords=out_coords)
     run_s = round(time.time() - t1, 1)
-    peak_gb = round(torch.cuda.max_memory_allocated() / 1e9, 1)
+    peak_gb = peak_gpu_gb()
     report(f"Forecast finished in {run_s:.0f} s", 0.95, run_s=run_s, peak_gpu_gb=peak_gb)
 
     ds = io.root.isel(time=0, drop=True)
