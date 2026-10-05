@@ -19,9 +19,11 @@ ENV PIP_CONSTRAINT= \
 
 COPY docker/locks /tmp/locks
 
-# Atlas CRPS, Aurora 1.5, AIFS v2 single (Earth2Studio 0.18)
+# Atlas CRPS, Aurora 1.5, AIFS v2 single (Earth2Studio 0.18). No build isolation:
+# NATTEN compiles from source and must build against the container's PyTorch.
+# There is no GPU during a build, so name the Spark's GB10 (sm_121) explicitly.
 RUN python -m venv --system-site-packages /opt/envs/e2s018 \
- && /opt/envs/e2s018/bin/pip install --no-deps -r /tmp/locks/e2s018.txt \
+ && NATTEN_CUDA_ARCH="12.1" NATTEN_N_WORKERS=16 /opt/envs/e2s018/bin/pip install --no-deps --no-build-isolation -r /tmp/locks/e2s018.txt \
  && /opt/envs/e2s018/bin/python -c "from earth2studio.models.px import AtlasCRPS, Aurora1p5, AIFS2"
 
 # AIFS v2 ENS (needs a different anemoi-models)
