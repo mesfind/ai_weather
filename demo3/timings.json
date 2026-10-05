@@ -1,12 +1,13 @@
 {
   "graphcast": {
-    "load_s": 32.0,
-    "run_s": 286.7,
+    "load_s": 34.4,
+    "run_s": 181.0,
     "lead_days": 10,
     "members": 1,
     "output_mb": 275.8,
-    "measured": "2026-09-30",
-    "note": "run_s includes downloading ERA5 initial conditions from ARCO."
+    "measured": "2026-10-06",
+    "note": "run_s includes downloading ERA5 initial conditions from ARCO.",
+    "peak_gpu_gb": 16.0
   },
   "atlas_crps": {
     "load_s": 60,
@@ -45,12 +46,13 @@
     "note": "Start 2026-05-15. First load 342 s incl. one-time weight download; load_s is a placeholder. run_s includes IFS download from ECMWF's Azure mirror."
   },
   "neuralgcm": {
-    "load_s": 4.8,
-    "run_s": 123.7,
+    "load_s": 6.8,
+    "run_s": 137.4,
     "lead_days": 10,
     "members": 3,
-    "measured": "2026-10-02",
-    "note": "2.8 deg stochastic precipitation checkpoint (only NeuralGCM version with rain); no 2 m temperature. run_s includes the ARCO download."
+    "measured": "2026-10-06",
+    "note": "2.8 deg stochastic precipitation checkpoint (only NeuralGCM version with rain); no 2 m temperature. run_s includes the ARCO download.",
+    "peak_gpu_gb": 18.2
   },
   "fgn": {
     "load_s": 1,
