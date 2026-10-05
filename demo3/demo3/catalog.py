@@ -2,12 +2,13 @@
 
 One entry per model on the 2026 list. `env` names the Python environment the
 model's runner executes in (models whose dependencies conflict get separate
-environments inside the container). `status` gates the Run button: models
-that are not installed yet can only be exercised with synthetic output.
+environments inside the container). A model can run live only if its
+environment exists at {ENV_ROOT}/{env}; otherwise only its saved runs load.
 """
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from pathlib import Path
@@ -16,6 +17,8 @@ ARCO_ERA5 = "ARCO ERA5 (Google)"
 IFS_OPEN = "IFS analysis (ECMWF Open Data)"
 # ECMWF open data on AWS starts 2024-03-01 and is current to within a few days.
 IFS_MIN, IFS_MAX = date(2024, 3, 1), date.today() - timedelta(days=2)
+# Model environments inside the container: {ENV_ROOT}/{env}/bin/python
+ENV_ROOT = Path(os.environ.get("DEMO3_ENV_ROOT", "/opt/envs"))
 
 
 @dataclass(frozen=True)
@@ -27,7 +30,6 @@ class Model:
     init_source: str
     env: str                      # runner environment name
     max_lead_days: int
-    status: str = "not installed"  # "ready" | "not installed"
     max_members: int = 1
     default_members: int = 1
     slow: bool = False            # suggest loading a saved run in class
@@ -35,13 +37,18 @@ class Model:
     init_max: date = date(2026, 4, 30)
     notes: str = ""
 
+    @property
+    def live(self) -> bool:
+        """True if this container can run the model (its environment is installed)."""
+        return (ENV_ROOT / self.env / "bin" / "python").exists()
+
 
 MODELS: list[Model] = [
     Model("aifs2_single", "AIFS Single v2.0", "ECMWF", "deterministic", IFS_OPEN, "e2s018",
           max_lead_days=15, init_min=IFS_MIN, init_max=IFS_MAX,
           notes="Starts from IFS analyses (incl. wave fields); ARCO ERA5 lacks some inputs."),
     Model("graphcast", "GraphCast", "Google DeepMind", "deterministic", ARCO_ERA5, "graphcast",
-          max_lead_days=10, status="ready"),
+          max_lead_days=10),
     Model("aurora15", "Aurora 1.5", "Microsoft", "deterministic", ARCO_ERA5, "e2s018",
           max_lead_days=10, slow=True),
     Model("aifs2_ens", "AIFS ENS v2", "ECMWF", "ensemble", IFS_OPEN, "e2s018ens",

@@ -14,13 +14,11 @@ import time
 import uuid
 from pathlib import Path
 
-from .catalog import BY_KEY
+from .catalog import BY_KEY, ENV_ROOT
 from .store import JOBS_DIR, RunRequest
 
 APP_ROOT = Path(__file__).resolve().parent.parent
 RUNNER = APP_ROOT / "runners" / "run_model.py"
-# Model environments inside the container: {ENV_ROOT}/{env}/bin/python
-ENV_ROOT = Path(os.environ.get("DEMO3_ENV_ROOT", "/opt/envs"))
 
 
 def _python_for(req: RunRequest) -> str:

@@ -111,7 +111,7 @@ gpu = gpu_name()
 # ── sidebar: developer options ───────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### Developer options")
-    synthetic = st.toggle("Use synthetic output", value=True,
+    synthetic = st.toggle("Use synthetic output", value=False,
                           help="Generate fake fields in the output format instead of running a model. "
                                "For building the visualizations before the model runners exist.")
     st.caption(f"Output folder: `{store.OUTPUT_DIR}`")
@@ -125,11 +125,11 @@ theme.page_title("Running Your First AI Weather Forecast",
                  "Pick a model, a start date and a region, run the forecast on your Spark, "
                  "and explore temperature, rainfall and onset.")
 
-ready = [m for m in catalog.MODELS if m.status == "ready"]
+ready = [m for m in catalog.MODELS if m.live]
 free_gb = shutil.disk_usage(store.OUTPUT_DIR if store.OUTPUT_DIR.exists() else "/").free / 1e9
 theme.stats([
     ("Models", str(len(catalog.MODELS)), theme.BLUE),
-    ("Installed", f"{len(ready)} / {len(catalog.MODELS)}", theme.TEAL),
+    ("Live on this Spark", f"{len(ready)} / {len(catalog.MODELS)}", theme.TEAL),
     ("Saved runs", str(len(saved)), theme.MUTED),
     ("Free disk", f"{free_gb:,.0f} GB", theme.ORANGE),
 ])
@@ -144,14 +144,14 @@ model = st.selectbox("Model", choices, format_func=lambda m: f"{m.name}  {catalo
                      label_visibility="collapsed")
 def model_tags(m: catalog.Model) -> str:
     kind_tag = theme.tag(m.kind, "ens" if m.kind == "ensemble" else "det")
-    return kind_tag + (theme.tag("ready", "ok") if m.status == "ready" else theme.tag("not installed", "warn"))
+    return kind_tag + (theme.tag("live", "ok") if m.live else theme.tag("saved runs only", "warn"))
 
 
 theme.cards([{
     "name": m.name, "org": m.org, "tags": model_tags(m),
     "note": f"{catalog.timing_label(m, timings)} · starts from {m.init_source}",
     "color": theme.PURPLE if m.kind == "ensemble" else theme.TEAL,
-    "selected": m.key == model.key, "dim": m.status != "ready" and not synthetic,
+    "selected": m.key == model.key, "dim": not m.live and not synthetic,
 } for m in choices])
 if model.notes:
     st.caption(f"ℹ️ {model.notes}")
@@ -221,7 +221,7 @@ theme.pills([("Model", model.name), ("Mode", mode), ("Start", f"{init:%Y-%m-%d %
              ("Lead", f"{lead_days} days"), ("Members", str(members)), ("Region", region_name),
              ("Use case", use_case)] + ([("Output", "synthetic")] if synthetic else []))
 
-can_run = (model.status == "ready" or synthetic) and box.is_valid()
+can_run = (model.live or synthetic) and box.is_valid()
 b1, b2 = st.columns([2, 3])
 if saved_path:
     clicked = b1.button("Load saved run", type="primary", width="stretch", disabled=not box.is_valid())
@@ -230,7 +230,7 @@ else:
     clicked = b1.button("Run forecast", type="primary", width="stretch",
                         disabled=not can_run or ss.job_id is not None)
     b2.markdown(theme.tag(f"will run on the Spark {catalog.timing_label(model, timings)}", "det")
-                if can_run else theme.tag("model not installed yet — turn on synthetic output to test", "warn"),
+                if can_run else theme.tag("no saved run for these settings, and live runs aren't set up here yet", "warn"),
                 unsafe_allow_html=True)
 
 if clicked:
