@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import pickle
 import time
+from pathlib import Path
 
 import numpy as np
 import xarray as xr
@@ -17,6 +18,7 @@ import xarray as xr
 from _e2s import peak_gpu_gb
 
 CHECKPOINT = "gs://neuralgcm/models/v1_precip/stochastic_precip_2_8_deg.pkl"
+CACHE = Path.home() / ".cache" / "neuralgcm"
 ARCO = "gs://gcp-public-data-arco-era5/ar/full_37-1h-0p25deg-chunk-1.zarr-v3"
 
 
@@ -28,7 +30,12 @@ def run(init, lead_hours, members, report):
 
     t0 = time.time()
     report("Loading NeuralGCM checkpoint…", 0.02)
-    with gcsfs.GCSFileSystem(token="anon").open(CHECKPOINT, "rb") as f:
+    local = CACHE / Path(CHECKPOINT).name  # keep a copy so later runs work offline
+    if not local.exists():
+        CACHE.mkdir(parents=True, exist_ok=True)
+        gcsfs.GCSFileSystem(token="anon").get(CHECKPOINT, str(local) + ".part")
+        Path(str(local) + ".part").replace(local)
+    with open(local, "rb") as f:
         model = neuralgcm.PressureLevelModel.from_checkpoint(pickle.load(f))
     load_s = round(time.time() - t0, 1)
     report(f"Model loaded in {load_s:.0f} s; fetching ERA5 initial conditions…", 0.1, load_s=load_s)
@@ -46,6 +53,9 @@ def run(init, lead_hours, members, report):
     inputs = model.inputs_from_xarray(era5.isel(time=0))
     forcings = model.forcings_from_xarray(era5.isel(time=0))
     persisted = model.forcings_from_xarray(era5.head(time=1))
+    fetch_s = round(time.time() - t1, 1)
+    report(f"Initial conditions ready in {fetch_s:.0f} s", 0.15, fetch_s=fetch_s)
+    t1 = time.time()
 
     steps = lead_hours // 6 + 1
     out = []

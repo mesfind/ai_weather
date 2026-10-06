@@ -45,7 +45,18 @@ def run_e2s(model_cls, data, init: pd.Timestamp, lead_hours: int, members: int, 
     report("Loading model weights…", 0.02)
     model = model_cls.load_model(model_cls.load_default_package()).to(device)
     load_s = round(time.time() - t0, 1)
-    report(f"Model loaded in {load_s:.0f} s; fetching initial conditions and running…", 0.1, load_s=load_s)
+    report(f"Model loaded in {load_s:.0f} s", 0.05, load_s=load_s)
+
+    # Fetch the initial conditions on their own first, so the download is timed
+    # separately from the model; the data sources cache it, so the run reuses it.
+    from earth2studio.data import fetch_data
+    ic = model.input_coords()
+    t_f = time.time()
+    report("Fetching initial conditions…", 0.06)
+    fetch_data(data, time=np.array([init.to_datetime64()]), variable=np.array(ic["variable"]),
+               lead_time=np.array(ic["lead_time"]), device="cpu")
+    fetch_s = round(time.time() - t_f, 1)
+    report(f"Initial conditions ready in {fetch_s:.0f} s; running…", 0.1, fetch_s=fetch_s)
 
     available = set(model.output_coords(model.input_coords())["variable"].tolist())
     precip = next((v for v in PRECIP_VARS if v in available), None)

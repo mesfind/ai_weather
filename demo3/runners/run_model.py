@@ -99,13 +99,26 @@ def main() -> int:
             except ModuleNotFoundError:
                 raise NotImplementedError(f"No runner yet for {model.name} (runners/runner_{a.model}.py)")
             ds = runner.run(init, a.lead_hours, a.members, report)
-        report("Writing output…", 0.98)
+        t_post = time.time()
+        report("Post-processing and saving…", 0.97)
+        source = ds.attrs.get("fgn_init_source") or model.init_source  # FGN: sample or converter
         ds = contract.finalize(ds, model_key=a.model, model_name=model.name, init=init,
-                               init_source=model.init_source, synthetic=a.synthetic)
+                               init_source=source, synthetic=a.synthetic)
         contract.write(ds, a.out)
-        report("Done", 1.0, state="done", finished=time.time(), runtime_s=round(time.time() - t0, 1))
+        post_s = round(time.time() - t_post, 1)
+        report("Done", 1.0, state="done", finished=time.time(), runtime_s=round(time.time() - t0, 1),
+               post_s=post_s)
+        # how this run was made, shown next to the results (also for saved runs)
+        stages = {k: report.state.get(k) for k in ("load_s", "fetch_s", "run_s", "post_s",
+                                                    "runtime_s", "peak_gpu_gb")}
+        stages.update(model=a.model, init=a.init, lead_hours=a.lead_hours, members=a.members,
+                      output_mb=round(a.out.stat().st_size / 1e6, 1), synthetic=a.synthetic,
+                      init_source=source,
+                      when=time.strftime("%Y-%m-%dT%H:%M"))
+        a.out.with_suffix(".json").write_text(json.dumps(stages, indent=1))
         if not a.synthetic:  # measured Spark runtimes, source for timings.json
-            rec = {k: report.state.get(k) for k in ("load_s", "run_s", "runtime_s", "peak_gpu_gb")}
+            rec = {k: report.state.get(k) for k in ("load_s", "fetch_s", "run_s", "post_s",
+                                                    "runtime_s", "peak_gpu_gb")}
             rec.update(model=a.model, init=a.init, lead_hours=a.lead_hours, members=a.members,
                        output_mb=round(a.out.stat().st_size / 1e6, 1), when=time.strftime("%Y-%m-%dT%H:%M"))
             with open(a.out.parent.parent / "_timings_log.jsonl", "a") as f:

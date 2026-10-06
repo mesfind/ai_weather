@@ -18,7 +18,7 @@ import pandas as pd
 import streamlit as st
 import xarray as xr
 
-from demo3 import catalog, jobs, movie, store, theme
+from demo3 import catalog, jobs, movie, results, store, theme
 from demo3.regions import COUNTRIES, GROUPS, Box, country_box
 
 st.set_page_config(page_title="Demo 3 · AI Weather Forecast", page_icon="🌦️", layout="wide")
@@ -166,6 +166,8 @@ if model.notes:
     st.caption(f"ℹ️ {model.notes}")
 if model.slow:
     st.caption("🐢 This model is slow on the Spark. In class, load a saved run where possible.")
+st.markdown("**What this model needs on the Spark**")
+results.requirements(model, timings, store.OUTPUT_DIR)
 
 # ── Step 2b: forecast setup ──────────────────────────────────────────────────
 theme.section("Forecast setup")
@@ -280,4 +282,26 @@ if ss.result:
         theme.section("Results")
         if full.attrs.get("synthetic"):
             st.caption("⚠️ Synthetic output — not a real forecast.")
-        event_results(path, m, full, run_req, box, region_name, lead_days, use_case)
+        st.markdown(f"**How this forecast was made** · {m.name}, started "
+                    f"{run_req.init:%-d %b %Y %HZ} from {full.attrs.get('init_source', m.init_source)}")
+        results.pipeline(path, full, m, timings)
+        movie_tab, maps_tab = st.tabs(["Event movie (vs observations)", "Forecast maps"])
+        with movie_tab:
+            event_results(path, m, full, run_req, box, region_name, lead_days, use_case)
+        with maps_tab:
+            ds = results.crop(full, box, lead_days * 24)
+            if ds.sizes["lat"] < 2 or ds.sizes["lon"] < 2:
+                st.error(f"{region_name} holds fewer than 2 grid points of {m.name}'s "
+                         f"{m.grid_deg:g}° grid; choose a larger region.")
+            else:
+                results.field_maps(ds, m, box, region_name)
+        data = results.netcdf_bytes(path, p.stat().st_mtime,
+                                    (box.lat_min, box.lat_max, box.lon_min, box.lon_max),
+                                    lead_days * 24)
+        st.download_button(f"⬇️ Download this forecast for {region_name} (NetCDF, "
+                           f"{len(data) / 1e6:.1f} MB)", data, mime="application/x-netcdf",
+                           file_name=f"{m.key}_{run_req.init:%Y%m%dT%H}_{lead_days}d_"
+                                     f"{region_name.replace(' ', '_').lower()}.nc")
+        st.caption(f"Variables tp (mm per 6 h), t2m (K), z500 (m² s⁻²) by member and lead time. "
+                   f"The full global file is on the Spark at `{p.relative_to(store.OUTPUT_DIR.parent)}` "
+                   f"({p.stat().st_size / 1e6:.0f} MB).")

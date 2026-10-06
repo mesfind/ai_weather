@@ -92,9 +92,12 @@ def run(init, lead_hours, members, report):
     load_s = round(time.time() - t0, 1)
     report(f"Model loaded in {load_s:.0f} s; preparing starting conditions…", 0.05, load_s=load_s)
 
+    t_in = time.time()
     batch, source = _inputs(pd.Timestamp(init), steps, sample, report)
     inputs, targets, forcings = data_utils.extract_inputs_targets_forcings(
         batch, target_lead_times=slice("6h", f"{steps * 6}h"), **dataclasses.asdict(config.task))
+    fetch_s = round(time.time() - t_in, 1)
+    report(f"Initial conditions ready in {fetch_s:.0f} s", 0.1, fetch_s=fetch_s)
 
     # GPUs need the alternative attention implementation.
     config.predictor_kwargs["noisy_function_kwargs"]["mesh_model_ctor"].keywords[

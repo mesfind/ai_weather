@@ -66,6 +66,9 @@ class Model:
     notes: str = ""
     missing: tuple[str, ...] = ()  # variables (VAR_LABELS keys) the model does not forecast
     grid_deg: float = 0.25          # output grid spacing
+    weights_gb: float = 0.0         # model weights on disk (downloaded once)
+    output_mb_10d: float = 0.0      # saved NetCDF for 10 days at the default members
+    inputs: str = ""                # what the starting conditions are and how they're prepared
 
     @property
     def live(self) -> bool:
@@ -97,29 +100,43 @@ MODELS: list[Model] = [
     Model("aifs2_single", "AIFS Single v2.0", "ECMWF", "deterministic", IFS_OPEN, "e2s018",
           max_lead_days=15, init_min=AIFS2_MIN, init_max=IFS_MAX,
           notes="Starts from ECMWF's IFS analyses. ECMWF's open data has every input AIFS v2 "
-                "needs only from 13 May 2026, so earlier start dates aren't available."),
+                "needs only from 13 May 2026, so earlier start dates aren't available.",
+          weights_gb=1.0, output_mb_10d=262,
+          inputs="ECMWF's IFS analysis at the start time and 6 h before: surface, soil and 14 pressure-level fields, interpolated from the 0.25° grid onto the model's own (N320) grid."),
     Model("graphcast", "GraphCast", "Google DeepMind", "deterministic", ARCO_ERA5, "graphcast",
-          max_lead_days=10),
+          max_lead_days=10,
+          weights_gb=0.14, output_mb_10d=269,
+          inputs='ERA5 at the start time and 6 h before: 6 atmospheric variables on 13 pressure levels plus surface fields, on the 0.25° grid.'),
     Model("aurora15", "Aurora 1.5", "Microsoft", "deterministic", ARCO_ERA5, "e2s018",
-          max_lead_days=10, slow=True),
+          max_lead_days=10, slow=True,
+          weights_gb=4.9, output_mb_10d=269,
+          inputs='ERA5 at the start time and 6 h before: 5 atmospheric variables on 13 pressure levels plus 4 surface fields, on the 0.25° grid. The model steps one hour at a time.'),
     Model("aifs2_ens", "AIFS ENS v2", "ECMWF", "ensemble", IFS_OPEN, "e2s018ens",
           max_lead_days=15, max_members=3, default_members=2, slow=True,
           init_min=AIFS2_MIN, init_max=IFS_MAX,
           notes="Starts from ECMWF's IFS analyses. ECMWF's open data has every input AIFS v2 "
-                "needs only from 13 May 2026, so earlier start dates aren't available."),
+                "needs only from 13 May 2026, so earlier start dates aren't available.",
+          weights_gb=2.4, output_mb_10d=795,
+          inputs="ECMWF's IFS analysis at the start time and 6 h before: surface, soil and 14 pressure-level fields, interpolated onto the model's own (N320) grid. Each member adds its own random noise."),
     Model("atlas_crps", "Atlas CRPS", "NVIDIA", "ensemble", ARCO_ERA5, "e2s018",
-          max_lead_days=10, max_members=3, default_members=2),
+          max_lead_days=10, max_members=3, default_members=2,
+          weights_gb=12.5, output_mb_10d=900,
+          inputs='ERA5 at the start time: surface and pressure-level fields on the 0.25° grid. Each member draws fresh random noise.'),
     Model("neuralgcm", "NeuralGCM", "Google", "ensemble", ARCO_ERA5, "neuralgcm",
           max_lead_days=10, max_members=3, default_members=2, missing=("t2m",), grid_deg=2.8,
           notes="2.8° (~300 km) stochastic precipitation version — the only NeuralGCM checkpoint "
-                "that forecasts rain. No 2 m temperature output."),
+                "that forecasts rain. No 2 m temperature output.",
+          weights_gb=0.045, output_mb_10d=4.5,
+          inputs="ERA5 at the start time, regridded from 0.25° to the model's 2.8° grid; sea-surface temperature and sea ice are held at their starting values."),
     Model("fgn", "FGN Mini (WeatherNext 2, 1°)", "Google DeepMind", "ensemble",
           "IFS analysis (ECMWF Open Data)", "fgn",
           max_lead_days=10, max_members=3, default_members=3, grid_deg=1.0,
           init_min=IFS_MIN, init_max=IFS_MAX,
           notes="The full 0.25° FGN does not fit in a Spark's memory, so this is Google's 1° Mini "
                 "version (cyclone-tuned weights, the only Mini Google publishes). Starting conditions "
-                "are built from ECMWF open data; on 7 Oct 2024 it uses Google's own sample file."),
+                "are built from ECMWF open data; on 7 Oct 2024 it uses Google's own sample file.",
+          weights_gb=0.23, output_mb_10d=75,
+          inputs="ECMWF's IFS analysis at the start time and 6 h before: 6 variables on 13 pressure levels plus surface fields, sampled onto a 1° grid and written in Google's format by our converter (Google's own sample file on 7 Oct 2024)."),
 ]
 
 BY_KEY = {m.key: m for m in MODELS}
