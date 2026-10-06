@@ -43,4 +43,22 @@ keypoints:
 - Participants generate the final figure (Command 4) and prepare their outputs for discussion and evaluation in subsequent sessions.
 
 
+**Timings on the Spark for a 10-day forecast:**
+
+| Model | Members | Time | Peak GPU memory |
+| --- | --- | --- | --- |
+| AIFS v2 single | 1 | ~2 min | 14 GB |
+| FGN Mini (1°) | 3 | ~2 min* | 1.8 GB |
+| NeuralGCM (2.8°) | 3 | ~2.5 min | 18 GB |
+| GraphCast | 1 | ~3.5 min | 16 GB |
+| AIFS v2 ENS | 3 | ~5.5 min | 25 GB |
+| Atlas CRPS | 3 | ~19 min | 33 GB |
+| Aurora 1.5 | 1 | ~26 min | 27 GB |
+
+* **FGN:** measured 106 s for Google’s 7.5-day sample case; the 10-day time is scaled up from that
+
+Times include downloading the starting conditions (from Google’s ERA5 copy or ECMWF), except FGN, which starts from Google’s sample file. Model weights were already downloaded
+
+The first run of each model is slower because the weights download once: about 31 min extra for Atlas CRPS, 7 min for Aurora 1.5 and 5 min for AIFS v2 ENS
+
 
