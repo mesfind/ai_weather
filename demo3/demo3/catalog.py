@@ -72,12 +72,12 @@ MODELS: list[Model] = [
           notes="2.8° (~300 km) stochastic precipitation version — the only NeuralGCM checkpoint "
                 "that forecasts rain. No 2 m temperature output."),
     Model("fgn", "FGN Mini (WeatherNext 2, 1°)", "Google DeepMind", "ensemble",
-          "HRES analysis (Google sample case)", "fgn",
-          max_lead_days=7, max_members=3, default_members=3, slow=False,
-          init_min=date(2024, 10, 7), init_max=date(2024, 10, 7),
+          "IFS analysis (ECMWF Open Data)", "fgn",
+          max_lead_days=10, max_members=3, default_members=3,
+          init_min=IFS_MIN, init_max=IFS_MAX,
           notes="The full 0.25° FGN does not fit in a Spark's memory, so this is Google's 1° Mini "
-                "version. Only Google's sample start date (2024-10-07) is available until we build "
-                "a converter from ECMWF open data."),
+                "version (cyclone-tuned weights, the only Mini Google publishes). Starting conditions "
+                "are built from ECMWF open data; on 7 Oct 2024 it uses Google's own sample file."),
 ]
 
 BY_KEY = {m.key: m for m in MODELS}

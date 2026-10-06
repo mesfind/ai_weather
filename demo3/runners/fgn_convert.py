@@ -3,14 +3,16 @@
 Google publishes FGN-ready inputs for one date only (2024-10-07 00Z). This
 script makes the same file for any date ECMWF open data covers (from
 2024-03-01): the IFS analyses (step 0) at init - 6 h and init, on the 13
-pressure levels FGN uses, regridded to FGN Mini's 1 deg grid and written in
+pressure levels FGN uses, sampled onto FGN Mini's 1 deg grid and written in
 Google's layout (dims batch/time/level/lat/lon, timedelta `time` starting at
 init - 6 h, `datetime` coordinate). Frames after the two inputs are NaN; FGN
 only reads their shape.
 
 What open data lacks, and what stands in for it:
-  sea_surface_temperature  IFS skin temperature over the ocean (NaN on land,
-                           where Google's files are NaN too)
+  sea_surface_temperature  IFS skin temperature over the ocean, floored at
+                           seawater freezing under sea ice (NaN on land, as in
+                           Google's files); vs Google's 2024-10-07 file:
+                           correlation 0.997, bias -0.08 K
   geopotential_at_surface, land_sea_mask
                            fixed fields, copied from Google's sample file
   total_precipitation_6hr, cyclone_*
@@ -61,7 +63,9 @@ def _retrieve(client, when: pd.Timestamp, params, levels, target: Path) -> None:
                        f" ({last})")
 
 
-REGRID = "mean"  # "mean" (cell average) or "point" (take the 1 deg grid points)
+# "point" takes the 1 deg grid points; on 2024-10-07 it reproduces Google's own file
+# (correlation 1.000 for every field but SST). "mean" averages each 1 deg cell.
+REGRID = "point"
 
 
 def _to_grid(values: np.ndarray, lats: np.ndarray, lons: np.ndarray,
