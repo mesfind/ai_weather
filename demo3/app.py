@@ -148,8 +148,12 @@ mode = st.radio("Mode", ["Deterministic", "Probabilistic"], horizontal=True, lab
 kind = "deterministic" if mode == "Deterministic" else "ensemble"
 choices = [m for m in catalog.MODELS if m.kind == kind]
 
-model = st.selectbox("Model", choices, format_func=lambda m: f"{m.name}  {catalog.timing_label(m, timings)}",
-                     label_visibility="collapsed")
+# Store the model's key, not the Model object: a session that outlives a code update
+# would otherwise hold an object of the old class.
+model_key = st.selectbox("Model", [m.key for m in choices], label_visibility="collapsed",
+                         format_func=lambda k: f"{catalog.BY_KEY[k].name}  "
+                                               f"{catalog.timing_label(catalog.BY_KEY[k], timings)}")
+model = catalog.BY_KEY[model_key]
 def model_tags(m: catalog.Model) -> str:
     kind_tag = theme.tag(m.kind, "ens" if m.kind == "ensemble" else "det")
     return kind_tag + (theme.tag("live", "ok") if m.live else theme.tag("saved runs only", "warn"))
