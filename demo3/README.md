@@ -1,11 +1,11 @@
 # Demo 3 — Running Your First AI Weather Forecast
 
-A Streamlit app, running on the DGX Spark, for running AI weather models. Participants choose a model, start date, lead time, region and use case (heat / precipitation / onset), run the forecast (or load a saved run), and explore the results.
+A Streamlit app, running on the DGX Spark, for running AI weather models. Participants choose a model, start date, lead time, region and use case (heat or precipitation), run the forecast (or load a saved run), and compare it with observations.
 
 **Status:**
 - All 7 models run live on the Spark from one Docker image (`docker/`), and saved runs load instantly.
 - The event movie tab (forecast vs observations) is Panchali's `demo3/event_movie/forecast_event_movie.py`.
-- The other result tabs are placeholders until the visualization module is plugged in (see "For the visualization module").
+- Results are Panchali's event movie (forecast next to ERA5 observations, day by day) and event-track map, for heat or precipitation.
 
 ## Run it
 
@@ -44,7 +44,8 @@ demo3/regions.py       program countries → padded plotting boxes
 demo3/contract.py      the output-file format every runner writes
 demo3/store.py         where outputs live; reusing saved runs
 demo3/jobs.py          launches runs in the background and tracks progress
-demo3/viz.py           result views (PLACEHOLDERS — the plug-in point)
+demo3/movie.py         runs the event movie in the background for the loaded run
+demo3/event_movie/     Panchali's forecast_event_movie.py (unchanged) + the Spark adapter
 demo3/theme.py         styling, matching the Demo 5 platform
 runners/run_model.py   runner entry point (+ synthetic output generator)
 runners/fgn_convert.py FGN starting conditions from ECMWF open data (see the FGN section)
@@ -68,21 +69,16 @@ Each run is one NetCDF file covering the whole globe:
 | coords | `valid_time` (along lead_time), `init_time` |
 | attrs | `model`, `model_name`, `init_source`, `members`, `synthetic` |
 
-## For the visualization module
+## Results: the event movie
 
-A view is a function that draws into Streamlit:
+The results are Panchali's `demo3/event_movie/forecast_event_movie.py`, kept unchanged
+(drop in new versions as they come). `run_event_movie.py` adapts it to the Spark: it reads
+Demo 3's output files, and fetches ERA5 observations from Google's ARCO copy (cached in
+`outputs/_obs_cache/`) when the cluster's ERA5 folder isn't there. The use case picks the
+movie: **Heat** = daily max 2 m temperature, **Precipitation** = daily rainfall. Each movie is
+rendered once per request and saved under `outputs/_movies/`.
 
-```python
-def view(ds: xr.Dataset, ctx: VizContext) -> None: ...
-```
-
-- `ds` is already cropped to the chosen region and lead time.
-- `ctx` holds everything else: model name and type, start time, region name and box, use case, and the thresholds the user set (`ctx.settings`, e.g. `heat_threshold_c`, `precip_threshold_mm`, `wet_threshold_mm`, `wet_spell_days`, `dry_spell_days`).
-- Use `st.pyplot`, `st.plotly_chart` or `st.image` to draw.
-
-To plug in your plots, replace the placeholder functions in `demo3/viz.py`, or point `VIEWS` at your own module. `viz.daily_precip(ds)` gives daily totals if you need them.
-
-To get test data without a GPU, leave **Use synthetic output** on in the sidebar and press Run. This writes a fake file in exactly this format.
+To get test data without a GPU, turn on **Use synthetic output** in the sidebar and press Run. This writes a fake file in exactly this format.
 
 ## FGN (WeatherNext 2): starting conditions from ECMWF open data
 

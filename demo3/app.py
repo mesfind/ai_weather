@@ -18,7 +18,7 @@ import pandas as pd
 import streamlit as st
 import xarray as xr
 
-from demo3 import catalog, jobs, movie, store, theme, viz
+from demo3 import catalog, jobs, movie, store, theme
 from demo3.regions import COUNTRIES, GROUPS, Box, country_box
 
 st.set_page_config(page_title="Demo 3 · AI Weather Forecast", page_icon="🌦️", layout="wide")
@@ -40,25 +40,18 @@ def open_output(path: str, mtime: float) -> xr.Dataset:
     return xr.open_dataset(path).load()
 
 
-def event_movie_tab(path, m, full, run_req, box, region_name, lead_days, use_case):
-    """Panchali's obs-vs-forecast event movie and track map for the loaded run."""
-    st.caption("Animated map of observations (ERA5) next to the forecast, with the regional "
-               "series building up day by day, plus a map of the event's footprint and track.")
-    missing = catalog.missing_in_run(full)
-    kinds = [k for k, var in (("precip", "tp"), ("heat", "t2m")) if var not in missing]
-    if not kinds:
-        st.info(f"{m.name} has neither rainfall nor 2 m temperature in this run, so there is no "
-                "event movie to show.")
+def event_results(path, m, full, run_req, box, region_name, lead_days, use_case):
+    """Panchali's obs-vs-forecast event movie and event-track map for the loaded run."""
+    kind, var = ("heat", "t2m") if use_case == "Heat" else ("precip", "tp")
+    if var in catalog.missing_in_run(full):
+        other = "Precipitation" if use_case == "Heat" else "Heat"
+        st.info(f"{m.name} does not forecast {catalog.VAR_LABELS[var]}, so there is no "
+                f"{use_case.lower()} movie for this run. Switch the use case to {other}, or "
+                "choose another model.")
         return
-    for k, var in (("precip", "tp"), ("heat", "t2m")):
-        if var in missing:
-            st.info(f"{m.name} does not forecast {catalog.VAR_LABELS[var]}, so only the "
-                    f"{'heat' if k == 'precip' else 'rainfall'} movie is available.")
-    labels = {"precip": "Rainfall (daily total)", "heat": "Heat (daily max 2 m T)"}
-    default = "heat" if use_case == "Heat" and "heat" in kinds else kinds[0]
-    c1, c2, c3 = st.columns([2, 2, 2])
-    kind = c1.radio("Event type", kinds, index=kinds.index(default), format_func=labels.get,
-                    key="movie_kind")
+    st.caption("Animated map of observations (ERA5) next to the forecast, with the regional "
+               "series building up day by day, then a map of the event's footprint and track.")
+    c2, c3 = st.columns(2)
     reduce = c2.selectbox("Regional series", ["mean", "max", "p95", "p99"], key="movie_reduce",
                           index=1 if kind == "heat" else 0,
                           format_func={"mean": "area mean", "max": "area maximum",
@@ -138,7 +131,7 @@ with st.sidebar:
 theme.header("AI Forecast Lab", "Demo 3", f"{'GPU: ' + gpu if gpu else 'No GPU detected'}", live=bool(gpu))
 theme.page_title("Running Your First AI Weather Forecast",
                  "Pick a model, a start date and a region, run the forecast on your Spark, "
-                 "and explore temperature, rainfall and onset.")
+                 "and compare it with what was observed.")
 
 ready = [m for m in catalog.MODELS if m.live]
 free_gb = shutil.disk_usage(store.OUTPUT_DIR if store.OUTPUT_DIR.exists() else "/").free / 1e9
@@ -213,29 +206,11 @@ else:
 
 # ── Step 2d: use case ────────────────────────────────────────────────────────
 theme.section("What do you want to look at?")
-use_case = st.segmented_control("Use case", ["Heat", "Precipitation", "Onset"], default="Precipitation",
+use_case = st.segmented_control("Use case", ["Heat", "Precipitation"], default="Precipitation",
                                 label_visibility="collapsed") or "Precipitation"
-settings: dict = {}
-u1, u2, u3, u4 = st.columns(4)
-if use_case == "Heat":
-    settings["heat_threshold_c"] = u1.number_input("Temperature threshold (°C)", value=35.0, step=0.5)
-elif use_case == "Precipitation":
-    settings["precip_threshold_mm"] = u1.number_input("Daily rainfall threshold (mm)", value=20.0, step=1.0)
-else:
-    preset = u1.selectbox("Onset definition", ["Ethiopia – Kiremt (Demo 5)", "India – monsoon (to be added)"])
-    # Kiremt defaults match the Demo 5 benchmarking configuration.
-    settings.update(
-        wet_threshold_mm=u2.number_input("Wet-spell rainfall (mm)", value=20.0, step=1.0),
-        wet_spell_days=u3.number_input("over N days", 1, 10, 3),
-        dry_spell_days=u4.number_input("No dry spell of (days)", 1, 21, 7),
-        dry_extent_days=21, dry_threshold_mm=1.0, preset=preset)
-    if preset.startswith("India"):
-        st.warning("The India monsoon onset definition isn't added yet; the Kiremt rule is used.")
-    if region_name not in ("Ethiopia", "Custom region"):
-        st.warning(f"The onset rule is Ethiopia's Kiremt definition (Demo 5); it may not describe "
-                   f"the rainy-season start in {region_name}.")
-    if not 5 <= init.month <= 9:
-        st.warning("The Kiremt onset window is May–September; onset is not meaningful for this start date.")
+st.caption("**Heat:** daily maximum 2 m temperature (°C).  **Precipitation:** daily rainfall "
+           "total (mm). The result is a movie of the forecast next to the observations, and a "
+           "map of where the event went.")
 
 problems = catalog.check(model, init, lead_days, int(members), box, region_name, use_case)
 for level, msg in problems:
@@ -293,9 +268,6 @@ if ss.job_id:
             ss.job_id = None
             st.rerun()
 
-# Variable each result view needs (views not listed here are always shown)
-VIEW_NEEDS = {"Temperature": "t2m", "Precipitation": "tp", "Geopotential (z500)": "z500", "Onset": "tp"}
-
 # ── Results ──────────────────────────────────────────────────────────────────
 if ss.result:
     path, run_req = ss.result
@@ -306,27 +278,6 @@ if ss.result:
         full = open_output(path, p.stat().st_mtime)
         m = catalog.BY_KEY[run_req.model]
         theme.section("Results")
-        ds = viz.crop(full, box, lead_days * 24)
-        if ds.sizes["lat"] < 2 or ds.sizes["lon"] < 2:
-            st.error(f"{region_name} holds fewer than 2 grid points of {m.name}'s {m.grid_deg:g}° "
-                     "grid; choose a larger region.")
-        else:
-            ctx = viz.VizContext(model_name=m.name, kind=m.kind, init=run_req.init,
-                                 lead_hours=lead_days * 24, region_name=region_name, box=box,
-                                 use_case=use_case, settings=settings, synthetic=bool(full.attrs.get("synthetic")))
-            if ctx.synthetic:
-                st.caption("⚠️ Synthetic output — not a real forecast.")
-            first = {"Heat": "Temperature", "Precipitation": "Precipitation", "Onset": "Onset"}[use_case]
-            names = [first] + [n for n in viz.VIEWS if n != first]
-            tabs = st.tabs(names + ["Event movie (vs observations)"])
-            missing = catalog.missing_in_run(full)
-            for tab, name in zip(tabs, names):
-                with tab:
-                    need = VIEW_NEEDS.get(name)
-                    if need in missing:
-                        st.info(f"{m.name} does not forecast {catalog.VAR_LABELS[need]}, so this view "
-                                "isn't available for this run.")
-                    else:
-                        viz.VIEWS[name](ds, ctx)
-            with tabs[-1]:
-                event_movie_tab(path, m, full, run_req, box, region_name, lead_days, use_case)
+        if full.attrs.get("synthetic"):
+            st.caption("⚠️ Synthetic output — not a real forecast.")
+        event_results(path, m, full, run_req, box, region_name, lead_days, use_case)

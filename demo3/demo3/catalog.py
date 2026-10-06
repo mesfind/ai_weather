@@ -134,7 +134,7 @@ def missing_in_run(ds) -> set[str]:
     return out
 
 # Variable each use case needs
-USE_CASE_NEEDS = {"Heat": "t2m", "Precipitation": "tp", "Onset": "tp"}
+USE_CASE_NEEDS = {"Heat": "t2m", "Precipitation": "tp"}
 
 
 def check(m: Model, init, lead_days: int, members: int, box, region_name: str,
@@ -156,8 +156,8 @@ def check(m: Model, init, lead_days: int, members: int, box, region_name: str,
         out.append(("error", f"{m.name} runs at most {m.max_members} members on the Spark."))
     need = USE_CASE_NEEDS.get(use_case)
     if need in m.missing:
-        out.append(("warning", f"{m.name} does not forecast {VAR_LABELS[need]}, so the {use_case} "
-                               "view won't be available for this model. Choose another model, or "
+        out.append(("warning", f"{m.name} does not forecast {VAR_LABELS[need]}, so there is no "
+                               f"{use_case.lower()} result for this model. Choose another model, or "
                                "switch to a use case it supports."))
     if box is not None and box.is_valid():
         n = min((box.lat_max - box.lat_min), (box.lon_max - box.lon_min)) / m.grid_deg
