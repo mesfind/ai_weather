@@ -33,6 +33,7 @@ import xarray as xr
 
 LEVELS = [50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 850, 925, 1000]
 G = 9.80665
+SEAWATER_FREEZING = 271.46  # K, the value ERA5 / IFS use for SST under sea ice
 PRESSURE = {"t": "temperature", "gh": "geopotential", "u": "u_component_of_wind",
             "v": "v_component_of_wind", "w": "vertical_velocity", "q": "specific_humidity"}
 SURFACE = {"2t": "2m_temperature", "msl": "mean_sea_level_pressure",
@@ -60,13 +61,18 @@ def _retrieve(client, when: pd.Timestamp, params, levels, target: Path) -> None:
                        f" ({last})")
 
 
+REGRID = "mean"  # "mean" (cell average) or "point" (take the 1 deg grid points)
+
+
 def _to_grid(values: np.ndarray, lats: np.ndarray, lons: np.ndarray,
              lat_out: np.ndarray, lon_out: np.ndarray) -> np.ndarray:
     """0.25 deg open-data field -> FGN's 1 deg grid (lat -90..90, lon 0..359), by
     averaging the 0.25 deg points within each 1 deg cell (cell centred on the
-    1 deg point; edge points get half weight)."""
+    1 deg point; edge points get half weight), or by taking the points."""
     da = xr.DataArray(values, dims=("lat", "lon"), coords={"lat": lats, "lon": lons % 360})
     da = da.sortby("lat").sortby("lon")
+    if REGRID == "point":
+        return da.sel(lat=lat_out, lon=lon_out).values.astype("float32")
     # wrap so cells at lon 0 see points at 359.5..359.75
     da = xr.concat([da.isel(lon=slice(-2, None)).assign_coords(lon=da.lon[-2:] - 360), da,
                     da.isel(lon=slice(0, 2)).assign_coords(lon=da.lon[:2] + 360)], "lon")
@@ -130,6 +136,8 @@ def build(init: pd.Timestamp, steps: int, static_file: Path, source: str = "aws"
         for i, when in enumerate(frames):
             arr[0, i] = frames[when][name]
         if name == "sea_surface_temperature":
+            # skin temperature over sea ice is the ice surface; sea water stays near freezing
+            arr = np.maximum(arr, SEAWATER_FREEZING)
             arr[:, :, ~ocean] = np.nan
         data[name] = (("batch", "time", "lat", "lon"), arr)
     # outputs-only variables: placeholders with the right shape
@@ -153,7 +161,9 @@ def main() -> int:
     ap.add_argument("--static", type=Path, required=True, help="Google's FGN sample file (1 deg)")
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--source", default="aws", help="ECMWF mirror: aws | azure | ecmwf")
+    ap.add_argument("--regrid", choices=["mean", "point"], default=REGRID)
     a = ap.parse_args()
+    globals()["REGRID"] = a.regrid
     t0 = time.time()
     ds = build(pd.Timestamp(a.init), a.steps, a.static, a.source)
     a.out.parent.mkdir(parents=True, exist_ok=True)
