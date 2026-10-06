@@ -69,7 +69,17 @@ def event_movie_tab(path, m, full, run_req, box, region_name, lead_days, use_cas
         "Threshold (°C)" if kind == "heat" else "Threshold (mm/day)",
         value=40.0 if kind == "heat" else 50.0, key="movie_thr")
     run_days = int(full.lead_time.max()) // 24
-    req = movie.request_for(path, m.name, kind, run_req.init, min(lead_days, run_days), box,
+    days = min(lead_days, run_days)
+    obs_end = pd.Timestamp(catalog.era5_dates()[1])  # last day of (preliminary) ERA5
+    if run_req.init >= obs_end:
+        st.info(f"Observations (ERA5) currently end on {obs_end:%-d %b %Y}, so there is nothing yet "
+                f"to compare this {run_req.init:%-d %b %Y} forecast with.")
+        return
+    if run_req.init + pd.Timedelta(days=days) > obs_end:
+        days = max(1, (obs_end - run_req.init).days)
+        st.info(f"Observations (ERA5) currently end on {obs_end:%-d %b %Y}, so the movie covers "
+                f"the first {days} day{'s' if days > 1 else ''} of the forecast.")
+    req = movie.request_for(path, m.name, kind, run_req.init, days, box,
                             region_name, reduce, threshold)
     s = movie.status(req)
 
@@ -167,9 +177,10 @@ if model.slow:
 # ── Step 2b: forecast setup ──────────────────────────────────────────────────
 theme.section("Forecast setup")
 c1, c2, c3, c4 = st.columns([2, 1, 2, 2])
-default_init = min(max(date(2025, 7, 1), model.init_min), model.init_max)
-init_day = c1.date_input("Start date (UTC)", value=default_init, min_value=model.init_min,
-                         max_value=model.init_max, key=f"init_{model.key}")
+init_lo, init_hi = model.date_range()
+default_init = min(max(date(2025, 7, 1), init_lo), init_hi)
+init_day = c1.date_input("Start date (UTC)", value=default_init, min_value=init_lo,
+                         max_value=init_hi, key=f"init_{model.key}")
 init_hour = c2.selectbox("Hour", [0, 12], format_func=lambda h: f"{h:02d}Z")
 lead_days = c3.slider("Lead time (days)", 1, model.max_lead_days, min(10, model.max_lead_days))
 members = (c4.number_input("Ensemble members", 1, model.max_members, model.default_members)
@@ -177,6 +188,8 @@ members = (c4.number_input("Ensemble members", 1, model.max_members, model.defau
 if model.kind != "ensemble":
     c4.text_input("Ensemble members", "1 (deterministic)", disabled=True)
 init = pd.Timestamp(init_day) + pd.Timedelta(hours=init_hour)
+st.caption(f"📅 Start dates for {model.name}: {init_lo:%-d %b %Y} – {init_hi:%-d %b %Y}. "
+           f"{model.date_reason()}")
 
 # ── Step 2c: region ──────────────────────────────────────────────────────────
 theme.section("Region")
@@ -216,14 +229,18 @@ else:
         wet_spell_days=u3.number_input("over N days", 1, 10, 3),
         dry_spell_days=u4.number_input("No dry spell of (days)", 1, 21, 7),
         dry_extent_days=21, dry_threshold_mm=1.0, preset=preset)
+    if preset.startswith("India"):
+        st.warning("The India monsoon onset definition isn't added yet; the Kiremt rule is used.")
+    if region_name not in ("Ethiopia", "Custom region"):
+        st.warning(f"The onset rule is Ethiopia's Kiremt definition (Demo 5); it may not describe "
+                   f"the rainy-season start in {region_name}.")
     if not 5 <= init.month <= 9:
         st.warning("The Kiremt onset window is May–September; onset is not meaningful for this start date.")
 
-NEEDS = {"Heat": "t2m", "Precipitation": "tp", "Onset": "tp"}
-if NEEDS[use_case] in model.missing:
-    label = catalog.VAR_LABELS[NEEDS[use_case]]
-    st.warning(f"{model.name} does not forecast {label}, so the {use_case} view won't be available "
-               f"for this model. Choose another model, or switch to a use case it supports.")
+problems = catalog.check(model, init, lead_days, int(members), box, region_name, use_case)
+for level, msg in problems:
+    (st.error if level == "error" else st.warning)(msg)
+blocked = any(level == "error" for level, _ in problems)
 
 # ── Step 3: run ──────────────────────────────────────────────────────────────
 theme.section("Run the forecast", "Step 3 ·")
@@ -233,16 +250,18 @@ theme.pills([("Model", model.name), ("Mode", mode), ("Start", f"{init:%Y-%m-%d %
              ("Lead", f"{lead_days} days"), ("Members", str(members)), ("Region", region_name),
              ("Use case", use_case)] + ([("Output", "synthetic")] if synthetic else []))
 
-can_run = (model.live or synthetic) and box.is_valid()
+can_run = (model.live or synthetic) and box.is_valid() and not blocked
 b1, b2 = st.columns([2, 3])
 if saved_path:
-    clicked = b1.button("Load saved run", type="primary", width="stretch", disabled=not box.is_valid())
+    clicked = b1.button("Load saved run", type="primary", width="stretch",
+                        disabled=not box.is_valid() or blocked)
     b2.markdown(theme.tag("saved run found — loads instantly", "ok"), unsafe_allow_html=True)
 else:
     clicked = b1.button("Run forecast", type="primary", width="stretch",
                         disabled=not can_run or ss.job_id is not None)
     b2.markdown(theme.tag(f"will run on the Spark {catalog.timing_label(model, timings)}", "det")
-                if can_run else theme.tag(f"no saved run for these settings, and {model.name} can't run live yet", "warn"),
+                if can_run else theme.tag("fix the settings above first" if blocked else
+                                          f"no saved run for these settings, and {model.name} can't run live yet", "warn"),
                 unsafe_allow_html=True)
 
 if clicked:
@@ -289,7 +308,8 @@ if ss.result:
         theme.section("Results")
         ds = viz.crop(full, box, lead_days * 24)
         if ds.sizes["lat"] < 2 or ds.sizes["lon"] < 2:
-            st.error("The selected region contains no grid points.")
+            st.error(f"{region_name} holds fewer than 2 grid points of {m.name}'s {m.grid_deg:g}° "
+                     "grid; choose a larger region.")
         else:
             ctx = viz.VizContext(model_name=m.name, kind=m.kind, init=run_req.init,
                                  lead_hours=lead_days * 24, region_name=region_name, box=box,

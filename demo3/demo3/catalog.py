@@ -7,8 +7,10 @@ environment exists at {ENV_ROOT}/{env}; otherwise only its saved runs load.
 """
 from __future__ import annotations
 
+import functools
 import json
 import os
+import urllib.request
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from pathlib import Path
@@ -19,6 +21,27 @@ IFS_OPEN = "IFS analysis (ECMWF Open Data)"
 IFS_MIN, IFS_MAX = date(2024, 3, 1), date.today() - timedelta(days=2)
 # ECMWF open data has every input AIFS v2 needs (incl. 10 hPa levels) only from this date.
 AIFS2_MIN = date(2026, 5, 13)
+# Google's ARCO ERA5 copy: Earth2Studio serves it up to `valid_time_stop` (final ERA5, about
+# 3 months behind); the preliminary ERA5T part runs to `valid_time_stop_era5t` (about a week
+# behind) and is what the event movie's observations can use. Both move forward over time.
+ARCO_ATTRS_URL = ("https://storage.googleapis.com/gcp-public-data-arco-era5/ar/"
+                  "full_37-1h-0p25deg-chunk-1.zarr-v3/.zattrs")
+ERA5_FALLBACK = {"valid_time_stop": "2026-06-30", "valid_time_stop_era5t": "2026-09-30"}
+
+
+@functools.lru_cache(maxsize=1)
+def era5_dates() -> tuple[date, date]:
+    """(last day Earth2Studio serves, last day of preliminary ERA5T) from Google's metadata."""
+    try:
+        with urllib.request.urlopen(ARCO_ATTRS_URL, timeout=5) as r:
+            attrs = json.load(r)
+    except Exception:
+        attrs = ERA5_FALLBACK
+    attrs = {**ERA5_FALLBACK, **attrs}
+    return (date.fromisoformat(attrs["valid_time_stop"]),
+            date.fromisoformat(attrs["valid_time_stop_era5t"]))
+
+
 # Forecast variables every run aims to provide, with the names shown to participants.
 VAR_LABELS = {"tp": "rainfall", "t2m": "2 m temperature", "z500": "500 hPa geopotential (z500)"}
 RUNNERS_DIR = Path(__file__).resolve().parent.parent / "runners"
@@ -39,9 +62,10 @@ class Model:
     default_members: int = 1
     slow: bool = False            # suggest loading a saved run in class
     init_min: date = date(2020, 1, 1)
-    init_max: date = date(2026, 4, 30)
+    init_max: date | None = None  # None: the last day ERA5 is available (see era5_dates)
     notes: str = ""
     missing: tuple[str, ...] = ()  # variables (VAR_LABELS keys) the model does not forecast
+    grid_deg: float = 0.25          # output grid spacing
 
     @property
     def live(self) -> bool:
@@ -49,6 +73,24 @@ class Model:
         has a runner (FGN, for now, only has Google's saved sample case)."""
         return ((ENV_ROOT / self.env / "bin" / "python").exists()
                 and (RUNNERS_DIR / f"runner_{self.key}.py").exists())
+
+    def date_range(self) -> tuple[date, date]:
+        """First and last start date this model can use."""
+        if self.init_max is not None:
+            return self.init_min, self.init_max
+        # the last ERA5 day is served up to 00Z; stop the day before so 12Z works too
+        return self.init_min, era5_dates()[0] - timedelta(days=1)
+
+    def date_reason(self) -> str:
+        lo, hi = self.date_range()
+        if self.init_source == ARCO_ERA5:
+            return (f"{self.name} starts from ERA5 (Google's copy), which is available up to "
+                    f"{hi:%-d %b %Y} (it runs about 3 months behind real time).")
+        if self.key.startswith("aifs2"):
+            return (f"ECMWF's open data has every input AIFS v2 needs only from {lo:%-d %b %Y}, "
+                    "and it is current to 2 days ago.")
+        return (f"{self.name} starts from ECMWF open data, available from {lo:%-d %b %Y} "
+                "to 2 days ago.")
 
 
 MODELS: list[Model] = [
@@ -68,12 +110,12 @@ MODELS: list[Model] = [
     Model("atlas_crps", "Atlas CRPS", "NVIDIA", "ensemble", ARCO_ERA5, "e2s018",
           max_lead_days=10, max_members=3, default_members=2),
     Model("neuralgcm", "NeuralGCM", "Google", "ensemble", ARCO_ERA5, "neuralgcm",
-          max_lead_days=10, max_members=3, default_members=2, missing=("t2m",),
+          max_lead_days=10, max_members=3, default_members=2, missing=("t2m",), grid_deg=2.8,
           notes="2.8° (~300 km) stochastic precipitation version — the only NeuralGCM checkpoint "
                 "that forecasts rain. No 2 m temperature output."),
     Model("fgn", "FGN Mini (WeatherNext 2, 1°)", "Google DeepMind", "ensemble",
           "IFS analysis (ECMWF Open Data)", "fgn",
-          max_lead_days=10, max_members=3, default_members=3,
+          max_lead_days=10, max_members=3, default_members=3, grid_deg=1.0,
           init_min=IFS_MIN, init_max=IFS_MAX,
           notes="The full 0.25° FGN does not fit in a Spark's memory, so this is Google's 1° Mini "
                 "version (cyclone-tuned weights, the only Mini Google publishes). Starting conditions "
@@ -90,6 +132,46 @@ def missing_in_run(ds) -> set[str]:
         if v not in ds.data_vars or not bool(ds[v].notnull().any()):
             out.add(v)
     return out
+
+# Variable each use case needs
+USE_CASE_NEEDS = {"Heat": "t2m", "Precipitation": "tp", "Onset": "tp"}
+
+
+def check(m: Model, init, lead_days: int, members: int, box, region_name: str,
+          use_case: str) -> list[tuple[str, str]]:
+    """Problems with a request, as (level, message): "error" means it cannot run,
+    "warning" means it runs but something will be missing or limited."""
+    out = []
+    lo, hi = m.date_range()
+    if not lo <= init.date() <= hi:
+        out.append(("error", f"{m.name} can't start on {init:%-d %b %Y}: start dates run from "
+                             f"{lo:%-d %b %Y} to {hi:%-d %b %Y}. {m.date_reason()}"))
+    if init.hour not in (0, 12):
+        out.append(("error", "Forecasts start at 00Z or 12Z."))
+    if lead_days > m.max_lead_days:
+        out.append(("error", f"{m.name} forecasts at most {m.max_lead_days} days ahead."))
+    if m.kind == "deterministic" and members != 1:
+        out.append(("error", f"{m.name} is deterministic: it gives one forecast, not an ensemble."))
+    elif members > m.max_members:
+        out.append(("error", f"{m.name} runs at most {m.max_members} members on the Spark."))
+    need = USE_CASE_NEEDS.get(use_case)
+    if need in m.missing:
+        out.append(("warning", f"{m.name} does not forecast {VAR_LABELS[need]}, so the {use_case} "
+                               "view won't be available for this model. Choose another model, or "
+                               "switch to a use case it supports."))
+    if box is not None and box.is_valid():
+        n = min((box.lat_max - box.lat_min), (box.lon_max - box.lon_min)) / m.grid_deg
+        km = round(m.grid_deg * 111, -1)
+        if n < 2:
+            out.append(("error", f"{region_name} is too small for {m.name}'s {m.grid_deg:g}° "
+                                 f"(~{km:.0f} km) grid: the maps would hold fewer than 2 grid "
+                                 "points across. Choose a larger region."))
+        elif n < 5:
+            out.append(("warning", f"{m.name}'s grid is {m.grid_deg:g}° (~{km:.0f} km), so "
+                                   f"{region_name} is only about {int(n) + 1} grid points across; "
+                                   "maps will look very coarse."))
+    return out
+
 
 TIMINGS_PATH = Path(__file__).resolve().parent.parent / "timings.json"
 
