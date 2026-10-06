@@ -9,6 +9,8 @@ A Streamlit app, running on the DGX Spark, for running AI weather models. Partic
 
 ## Run it
 
+**Full step-by-step setup (new Spark, GPU check, copying weights, troubleshooting): [SETUP.md](SETUP.md).**
+
 **On the Spark** (aarch64; build once, about an hour, mostly compiling two libraries):
 
 ```bash
