@@ -45,6 +45,7 @@ demo3/jobs.py          launches runs in the background and tracks progress
 demo3/viz.py           result views (PLACEHOLDERS — the plug-in point)
 demo3/theme.py         styling, matching the Demo 5 platform
 runners/run_model.py   runner entry point (+ synthetic output generator)
+runners/fgn_convert.py FGN starting conditions from ECMWF open data (see the FGN section)
 timings.json           measured Spark runtimes shown in brackets in the app
 docker/                the image: Dockerfile, run.sh, per-environment package locks
 outputs/               saved runs: outputs/{model}/{YYYYMMDDTHH}_{lead}h_m{members}.nc
@@ -80,6 +81,35 @@ def view(ds: xr.Dataset, ctx: VizContext) -> None: ...
 To plug in your plots, replace the placeholder functions in `demo3/viz.py`, or point `VIEWS` at your own module. `viz.daily_precip(ds)` gives daily totals if you need them.
 
 To get test data without a GPU, leave **Use synthetic output** on in the sidebar and press Run. This writes a fake file in exactly this format.
+
+## FGN (WeatherNext 2): starting conditions from ECMWF open data
+
+FGN is not in Earth2Studio, and Google publishes FGN-ready inputs for one date only
+(2024-10-07 00Z). The full 0.25° model does not fit in a Spark's memory, so Demo 3 runs
+Google's 1° Mini model (`WeatherNextCyclones_Mini`, the only Mini weights published).
+
+**Converter** (`runners/fgn_convert.py`, runs in the `e2s018` environment)
+- Downloads ECMWF's IFS analyses (step 0) for the start time and 6 hours earlier, at FGN's
+  13 pressure levels, puts them on FGN's 1° grid (taking the 1° points) and writes Google's
+  file layout. Works for any date ECMWF open data covers (from 2024-03-01).
+- What open data lacks, and what stands in for it:
+  - sea-surface temperature: IFS skin temperature over the ocean, floored at seawater
+    freezing (271.46 K) under sea ice;
+  - surface geopotential and land–sea mask: fixed fields, copied from Google's sample file.
+- Checked against Google's own 2024-10-07 file, rebuilt from ECMWF data: every field matches
+  to within rounding (correlation 1.000), so Google built theirs the same way. The one
+  approximation is sea-surface temperature (correlation 0.997, 0.08 K too cold on average).
+- From the same 2026-05-15 start, FGN and AIFS v2 agree closely at 24–48 h (z500 and 2 m
+  temperature correlation ≥ 0.999).
+
+**Runner** (`runners/runner_fgn.py`)
+- Starting conditions: Google's sample file on 2024-10-07 (up to 7.5 days); the converter for
+  every other date.
+- First run: downloads the weights and the sample file (1.1 GB) from Google into
+  `DEMO3_FGN_DIR` (default `~/.cache/fgn`), so each Spark sets itself up.
+- Caches converted inputs (53 MB per start date) in `outputs/_fgn_inputs/`, so a rerun of the
+  same date skips the conversion (~95 s).
+- 10 days, 3 members: ~2 min on the GPU, 1.8 GB peak memory.
 
 ## Adding a model
 
