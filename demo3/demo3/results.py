@@ -23,16 +23,17 @@ from .regions import Box
 SPARK_MEMORY_GB = 121  # GB10 unified memory, shared by CPU and GPU
 
 
-def spark_now(path: Path) -> tuple[float | None, float]:
-    """(memory available now, disk free) in GB on this Spark."""
-    mem = None
+def spark_now(path: Path) -> tuple[float | None, float | None, float]:
+    """(memory available now, memory total, disk free) in GB on this machine."""
+    info = {}
     try:
         for line in Path("/proc/meminfo").read_text().splitlines():
-            if line.startswith("MemAvailable:"):
-                mem = int(line.split()[1]) / 1e6
-    except OSError:
+            key, val = line.split(":", 1)
+            info[key] = int(val.split()[0]) / 1e6
+    except (OSError, ValueError):
         pass
-    return mem, shutil.disk_usage(path if path.exists() else "/").free / 1e9
+    disk = shutil.disk_usage(path if path.exists() else "/").free / 1e9
+    return info.get("MemAvailable"), info.get("MemTotal"), disk
 
 
 def _size(gb: float) -> str:
@@ -53,8 +54,8 @@ def requirements(m: catalog.Model, timings: dict, output_dir: Path) -> None:
                    help=f"NetCDF for {m.default_members if m.kind == 'ensemble' else 1} member(s)")
     cols[3].metric("Grid", f"{m.grid_deg:g}° (~{round(m.grid_deg * 111, -1):.0f} km)")
     st.caption(f"**Inputs:** {m.inputs}")
-    mem, disk = spark_now(output_dir)
-    st.caption(f"**This Spark right now:** {mem:.0f} GB of {SPARK_MEMORY_GB} GB memory free · "
+    mem, total, disk = spark_now(output_dir)
+    st.caption(f"**This Spark right now:** {mem:.0f} GB of {total or SPARK_MEMORY_GB:.0f} GB memory free · "
                f"{disk:,.0f} GB disk free. (This changes with whatever else is running or stored; "
                "the figures above don't.)" if mem is not None else
                f"**This Spark right now:** {disk:,.0f} GB disk free.")
