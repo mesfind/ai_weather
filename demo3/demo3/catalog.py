@@ -166,7 +166,7 @@ def check(m: Model, init, lead_days: int, members: int, box, region_name: str,
             out.append(("error", f"{region_name} is too small for {m.name}'s {m.grid_deg:g}° "
                                  f"(~{km:.0f} km) grid: the maps would hold fewer than 2 grid "
                                  "points across. Choose a larger region."))
-        elif n < 5:
+        elif n < 4:
             out.append(("warning", f"{m.name}'s grid is {m.grid_deg:g}° (~{km:.0f} km), so "
                                    f"{region_name} is only about {int(n) + 1} grid points across; "
                                    "maps will look very coarse."))
