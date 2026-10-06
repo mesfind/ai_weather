@@ -242,7 +242,7 @@ else:
     clicked = b1.button("Run forecast", type="primary", width="stretch",
                         disabled=not can_run or ss.job_id is not None)
     b2.markdown(theme.tag(f"will run on the Spark {catalog.timing_label(model, timings)}", "det")
-                if can_run else theme.tag("no saved run for these settings, and live runs aren't set up here yet", "warn"),
+                if can_run else theme.tag(f"no saved run for these settings, and {model.name} can't run live yet", "warn"),
                 unsafe_allow_html=True)
 
 if clicked:

@@ -21,6 +21,7 @@ IFS_MIN, IFS_MAX = date(2024, 3, 1), date.today() - timedelta(days=2)
 AIFS2_MIN = date(2026, 5, 13)
 # Forecast variables every run aims to provide, with the names shown to participants.
 VAR_LABELS = {"tp": "rainfall", "t2m": "2 m temperature", "z500": "500 hPa geopotential (z500)"}
+RUNNERS_DIR = Path(__file__).resolve().parent.parent / "runners"
 # Model environments inside the container: {ENV_ROOT}/{env}/bin/python
 ENV_ROOT = Path(os.environ.get("DEMO3_ENV_ROOT", "/opt/envs"))
 
@@ -44,8 +45,10 @@ class Model:
 
     @property
     def live(self) -> bool:
-        """True if this container can run the model (its environment is installed)."""
-        return (ENV_ROOT / self.env / "bin" / "python").exists()
+        """True if this container can run the model: its environment is installed and it
+        has a runner (FGN, for now, only has Google's saved sample case)."""
+        return ((ENV_ROOT / self.env / "bin" / "python").exists()
+                and (RUNNERS_DIR / f"runner_{self.key}.py").exists())
 
 
 MODELS: list[Model] = [
