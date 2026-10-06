@@ -2,20 +2,23 @@
 
 A Streamlit app, running on the DGX Spark, for running AI weather models. Participants choose a model, start date, lead time, region and use case (heat / precipitation / onset), run the forecast (or load a saved run), and explore the results.
 
-**Status: skeleton.**
-- The full app flow works end to end with *synthetic* output.
-- Real model runners are added one at a time (see "Adding a model").
-- The result plots are placeholders until the visualization module is plugged in (see "For the visualization module").
+**Status:**
+- All 7 models run live on the Spark from one Docker image (`docker/`), and saved runs load instantly.
+- The event movie tab (forecast vs observations) is Panchali's `demo3/event_movie/forecast_event_movie.py`.
+- The other result tabs are placeholders until the visualization module is plugged in (see "For the visualization module").
 
 ## Run it
 
-**On the Spark:**
+**On the Spark** (aarch64; build once, about an hour, mostly compiling two libraries):
 
 ```bash
-cd ~/demo3_ai_forecast
-docker run -d --name demo3-ui -p 127.0.0.1:8501:8501 -v $PWD:/app -w /app \
-  demo45-benchmarks streamlit run app.py --server.headless true --server.port 8501
+cd ~/ai_weather/demo3
+docker build -t demo3 -f docker/Dockerfile .
+bash docker/run.sh            # or DEV=1 bash docker/run.sh to use this folder's code live
 ```
+
+`run.sh` keeps saved runs in `outputs/` and model weights (~90 GB, downloaded on each model's
+first run) in `~/.cache/demo3`; set `DEMO3_CACHE` to reuse an existing cache.
 
 **From your laptop:** open a tunnel, then browse to http://localhost:8501.
 
@@ -23,13 +26,18 @@ docker run -d --name demo3-ui -p 127.0.0.1:8501:8501 -v $PWD:/app -w /app \
 ssh -L 8501:localhost:8501 <you>@hcwfpgx
 ```
 
-`demo45-benchmarks` is a temporary base image. It will be replaced by the Demo 3 image, which also holds the model environments.
+**After a reboot**, if the container won't start with "unresolvable CDI devices", Docker started
+before the GPU list existed: `systemctl --user restart docker && docker start demo3`.
+
+**Environments in the image** (`/opt/envs/<env>`, pinned in `docker/locks/`):
+`e2s018` Atlas CRPS, Aurora 1.5, AIFS v2 single · `e2s018ens` AIFS v2 ENS ·
+`graphcast` GraphCast and NeuralGCM · `fgn` FGN · `ui` the page.
 
 ## Layout
 
 ```
 app.py                 Streamlit page: steps 2–3 and results
-demo3/catalog.py       the 7 models (type, environment, lead-time limit, members, status)
+demo3/catalog.py       the 7 models (type, environment, lead-time limit, members)
 demo3/regions.py       program countries → padded plotting boxes
 demo3/contract.py      the output-file format every runner writes
 demo3/store.py         where outputs live; reusing saved runs
@@ -38,6 +46,7 @@ demo3/viz.py           result views (PLACEHOLDERS — the plug-in point)
 demo3/theme.py         styling, matching the Demo 5 platform
 runners/run_model.py   runner entry point (+ synthetic output generator)
 timings.json           measured Spark runtimes shown in brackets in the app
+docker/                the image: Dockerfile, run.sh, per-environment package locks
 outputs/               saved runs: outputs/{model}/{YYYYMMDDTHH}_{lead}h_m{members}.nc
 ```
 
