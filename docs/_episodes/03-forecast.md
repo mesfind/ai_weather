@@ -38,12 +38,7 @@ keypoints:
   - **Precipitation Exceedance (Short-run rainfall):** Led by Koomi, supported by Shruti.
   - **Onset/Cessation:** Led Aryan, supported by Panchali.
 
-### 3. Output Generation and Discussion Prep
-- Groups execute their specific model runs within the container.
-- Participants generate the final figure (Command 4) and prepare their outputs for discussion and evaluation in subsequent sessions.
-
-
-**Timings on the Spark for a 10-day forecast:**
+### 3. Timings on the Spark for a 10-day forecast
 
 | Model | Members | Time | Peak GPU memory |
 | --- | --- | --- | --- |
