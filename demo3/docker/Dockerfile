@@ -53,6 +53,14 @@ import cartopy.feature as cf, cartopy.io.shapereader as sr; \
               ('cultural', 'admin_0_boundary_lines_land'), ('cultural', 'admin_0_countries')]]"
 # (map outlines are fetched now so the page works without internet at the venue)
 
+# Earth2Studio 0.16's GraphCast wraps Datasets in xr.Dataset(...), which newer
+# xarray rejects; copy them instead (the same fix the summer environment carried).
+RUN cd /opt/envs/graphcast/lib/python3.12/site-packages/earth2studio/models/px \
+ && sed -i -E 's/^( +)(inputs|targets_template|forcings) = xr\.Dataset\(\2\)$/\1\2 = \2.copy()/' \
+      graphcast_operational.py graphcast_small.py \
+ && grep -q "forcings = forcings.copy()" graphcast_operational.py \
+ && grep -q "forcings = forcings.copy()" graphcast_small.py
+
 ENV PATH=/opt/envs/ui/bin:$PATH \
     DEMO3_ENV_ROOT=/opt/envs
 
