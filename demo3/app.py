@@ -8,6 +8,7 @@ Step 3 run the model (or load a saved run); then explore the results.
 """
 from __future__ import annotations
 
+import base64
 import shutil
 import subprocess
 import time
@@ -21,7 +22,7 @@ import xarray as xr
 from demo3 import catalog, jobs, movie, results, store, theme
 from demo3.regions import COUNTRIES, GROUPS, Box, country_box
 
-st.set_page_config(page_title="Demo 3 · AI Weather Forecast", page_icon="🌦️", layout="wide")
+st.set_page_config(page_title="Demo 3 · AI Weather Forecast", layout="wide")
 theme.apply()
 
 
@@ -97,7 +98,11 @@ def event_results(path, m, full, run_req, box, region_name, lead_days, use_case)
             st.rerun()
     else:
         if s.get("gif"):
-            st.image(s["gif"], caption="Observations vs forecast, by valid day")
+            # st.image shows only a GIF's first frame; embed it so it animates
+            gif64 = base64.b64encode(Path(s["gif"]).read_bytes()).decode()
+            st.html(f'<img src="data:image/gif;base64,{gif64}" style="width:100%" '
+                    'alt="Observations vs forecast, by valid day">')
+            st.caption("Observations vs forecast, by valid day")
             st.download_button("Download movie (GIF)", Path(s["gif"]).read_bytes(),
                                file_name=Path(s["gif"]).name, mime="image/gif", key="movie_dl")
         if s.get("png"):
@@ -167,9 +172,9 @@ theme.cards([{
     "selected": m.key == model.key, "dim": not m.live and not synthetic,
 } for m in choices])
 if model.notes:
-    st.caption(f"ℹ️ {model.notes}")
+    st.caption(f"ⓘ {model.notes}")
 if model.slow:
-    st.caption("🐢 This model is slow on the Spark. In class, load a saved run where possible.")
+    st.caption("ⓘ This model is slow on the Spark. In class, load a saved run where possible.")
 st.markdown("**What this model needs on the Spark**")
 results.requirements(model, timings, store.OUTPUT_DIR)
 
@@ -187,7 +192,7 @@ members = (c4.number_input("Ensemble members", 1, model.max_members, model.defau
 if model.kind != "ensemble":
     c4.text_input("Ensemble members", "1 (deterministic)", disabled=True)
 init = pd.Timestamp(init_day) + pd.Timedelta(hours=init_hour)
-st.caption(f"📅 Start dates for {model.name}: {init_lo:%-d %b %Y} – {init_hi:%-d %b %Y}. "
+st.caption(f"ⓘ Start dates for {model.name}: {init_lo:%-d %b %Y} – {init_hi:%-d %b %Y}. "
            f"{model.date_reason()}")
 
 # ── Step 2c: region ──────────────────────────────────────────────────────────
@@ -285,7 +290,7 @@ if ss.result:
         m = catalog.BY_KEY[run_req.model]
         theme.section("Results")
         if full.attrs.get("synthetic"):
-            st.caption("⚠️ Synthetic output — not a real forecast.")
+            st.caption("ⓘ Synthetic output — not a real forecast.")
         st.markdown(f"**How this forecast was made** · {m.name}, started "
                     f"{run_req.init:%-d %b %Y %HZ} from {full.attrs.get('init_source', m.init_source)}")
         results.pipeline(path, full, m, timings)
@@ -302,7 +307,7 @@ if ss.result:
         data = results.netcdf_bytes(path, p.stat().st_mtime,
                                     (box.lat_min, box.lat_max, box.lon_min, box.lon_max),
                                     lead_days * 24)
-        st.download_button(f"⬇️ Download this forecast for {region_name} (NetCDF, "
+        st.download_button(f"Download this forecast for {region_name} (NetCDF, "
                            f"{len(data) / 1e6:.1f} MB)", data, mime="application/x-netcdf",
                            file_name=f"{m.key}_{run_req.init:%Y%m%dT%H}_{lead_days}d_"
                                      f"{region_name.replace(' ', '_').lower()}.nc")
