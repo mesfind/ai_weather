@@ -54,18 +54,24 @@ def _inputs(init: pd.Timestamp, steps: int, sample: Path, report) -> tuple[xr.Da
     if init == SAMPLE_INIT and steps <= SAMPLE_STEPS:
         batch = xr.load_dataset(sample).isel(time=slice(0, steps + 2))
         return batch, "HRES analysis (Google sample case)"
-    cached = INPUTS_DIR / f"{init:%Y%m%dT%H}_{steps}steps.nc"
+    # the converter writes just the two input times; forecast frames are added here
+    cached = INPUTS_DIR / f"{init:%Y%m%dT%H}.nc"
     if not cached.exists():
         report("Building starting conditions from ECMWF open data…", 0.05)
         cmd = [str(CONVERTER_PY), str(Path(__file__).with_name("fgn_convert.py")),
-               "--init", f"{init:%Y-%m-%dT%H}", "--steps", str(steps), "--static", str(sample),
+               "--init", f"{init:%Y-%m-%dT%H}", "--steps", "0", "--static", str(sample),
                "--out", str(cached), "--source", os.environ.get("DEMO3_IFS_SOURCE", "aws")]
         r = subprocess.run(cmd, capture_output=True, text=True)
         print(r.stdout[-2000:], r.stderr[-4000:], sep="\n", flush=True)
         if r.returncode != 0:
             lines = [ln for ln in r.stderr.strip().splitlines() if ln.strip()]
             raise RuntimeError(lines[-1] if lines else "FGN input conversion failed")
-    return xr.load_dataset(cached), "IFS analysis (ECMWF open data)"
+    batch = xr.load_dataset(cached)
+    times = pd.to_timedelta(np.arange(steps + 2) * 6, unit="h")
+    start = batch.datetime.values[0, 0]
+    batch = batch.reindex(time=times).assign_coords(
+        datetime=(("batch", "time"), (start + times.values)[None, :]))
+    return batch, "IFS analysis (ECMWF open data)"
 
 
 def run(init, lead_hours, members, report):
