@@ -17,6 +17,10 @@ ARCO_ERA5 = "ARCO ERA5 (Google)"
 IFS_OPEN = "IFS analysis (ECMWF Open Data)"
 # ECMWF open data on AWS starts 2024-03-01 and is current to within a few days.
 IFS_MIN, IFS_MAX = date(2024, 3, 1), date.today() - timedelta(days=2)
+# ECMWF open data has every input AIFS v2 needs (incl. 10 hPa levels) only from this date.
+AIFS2_MIN = date(2026, 5, 13)
+# Forecast variables every run aims to provide, with the names shown to participants.
+VAR_LABELS = {"tp": "rainfall", "t2m": "2 m temperature", "z500": "500 hPa geopotential (z500)"}
 # Model environments inside the container: {ENV_ROOT}/{env}/bin/python
 ENV_ROOT = Path(os.environ.get("DEMO3_ENV_ROOT", "/opt/envs"))
 
@@ -36,6 +40,7 @@ class Model:
     init_min: date = date(2020, 1, 1)
     init_max: date = date(2026, 4, 30)
     notes: str = ""
+    missing: tuple[str, ...] = ()  # variables (VAR_LABELS keys) the model does not forecast
 
     @property
     def live(self) -> bool:
@@ -45,20 +50,22 @@ class Model:
 
 MODELS: list[Model] = [
     Model("aifs2_single", "AIFS Single v2.0", "ECMWF", "deterministic", IFS_OPEN, "e2s018",
-          max_lead_days=15, init_min=IFS_MIN, init_max=IFS_MAX,
-          notes="Starts from IFS analyses (incl. wave fields); ARCO ERA5 lacks some inputs."),
+          max_lead_days=15, init_min=AIFS2_MIN, init_max=IFS_MAX,
+          notes="Starts from ECMWF's IFS analyses. ECMWF's open data has every input AIFS v2 "
+                "needs only from 13 May 2026, so earlier start dates aren't available."),
     Model("graphcast", "GraphCast", "Google DeepMind", "deterministic", ARCO_ERA5, "graphcast",
           max_lead_days=10),
     Model("aurora15", "Aurora 1.5", "Microsoft", "deterministic", ARCO_ERA5, "e2s018",
           max_lead_days=10, slow=True),
     Model("aifs2_ens", "AIFS ENS v2", "ECMWF", "ensemble", IFS_OPEN, "e2s018ens",
           max_lead_days=15, max_members=3, default_members=2, slow=True,
-          init_min=IFS_MIN, init_max=IFS_MAX,
-          notes="Needs IFS initial conditions incl. wave fields, not ARCO."),
+          init_min=AIFS2_MIN, init_max=IFS_MAX,
+          notes="Starts from ECMWF's IFS analyses. ECMWF's open data has every input AIFS v2 "
+                "needs only from 13 May 2026, so earlier start dates aren't available."),
     Model("atlas_crps", "Atlas CRPS", "NVIDIA", "ensemble", ARCO_ERA5, "e2s018",
           max_lead_days=10, max_members=3, default_members=2),
     Model("neuralgcm", "NeuralGCM", "Google", "ensemble", ARCO_ERA5, "neuralgcm",
-          max_lead_days=10, max_members=3, default_members=2,
+          max_lead_days=10, max_members=3, default_members=2, missing=("t2m",),
           notes="2.8° (~300 km) stochastic precipitation version — the only NeuralGCM checkpoint "
                 "that forecasts rain. No 2 m temperature output."),
     Model("fgn", "FGN Mini (WeatherNext 2, 1°)", "Google DeepMind", "ensemble",
@@ -71,6 +78,15 @@ MODELS: list[Model] = [
 ]
 
 BY_KEY = {m.key: m for m in MODELS}
+
+
+def missing_in_run(ds) -> set[str]:
+    """Variables a saved run does not provide: listed as missing, absent, or all NaN."""
+    out = set(filter(None, ds.attrs.get("missing_variables", "").split(",")))
+    for v in VAR_LABELS:
+        if v not in ds.data_vars or not bool(ds[v].notnull().any()):
+            out.add(v)
+    return out
 
 TIMINGS_PATH = Path(__file__).resolve().parent.parent / "timings.json"
 

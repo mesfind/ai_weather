@@ -44,11 +44,16 @@ def event_movie_tab(path, m, full, run_req, box, region_name, lead_days, use_cas
     """Panchali's obs-vs-forecast event movie and track map for the loaded run."""
     st.caption("Animated map of observations (ERA5) next to the forecast, with the regional "
                "series building up day by day, plus a map of the event's footprint and track.")
-    missing = set(filter(None, full.attrs.get("missing_variables", "").split(",")))
+    missing = catalog.missing_in_run(full)
     kinds = [k for k, var in (("precip", "tp"), ("heat", "t2m")) if var not in missing]
     if not kinds:
-        st.info(f"{m.name} has neither rainfall nor 2 m temperature in this run.")
+        st.info(f"{m.name} has neither rainfall nor 2 m temperature in this run, so there is no "
+                "event movie to show.")
         return
+    for k, var in (("precip", "tp"), ("heat", "t2m")):
+        if var in missing:
+            st.info(f"{m.name} does not forecast {catalog.VAR_LABELS[var]}, so only the "
+                    f"{'heat' if k == 'precip' else 'rainfall'} movie is available.")
     labels = {"precip": "Rainfall (daily total)", "heat": "Heat (daily max 2 m T)"}
     default = "heat" if use_case == "Heat" and "heat" in kinds else kinds[0]
     c1, c2, c3 = st.columns([2, 2, 2])
@@ -149,7 +154,8 @@ def model_tags(m: catalog.Model) -> str:
 
 theme.cards([{
     "name": m.name, "org": m.org, "tags": model_tags(m),
-    "note": f"{catalog.timing_label(m, timings)} · starts from {m.init_source}",
+    "note": f"{catalog.timing_label(m, timings)} · starts from {m.init_source}"
+            + "".join(f" · no {catalog.VAR_LABELS[v]}" for v in m.missing),
     "color": theme.PURPLE if m.kind == "ensemble" else theme.TEAL,
     "selected": m.key == model.key, "dim": not m.live and not synthetic,
 } for m in choices])
@@ -213,6 +219,12 @@ else:
     if not 5 <= init.month <= 9:
         st.warning("The Kiremt onset window is May–September; onset is not meaningful for this start date.")
 
+NEEDS = {"Heat": "t2m", "Precipitation": "tp", "Onset": "tp"}
+if NEEDS[use_case] in model.missing:
+    label = catalog.VAR_LABELS[NEEDS[use_case]]
+    st.warning(f"{model.name} does not forecast {label}, so the {use_case} view won't be available "
+               f"for this model. Choose another model, or switch to a use case it supports.")
+
 # ── Step 3: run ──────────────────────────────────────────────────────────────
 theme.section("Run the forecast", "Step 3 ·")
 req = store.RunRequest(model.key, init, lead_days * 24, int(members), synthetic)
@@ -262,6 +274,9 @@ if ss.job_id:
             ss.job_id = None
             st.rerun()
 
+# Variable each result view needs (views not listed here are always shown)
+VIEW_NEEDS = {"Temperature": "t2m", "Precipitation": "tp", "Geopotential (z500)": "z500", "Onset": "tp"}
+
 # ── Results ──────────────────────────────────────────────────────────────────
 if ss.result:
     path, run_req = ss.result
@@ -284,8 +299,14 @@ if ss.result:
             first = {"Heat": "Temperature", "Precipitation": "Precipitation", "Onset": "Onset"}[use_case]
             names = [first] + [n for n in viz.VIEWS if n != first]
             tabs = st.tabs(names + ["Event movie (vs observations)"])
+            missing = catalog.missing_in_run(full)
             for tab, name in zip(tabs, names):
                 with tab:
-                    viz.VIEWS[name](ds, ctx)
+                    need = VIEW_NEEDS.get(name)
+                    if need in missing:
+                        st.info(f"{m.name} does not forecast {catalog.VAR_LABELS[need]}, so this view "
+                                "isn't available for this run.")
+                    else:
+                        viz.VIEWS[name](ds, ctx)
             with tabs[-1]:
                 event_movie_tab(path, m, full, run_req, box, region_name, lead_days, use_case)
