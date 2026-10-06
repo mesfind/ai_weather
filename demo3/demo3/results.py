@@ -21,6 +21,7 @@ from . import catalog
 from .regions import Box
 
 SPARK_MEMORY_GB = 121  # GB10 unified memory, shared by CPU and GPU
+JAX_ENVS = ("graphcast", "neuralgcm", "fgn")  # compiled on the first step (XLA)
 
 
 def spark_now(path: Path) -> tuple[float | None, float | None, float]:
@@ -95,7 +96,9 @@ def pipeline(path: str, full: xr.Dataset, m: catalog.Model, timings: dict) -> No
     c[2].metric("3 · Run the model", fmt(run_s))
     c[2].caption(f"{steps} steps of 6 h" + (f" × {members} members" if members > 1 else "")
                  + (f", {per_step}" if per_step else "") + "; each step feeds the next."
-                 + (f" Peak GPU memory {peak:g} GB of {SPARK_MEMORY_GB} GB." if peak else ""))
+                 + (f" Peak GPU memory {peak:g} GB of {SPARK_MEMORY_GB} GB." if peak else "")
+                 + (" The first step includes compiling the model for the GPU (often over a "
+                    "minute), so short forecasts look slower per step." if m.env in JAX_ENVS else ""))
     c[3].metric("4 · Post-process and save", fmt(s.get("post_s")))
     c[3].caption(f"Convert units (rain into 6-hour totals in mm, temperature in K, z500 in "
                  f"m² s⁻²), add metadata and save as NetCDF ({out_mb:g} MB).")
