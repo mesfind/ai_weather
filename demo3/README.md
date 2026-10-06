@@ -5,7 +5,8 @@ A Streamlit app, running on the DGX Spark, for running AI weather models. Partic
 **Status:**
 - All 7 models run live on the Spark from one Docker image (`docker/`), and saved runs load instantly.
 - The event movie tab (forecast vs observations) is Panchali's `demo3/event_movie/forecast_event_movie.py`.
-- Results are Panchali's event movie (forecast next to ERA5 observations, day by day) and event-track map, for heat or precipitation.
+- Results are Panchali's event movie (forecast next to ERA5 observations, day by day) and event-track map, for heat or precipitation; plus how the forecast was made (load, inputs, run, save, with times on the Spark), maps of z500 / 2 m temperature / rainfall, and a NetCDF download.
+- Each model card lists what it needs on the Spark: weight size, peak GPU memory, output size, grid and inputs.
 
 ## Run it
 
@@ -45,6 +46,7 @@ demo3/contract.py      the output-file format every runner writes
 demo3/store.py         where outputs live; reusing saved runs
 demo3/jobs.py          launches runs in the background and tracks progress
 demo3/movie.py         runs the event movie in the background for the loaded run
+demo3/results.py       pipeline stages, model requirements, forecast maps, NetCDF download
 demo3/event_movie/     Panchali's forecast_event_movie.py (unchanged) + the Spark adapter
 demo3/theme.py         styling, matching the Demo 5 platform
 runners/run_model.py   runner entry point (+ synthetic output generator)
