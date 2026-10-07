@@ -69,7 +69,7 @@ By the end of this lesson, you will be able to:
 
 In Ethiopian agriculture, the onset of the rainy season (Kiremt: June–September) dictates planting dates for millions of smallholder farmers. A late or false onset signal can lead to crop failure from planting too early, lost growing days from planting too late, and regional food insecurity.
 
-![Map of mean onset date across Ethiopia](figures/mean_onset_date.png)
+![Map of mean onset date across Ethiopia](..fig/mean_onset_date.png)
 
 *Figure 1. Mean rainy season onset date (day of year), 2003–2024. Onset arrives first in the southwest (mid-to-late May) and progressively later toward the north and east (July–August). This strong spatial gradient is why skill must be examined per grid cell and not only as a national average.*
 
@@ -287,10 +287,10 @@ ROMP benchmarks are executed using the `momp-run` command:
 
 ```bash
 # Deterministic evaluation
-momp-run -p notebooks/config_et.in --mode det
+momp-run -p notebooks/config.in --mode det
 
 # Probabilistic evaluation
-momp-run -p notebooks/config_et.in --mode prob
+momp-run -p notebooks/config.in --mode prob
 ```
 
 > #### Track Separation
@@ -325,13 +325,13 @@ Results are written to the `data/ROMP_OUT/` directory, organized by:
 cd ai_weather
 
 # 2. Run deterministic benchmark for Ethiopia
-momp-run -p notebooks/config_et.in --mode det
+momp-run -p notebooks/config.in --mode det
 
 # 3. Check results
 ls data/ROMP_OUT/et/output/
 
 # 4. Run probabilistic benchmark
-momp-run -p notebooks/config_et.in --mode prob
+momp-run -p notebooks/config.in --mode prob
 
 # 5. View probabilistic results
 ls data/ROMP_OUT/et/output/*AIFS_ENS*.csv
