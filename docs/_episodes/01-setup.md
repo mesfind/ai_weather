@@ -141,12 +141,3 @@ docker build -t demo3 -f docker/Dockerfile . && docker rm -f demo3 && bash docke
 | A run fails while downloading starting conditions | ECMWF/Google mirror busy: try again, or start with `DEMO3_IFS_SOURCE=azure` |
 | First run of a model is slow | it is downloading the weights once (Atlas CRPS ~30 min); later runs start in seconds |
 
-
-## Onset
-
-## Censsion
-
-## Temperature
-
-
-
