@@ -89,15 +89,33 @@ def dim_fmt_model(ds):
         ds = ds.rename({lat_coords: "lat", lon_coords: "lon"})
 
     if "init_time" not in coord_list:
-        time_coords = _find_coord(coord_list, ["time"], "init_time")
+        time_coords = _find_coord(
+            coord_list,
+            ["init_time", "time", "forecast_reference_time", "date"],
+            "init_time",
+        )
         ds = ds.rename({time_coords: "init_time"})
 
     if "step" not in coord_list:
-        # If a new model/version uses a different lead-time coordinate
-        # name (e.g. "lead_time", "forecast_period", "fhour"), add the
-        # matching keyword here once identified via the error message
-        # _find_coord raises.
-        step_coords = _find_coord(coord_list, ["day", "prediction_timedelta"], "step")
+        # FIX: Added "lead_time", "lead", "step", "forecast_period", "fhour"
+        # to cover all common naming conventions across different model outputs.
+        #
+        # Your AIFS files use "lead_time" for the forecast lead dimension,
+        # which was not in the original keyword list ["day", "prediction_timedelta"].
+        step_coords = _find_coord(
+            coord_list,
+            [
+                "step",
+                "lead_time",
+                "lead",
+                "day",
+                "prediction_timedelta",
+                "forecast_period",
+                "fhour",
+                "forecast_hour",
+            ],
+            "step",
+        )
         ds = ds.rename({step_coords: "step"})
 
     # convert TimedeltaIndex to integer (days)
@@ -115,7 +133,11 @@ def dim_fmt_model_ensemble(ds):
     coord_list = list(ds.coords.keys())
 
     if "member" not in coord_list:
-        ensemble_coords = _find_coord(coord_list, ["number", "sample"], "ensemble member")
+        ensemble_coords = _find_coord(
+            coord_list,
+            ["number", "sample", "member", "realization", "ensemble"],
+            "ensemble member",
+        )
         ds = ds.rename({ensemble_coords: "member"})
 
     return dim_order_fmt(ds)
