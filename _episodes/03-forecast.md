@@ -33,7 +33,7 @@ A Streamlit app, running on the DGX Spark, for running AI weather models. Partic
 
 ## Run it
 
-**Full step-by-step setup (new Spark, GPU check, copying weights, troubleshooting): [Demo1](../../docs/_episodes/03-forecast.md).**
+**Full step-by-step setup (new Spark, GPU check, copying weights, troubleshooting): [Demo1](https://mesfind.github.io/ai_weather/03-forecast/).**
 
 **On the Spark** (aarch64; build once, about an hour, mostly compiling two libraries):
 
