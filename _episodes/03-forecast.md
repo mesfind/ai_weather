@@ -20,10 +20,6 @@ keypoints:
 
 # Running AI Weather Forecast Models on a DGX Spark
 
-This module provides a comprehensive, state-of-the-art (SOTA) guide to deploying, executing, and benchmarking modern AI weather forecasting models locally using containerized workflows on a DGX Spark infrastructure.
-
----
-
 ## 1. Environment and Workflow Setup
 
 Step-by-step setup for the Demo 3 Streamlit platform (AI forecast lab). The entire stack operates within a single Docker container on the Spark, accessed via an SSH tunnel from your laptop's browser. This leverages NVIDIA's SOTA rootless Container Device Interface (CDI) for secure GPU passthrough.
@@ -222,6 +218,7 @@ docker build -t demo3 -f docker/Dockerfile . && docker rm -f demo3 && bash docke
 ```
 
 ### Rapid Troubleshooting Reference
+
 | Symptom | Resolution |
 |---|---|
 | `docker run` fails: `unresolvable CDI devices` | Execute `systemctl --user restart docker`, then `docker start demo3`. Implement the `wait-for-gpu.conf` fix (Step 1.1) for permanence. |
