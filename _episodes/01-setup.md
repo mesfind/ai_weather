@@ -569,9 +569,6 @@ Every benchmark result should document:
 > 3. What configuration change prevents this from happening after future reboots?
 {: .exercise}
 
-<details>
-<summary><strong>Check your answer</strong></summary>
-<br>
 
 > #### Solution
 >
@@ -580,7 +577,6 @@ Every benchmark result should document:
 > 3. **Prevention**: Create `~/.config/systemd/user/docker.service.d/wait-for-gpu.conf` with the ExecStartPre hook that waits for `/var/run/cdi/nvidia.yaml`.
 {: .solution}
 
-</details>
 
 > #### Exercise 3: Container Management (5 min)
 >
