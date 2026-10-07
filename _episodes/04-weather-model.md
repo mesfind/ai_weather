@@ -359,6 +359,7 @@ Every skill score is measured against climatology, so inspect the reference maps
 - All spatial metric files (NetCDF and PNG) were saved successfully for completed model/window combinations, with no fatal errors or tracebacks in the output.
 
 ### Model Skill Rankings from the Original Test Run (Reference: Climatology = 0.0)
+
 | Model | Mean MAE Skill | False Alarm Rate Skill | Miss Rate Skill | Overall Skill Score |
 |-------|----------------|------------------------|-----------------|---------------------|
 | **Climatology** | 0.000000 | 0.000000 | 0.000000 | 0.000000 |
@@ -373,6 +374,7 @@ Every skill score is measured against climatology, so inspect the reference maps
 ## Probabilistic Evaluation (AIFS-ENS)
 
 ### Run Configuration
+
 - **Command Executed:** `momp-run -p notebooks/config_et.in --mode prob`
 - **Model Evaluated:** AIFS-ENS (25 ensemble members)
 - **Evaluation Mode:** Probabilistic (CLI override)
@@ -381,6 +383,7 @@ Every skill score is measured against climatology, so inspect the reference maps
 - **Verification Windows:** Days 1–15 and Days 16–30
 
 ### Processing Summary
+
 - **Temporal Scope:** 2015–2022 (8 years)
 - **Initializations:** 15 dates per year (May–July)
 - **Total Potential Forecasts:** ~1,120,875 per window
