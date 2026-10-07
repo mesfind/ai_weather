@@ -24,3 +24,5 @@ docs/_site/
 *.ipynb_checkpoints
 
 notebooks/*.ipynb
+.agents/skills
+.claude/skills
