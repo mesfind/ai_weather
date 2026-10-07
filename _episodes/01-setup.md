@@ -234,6 +234,7 @@ Prepend these flags to `bash docker/run.sh` to customize behavior:
 | `DEMO3_IFS_SOURCE=azure` | Use Azure mirror for ECMWF data | `DEMO3_IFS_SOURCE=azure bash docker/run.sh` | AWS |
 | `DEMO3_FGN_DIR=/path` | FGN weights and sample file location | `DEMO3_FGN_DIR=/data/fgn bash docker/run.sh` | `~/.cache/fgn` |
 
+
 :::{tip}
 #### Development Workflow
 Use `DEV=1` during active development to avoid rebuilding the container after every code change. Changes to Python files take effect immediately after a page refresh.
