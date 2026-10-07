@@ -18,13 +18,17 @@ keypoints:
 <!-- MathJax -->
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
-# Running AI Weather Forecast Models on a DGX Spark'
+# Running AI Weather Forecast Models on a DGX Spark
 
-This module provides a comprehensive guide to deploying, executing, and benchmarking modern AI weather forecasting models locally using containerized workflows on a DGX Spark infrastructure.
+This module provides a comprehensive guide to deploying, executing, and benchmarking modern AI weather forecasting models locally using containerized workflows on a DGX Spark infrastructure. 
+
+*Note: All demonstration applications, including Demo 3, are now organized under the `demos/` directory in the repository.*
+
+---
 
 ## 1. Environment and Workflow Setup
 
-Step-by-step setup for the Demo 3 Streamlit platform (AI forecast lab). The entire stack operates within a single Docker container on the Spark, accessed via an SSH tunnel from your laptop's browser. This leverages NVIDIA's SOTA rootless Container Device Interface (CDI) for secure GPU passthrough.
+Step-by-step setup for the Demo 3 Streamlit platform (AI forecast lab). The entire stack operates within a single Docker container on the Spark, accessed via an SSH tunnel from your laptop's browser. This leverages modern rootless Container Device Interface (CDI) standards for secure GPU passthrough.
 
 **Access Pathways:**
 - **Path A (Pre-configured Spark):** Use a Spark where Demo 3 is already deployed (e.g., `hcwfpgx`). Proceed directly to **Step 5**. Requires Tailscale access and a user account.
@@ -52,14 +56,14 @@ systemctl --user daemon-reload
 ### 1.2. Acquire the Codebase
 ```bash
 git clone https://github.com/mesfind/ai_weather.git
-cd ai_weather/demo3
+cd ai_weather/demos/demo3
 ```
 
 ### 1.3. Build the Container Image (One-time, ~1 hour)
 ```bash
 docker build -t demo3 -f docker/Dockerfile .
 ```
-*Note:* The build duration is primarily consumed by compiling SOTA AI weather dependencies (e.g., `earth2grid`, `NATTEN`). Subsequent rebuilds leverage Docker's layer cache and complete in seconds unless `docker/locks/` is modified. Model weights are explicitly excluded from the image to maintain portability.
+*Note:* The build duration is primarily consumed by compiling advanced AI weather dependencies (e.g., `earth2grid`, `NATTEN`). Subsequent rebuilds leverage Docker's layer cache and complete in seconds unless `docker/locks/` is modified. Model weights are explicitly excluded from the image to maintain portability.
 
 *Optimization:* Transfer a pre-built image from an existing Spark:
 ```bash
@@ -77,7 +81,7 @@ This launches a self-healing container named `demo3` that persists across reboot
 
 | Asset Type | Spark Location | Storage Profile |
 |---|---|---|
-| Saved forecasts, event movies, job logs | `ai_weather/demo3/outputs/` | Grows incrementally with usage |
+| Saved forecasts, event movies, job logs | `ai_weather/demos/demo3/outputs/` | Grows incrementally with usage |
 | Model weights (downloaded on first run) | `~/.cache/demo3/` | Up to ~75 GB total |
 
 **Runtime Configuration Flags** (prepend to `bash docker/run.sh`):
@@ -88,7 +92,7 @@ This launches a self-healing container named `demo3` that persists across reboot
 *Optimization:* Pre-populate weights and outputs from an existing Spark:
 ```bash
 rsync -a --info=progress2 <user>@<spark>:<its weights cache>/ ~/.cache/demo3/
-rsync -a --info=progress2 <user>@<spark>:ai_weather/demo3/outputs/ ai_weather/demo3/outputs/
+rsync -a --info=progress2 <user>@<spark>:ai_weather/demos/demo3/outputs/ ai_weather/demos/demo3/outputs/
 ```
 *(On `hcwfpgx`, the canonical weights cache is located at `~/e2s-spark/root_cache`)*.
 
@@ -105,42 +109,43 @@ Keep this terminal active and navigate to **http://localhost:8501** in your brow
 3. **Execution:** If a matching forecast exists, **Load saved run** provides instant retrieval. Otherwise, **Run forecast** executes the model on the Spark with a real-time progress indicator.
 4. **Analysis:** Explore the result tabs, including the **Event movie** tab for temporal forecast-to-observation comparisons.
 
-*Pedagogical Note:* Computationally intensive models (e.g., Aurora 1.5 at ~26 min, Atlas CRPS at ~19 min for 10-day forecasts) represent the cutting edge of high-resolution probabilistic forecasting. Pre-running these is recommended for seamless classroom demonstration.
+*Pedagogical Note:* Computationally intensive models (e.g., Aurora 1.5 at ~26 min, Atlas CRPS at ~19 min for 10-day forecasts) represent advanced high-resolution probabilistic forecasting. Pre-running these is recommended for seamless classroom demonstration.
 
 ---
 
-## 2. Structured Lab Execution: Use-Case Groups
+## 2. Use-Case Group Execution
 
-To facilitate targeted learning, participants are divided into specialized use-case groups. Each group must activate the corresponding flag in the application to tailor the model's output and visualization pipeline.
+Organize into your designated use-case groups to begin the hands-on exercises. Ensure your team uses the specific flag in the code that tailors the model output to your assigned challenge:
 
-- **Temperature Exceedance:** Led by Docko, supported by Narayana. Focuses on heatwave tracking and daily maximum 2m temperature thresholds.
-- **Precipitation Exceedance (Short-run rainfall):** Led by Koomi, supported by Shruti. Focuses on convective rainfall accumulation and flood risk mapping.
-- **Onset/Cessation:** Led by Aryan, supported by Panchali. Focuses on seasonal transition markers and agricultural climate indices.
+- **Temperature Exceedance:** Led by Docko, supported by Narayana.
+- **Precipitation Exceedance (Short-run rainfall):** Led by Koomi, supported by Shruti.
+- **Onset/Cessation:** Led by Aryan, supported by Panchali.
 
 ---
 
 ## 3. Application Interface and Execution Architecture
 
-The Demo 3 Streamlit application serves as the unified interface for orchestrating SOTA AI weather models on the DGX Spark. 
+The Demo 3 Streamlit application serves as the unified interface for orchestrating advanced AI weather models on the DGX Spark. 
 
 **System Status & Capabilities:**
 - All 7 integrated models execute live from a unified Docker image, with instant loading for cached runs.
-- The event movie pipeline (`demo3/event_movie/forecast_event_movie.py`, developed by Panchali) renders side-by-side forecast and ERA5 observation comparisons.
+- The event movie pipeline (`demos/demo3/event_movie/forecast_event_movie.py`, developed by Panchali) renders side-by-side forecast and ERA5 observation comparisons.
 - Comprehensive result packages include: execution telemetry (load, input, run, save times), geospatial maps (z500, 2m temperature, rainfall), and downloadable NetCDF artifacts.
 - Each model card transparently reports hardware requirements: weight size, peak GPU memory, output dimensions, and required input variables.
 
 ### 3.1. Core Directory Layout
+*(Paths are relative to `ai_weather/demos/demo3/`)*
 ```text
 app.py                 # Main Streamlit application: orchestration and results display
-demo3/catalog.py       # Model registry (type, environment, lead-time limits, member counts)
-demo3/regions.py       # Geographic mapping: program countries to padded plotting bounding boxes
-demo3/contract.py      # Strict data contract: output-file format enforced for all runners
-demo3/store.py         # Artifact management: storage paths and saved-run deduplication
-demo3/jobs.py          # Asynchronous job launcher and progress tracker
-demo3/movie.py         # Background event movie generator for loaded runs
-demo3/results.py       # Pipeline visualization: model requirements, forecast maps, NetCDF export
-demo3/event_movie/     # Panchali's forecast_event_movie.py + Spark adaptation layer
-demo3/theme.py         # UI styling, aligned with the Demo 5 platform design system
+catalog.py             # Model registry (type, environment, lead-time limits, member counts)
+regions.py             # Geographic mapping: program countries to padded plotting bounding boxes
+contract.py            # Strict data contract: output-file format enforced for all runners
+store.py               # Artifact management: storage paths and saved-run deduplication
+jobs.py                # Asynchronous job launcher and progress tracker
+movie.py               # Background event movie generator for loaded runs
+results.py             # Pipeline visualization: model requirements, forecast maps, NetCDF export
+event_movie/           # forecast_event_movie.py + Spark adaptation layer
+theme.py               # UI styling, aligned with the Demo 5 platform design system
 runners/run_model.py   # Universal runner entry point (+ synthetic output generator for testing)
 runners/fgn_convert.py # FGN-specific starting condition converter from ECMWF open data
 timings.json           # Empirically measured Spark runtimes displayed in the UI
@@ -173,7 +178,7 @@ Every model execution produces a single, globally covered NetCDF file. Runners m
 The visualization pipeline reads Demo 3 output files and dynamically fetches ERA5 observations from Google's ARCO dataset (cached locally in `outputs/_obs_cache/` if the cluster's primary ERA5 volume is unavailable). The selected use case dictates the movie variable: **Heat** (daily max 2m temperature) or **Precipitation** (daily rainfall accumulation). Movies are rendered on-demand and cached in `outputs/_movies/`.
 
 ### 4.3. FGN (WeatherNext 2) Integration Specifics
-FGN (Functional Generative Network) is Google DeepMind's SOTA approach for probabilistic forecasting, injecting noise directly into the generative process. As it is not yet natively supported in NVIDIA Earth2Studio, and Google publishes FGN-ready inputs for a single date (2024-10-07 00Z), Demo 3 implements a specialized workflow for Google's 1° Mini model (`WeatherNextCyclones_Mini`), optimized for constrained memory environments while maintaining cyclone tracking fidelity.
+FGN (Functional Generative Network) is Google DeepMind's advanced approach for probabilistic forecasting, injecting noise directly into the generative process. As it is not yet natively supported in NVIDIA Earth2Studio, and Google publishes FGN-ready inputs for a single date (2024-10-07 00Z), Demo 3 implements a specialized workflow for Google's 1° Mini model (`WeatherNextCyclones_Mini`), optimized for constrained memory environments while maintaining cyclone tracking fidelity.
 
 - **Converter (`runners/fgn_convert.py`):** Executes in the `e2s018` environment. Downloads ECMWF IFS analyses (step 0) for the target time and T-6h at FGN's 13 pressure levels, regrids to FGN's 1° resolution, and constructs Google's expected file layout. Valid for any date covered by ECMWF open data (from 2024-03-01).
   - *Approximations:* Sea-surface temperature uses IFS skin temperature over oceans, floored at seawater freezing (271.46 K) under sea ice. Surface geopotential and land-sea masks are fixed fields copied from Google's sample. Validation against Google's 2024-10-07 file shows a correlation of 1.000 for all fields except SST (correlation 0.997, mean bias -0.08 K).
@@ -182,12 +187,12 @@ FGN (Functional Generative Network) is Google DeepMind's SOTA approach for proba
 ### 4.4. Developer Guide: Adding a New Model
 1. Implement `runners/runner_<model_key>.py` containing `run(init, lead_hours, members, report) -> xr.Dataset`, ensuring strict compliance with the output data contract (`tp`, `t2m`, `z500`).
 2. Verify the model's Python environment is provisioned at `/opt/envs/<env>/bin/python` within the container.
-3. Register the model with `status="ready"` in `demo3/catalog.py`.
+3. Register the model with `status="ready"` in `catalog.py`.
 4. Benchmark the execution and append the measured runtime to `timings.json`.
 
 ---
 
-## 5. Performance Reporting and SOTA Benchmarks
+## 5. Performance Reporting and Benchmarks
 
 The following table reports the empirical performance baseline for each model on a DGX Spark (H100-class GPU) for a standard 10-day forecast. These metrics illustrate the architectural trade-offs between spatial resolution, ensemble size, and computational complexity in modern AI weather models.
 
@@ -206,12 +211,13 @@ The following table reports the empirical performance baseline for each model on
 **Benchmarking Context:**
 - **Initialization Overhead:** Reported times include the download of starting conditions (from Google’s ERA5 copy or ECMWF), except for FGN, which utilizes the pre-packaged sample file. Model weights are assumed to be pre-cached. First-time executions incur additional latency for weight downloads (e.g., ~31 min for Atlas CRPS, ~7 min for Aurora 1.5, ~5 min for AIFS v2 ENS).
 - **Aurora 1.5:** Microsoft's open foundation model for the Earth system. The extended runtime reflects its high-resolution, multi-variable atmospheric and environmental modeling capabilities.
-- **Atlas CRPS:** NVIDIA's advanced ensemble prognostic model. The higher memory footprint and runtime are attributable to its noise-conditioned transformer blocks sharing the Atlas autoencoder, designed for superior probabilistic dispersion.
-- **AIFS v2:** ECMWF's operational machine-learning ensemble. Represents the current industry standard for medium-range global forecasting, balancing speed and accuracy, with v3 architectures slated to introduce hourly surface forecasts.
+- **Atlas CRPS:** NVIDIA's advanced ensemble prognostic model. The higher memory footprint and runtime are attributable to its noise-conditioned transformer blocks sharing the Atlas autoencoder, designed for robust probabilistic dispersion.
+- **AIFS v2:** ECMWF's operational machine-learning ensemble. Represents the current operational standard for medium-range global forecasting, balancing speed and accuracy, with v3 architectures slated to introduce hourly surface forecasts.
 - **FGN (WeatherNext 2):** Demonstrates highly efficient, scalable probabilistic forecasting. The Mini variant achieves rapid cyclone tracking with minimal memory overhead, validating the efficacy of the Functional Generative Network architecture.
 
 ---
 ### Everyday Maintenance Commands
+
 ```bash
 docker logs -f demo3                 # Monitor real-time application logs
 docker restart demo3                 # Gracefully restart the application container
