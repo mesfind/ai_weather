@@ -25,19 +25,27 @@ keypoints:
 <!-- MathJax -->
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
-# Setting Up AI Weather Forecasting Lab
+# Setting Up the AI Weather Forecasting Lab
 
-This lesson documents the complete environmental setup and configuration for AI weather forecasting on DGX Spark infrastructure. It covers GPU verification, container configuration, runtime options, model-specific environments, and essential library dependencies required for running modern AI weather models (AIFS, GraphCast, Aurora, Atlas CRPS, FGN/WeatherNext, NeuralGCM, and FuXi).
+This lesson documents the complete environmental setup and configuration for AI weather forecasting on DGX Spark infrastructure. It is the single source of truth for all configuration — covering GPU verification, container configuration, runtime options, model-specific environments, FGN integration, and the ROMP/MOMP benchmarking pipeline. It is required reading before [Demo 3: Running AI Weather Forecasts](03-forecast.md) and [Demo 4: AI Weather Model Scorecard](04-weather-model.md).
+
+> #### Prerequisites
+>
+> - Access to a DGX Spark node (e.g., `hcwfpgx`) via Tailscale.
+> - A user account on the Spark with sudo privileges for Docker configuration.
+> - Familiarity with the Linux command line and basic Docker concepts.
+{: .prereq}
 
 ## Learning Objectives
 
 By the end of this lesson, you will be able to:
-- Verify GPU availability using NVIDIA Container Device Interface (CDI)
-- Configure Docker rootless mode with proper GPU passthrough
-- Build and deploy containerized AI weather forecasting environments
-- Configure runtime options for development, caching, and data sources
-- Understand model-specific environment requirements and dependencies
-- Identify and resolve common setup issues related to GPU access
+
+- Verify GPU availability using NVIDIA Container Device Interface (CDI).
+- Configure Docker rootless mode with proper GPU passthrough.
+- Build and deploy containerized AI weather forecasting environments.
+- Configure runtime options for development, caching, and data sources.
+- Understand model-specific environment requirements and dependencies.
+- Identify and resolve common setup issues related to GPU access.
 
 ## Lesson Roadmap
 
@@ -53,20 +61,22 @@ By the end of this lesson, you will be able to:
 | ROMP/MOMP Configuration | Benchmarking pipeline setup |
 | Essential Libraries | Understanding dependencies for AI weather models |
 | Troubleshooting | Resolving common setup issues |
+| Best Practices | Checklists and performance optimization |
 | Exercises | Hands-on practice with environment verification |
 
 ## Why Environment Setup Matters
 
 AI weather forecasting models require specialized hardware (GPUs) and software environments to run efficiently. Unlike traditional weather models that run on CPUs, modern AI models like GraphCast, Aurora, and AIFS leverage GPU acceleration for:
 
-- **Fast inference**: 10-day global forecasts in minutes instead of hours
-- **Ensemble generation**: Running multiple forecast scenarios simultaneously
-- **High-resolution predictions**: 0.25° grid resolution with complex neural architectures
+- **Fast inference**: 10-day global forecasts in minutes instead of hours.
+- **Ensemble generation**: Running multiple forecast scenarios simultaneously.
+- **High-resolution predictions**: 0.25° grid resolution with complex neural architectures.
 
 A reproducible environment ensures that:
-- Results can be replicated across different DGX Spark nodes
-- Model weights and dependencies are consistent
-- GPU resources are properly allocated and monitored
+
+- Results can be replicated across different DGX Spark nodes.
+- Model weights and dependencies are consistent.
+- GPU resources are properly allocated and monitored.
 
 ## 1. GPU Verification
 
@@ -81,14 +91,15 @@ docker run --rm --device nvidia.com/gpu=all ubuntu nvidia-smi -L
 ```
 
 **Expected output:**
+
 ```
 GPU 0: NVIDIA H100 80GB HBM3 (UUID: GPU-xxxxx)
 ```
 
-:::{warning}
-#### Common Issue: Unresolvable CDI Devices
-If the command fails with `unresolvable CDI devices nvidia.com/gpu=all`, Docker started before the GPU registry was populated. This commonly occurs immediately after a system reboot.
-:::
+> #### Common Issue: Unresolvable CDI Devices
+>
+> If the command fails with `unresolvable CDI devices nvidia.com/gpu=all`, Docker started before the GPU registry was populated. This commonly occurs immediately after a system reboot.
+{: .warning}
 
 **Solution:** Restart the Docker service:
 
@@ -111,19 +122,20 @@ EOF
 systemctl --user daemon-reload
 ```
 
-:::{tip}
-#### Why This Works
-The configuration adds a pre-start hook that waits up to 120 seconds for the CDI registry file (`/var/run/cdi/nvidia.yaml`) to appear before starting Docker. This ensures GPU devices are properly registered before Docker attempts to use them.
-:::
+> #### Why This Works
+>
+> The configuration adds a pre-start hook that waits up to 120 seconds for the CDI registry file (`/var/run/cdi/nvidia.yaml`) to appear before starting Docker. This ensures GPU devices are properly registered before Docker attempts to use them.
+{: .tip}
 
 ## 2. Docker Configuration
 
 ### 2.1 Understanding Rootless Docker
 
 Rootless Docker runs the Docker daemon as a non-root user, providing:
-- **Enhanced security**: No root privileges required
-- **User isolation**: Each user manages their own containers
-- **Simplified permissions**: No need for sudo or group membership
+
+- **Enhanced security**: No root privileges required.
+- **User isolation**: Each user manages their own containers.
+- **Simplified permissions**: No need for sudo or group membership.
 
 ### 2.2 Container Storage Management
 
@@ -131,15 +143,15 @@ When running AI weather models, Docker manages two primary storage locations:
 
 | Asset Type | Location | Size | Purpose |
 | --- | --- | --- | --- |
-| Saved forecasts, event movies, job logs | `ai_weather/demo3/outputs/` | Grows with use | Persistent results |
+| Saved forecasts, event movies, job logs | `ai_weather/demos/demo3/outputs/` | Grows with use | Persistent results |
 | Model weights (downloaded on first run) | `~/.cache/demo3/` | Up to ~75 GB | Model parameters |
 
-:::{keypoints}
-#### Storage Best Practices
-- Model weights are downloaded once per model and cached locally
-- Saved forecasts accumulate over time; consider periodic cleanup
-- Use `DEMO3_CACHE=/path` to redirect weights to high-performance storage
-:::
+> #### Storage Best Practices
+>
+> - Model weights are downloaded once per model and cached locally.
+> - Saved forecasts accumulate over time; consider periodic cleanup.
+> - Use `DEMO3_CACHE=/path` to redirect weights to high-performance storage.
+{: .keypoints}
 
 ## 3. Container Image Management
 
@@ -152,19 +164,21 @@ docker build -t demo3 -f docker/Dockerfile .
 ```
 
 **Build characteristics:**
-- **First build**: ~1 hour (compiling earth2grid, NATTEN libraries)
-- **Subsequent builds**: Seconds (using Docker layer cache)
-- **Image contents**: Python environments, dependencies, application code
-- **Excluded**: Model weights (downloaded on first run)
 
-:::{note}
-#### Build Optimization
-Most of the build time is spent compiling two specialized libraries:
-- **earth2grid**: Grid interpolation for weather data
-- **NATTEN**: Neighborhood attention for transformer architectures
+- **First build**: ~1 hour (compiling earth2grid, NATTEN libraries).
+- **Subsequent builds**: Seconds (using Docker layer cache).
+- **Image contents**: Python environments, dependencies, application code.
+- **Excluded**: Model weights (downloaded on first run).
 
-These are compiled from source to ensure compatibility with the target GPU architecture.
-:::
+> #### Build Optimization
+>
+> Most of the build time is spent compiling two specialized libraries:
+>
+> - **earth2grid**: Grid interpolation for weather data.
+> - **NATTEN**: Neighborhood attention for transformer architectures.
+>
+> These are compiled from source to ensure compatibility with the target GPU architecture.
+{: .tip}
 
 ### 3.2 Transferring Pre-built Images
 
@@ -181,27 +195,32 @@ scp demo3-image.tar.gz <user>@<target-spark>:~/
 docker load < demo3-image.tar.gz
 ```
 
-:::{exercise}
-#### Exercise 1: Image Transfer (5 min)
-You have a pre-built image on Spark `hcwfpgx` and need to deploy it to a new Spark `hcwfpgy`. Write the complete sequence of commands to:
-1. Export the image from the source Spark
-2. Transfer it to the target Spark
-3. Load it on the target Spark
+> #### Exercise 1: Image Transfer (5 min)
+>
+> You have a pre-built image on Spark `hcwfpgx` and need to deploy it to a new Spark `hcwfpgy`. Write the complete sequence of commands to:
+>
+> 1. Export the image from the source Spark.
+> 2. Transfer it to the target Spark.
+> 3. Load it on the target Spark.
+{: .exercise}
 
 <details>
-<summary>Solution</summary>
+<summary><strong>Check your answer</strong></summary>
+<br>
 
-```bash
-# On hcwfpgx:
-docker save demo3 | gzip > demo3-image.tar.gz
-scp demo3-image.tar.gz <user>@hcwfpgy:~/
-
-# On hcwfpgy:
-docker load < demo3-image.tar.gz
-```
+> #### Solution
+>
+> ```bash
+> # On hcwfpgx:
+> docker save demo3 | gzip > demo3-image.tar.gz
+> scp demo3-image.tar.gz <user>@hcwfpgy:~/
+>
+> # On hcwfpgy:
+> docker load < demo3-image.tar.gz
+> ```
+{: .solution}
 
 </details>
-:::
 
 ## 4. Runtime Configuration
 
@@ -218,7 +237,7 @@ docker build -t demo3 -f docker/Dockerfile .
 # 3. Start the container
 bash docker/run.sh
 
-# 4. Access the UI from your laptop
+# 4. Access the UI from your laptop (on Tailscale)
 ssh -L 8501:localhost:8501 <user>@<spark>
 # Then browse to http://localhost:8501
 ```
@@ -234,16 +253,15 @@ Prepend these flags to `bash docker/run.sh` to customize behavior:
 | `DEMO3_IFS_SOURCE=azure` | Use Azure mirror for ECMWF data | `DEMO3_IFS_SOURCE=azure bash docker/run.sh` | AWS |
 | `DEMO3_FGN_DIR=/path` | FGN weights and sample file location | `DEMO3_FGN_DIR=/data/fgn bash docker/run.sh` | `~/.cache/fgn` |
 
+> #### Development Workflow
+>
+> Use `DEV=1` during active development to avoid rebuilding the container after every code change. Changes to Python files take effect immediately after a page refresh.
+{: .tip}
 
-:::{tip}
-#### Development Workflow
-Use `DEV=1` during active development to avoid rebuilding the container after every code change. Changes to Python files take effect immediately after a page refresh.
-:::
-
-:::{warning}
-#### First-Run Downloads
-The first execution of each model downloads weights (~75 GB total). This can take 30+ minutes for large models like Atlas CRPS. Subsequent runs start in seconds.
-:::
+> #### First-Run Downloads
+>
+> The first execution of each model downloads weights (~75 GB total). This can take 30+ minutes for large models like Atlas CRPS. Subsequent runs start in seconds.
+{: .warning}
 
 ### 4.3 Pre-populating Cache and Outputs
 
@@ -258,6 +276,7 @@ rsync -a --info=progress2 <user>@<spark>:ai_weather/demos/demo3/outputs/ ai_weat
 ```
 
 **Known cache locations:**
+
 - On `hcwfpgx`: `~/e2s-spark/root_cache`
 
 ## 5. Model-Specific Environments
@@ -268,16 +287,16 @@ Different models require different Python environments, provisioned inside the c
 
 | Environment | Models | Key Dependencies | Peak GPU Memory |
 | --- | --- | --- | --- |
-| `e2s018` | Atlas CRPS, Aurora 1.5, AIFS v2 single | PyTorch, Earth2Studio | 14-33 GB |
+| `e2s018` | Atlas CRPS, Aurora 1.5, AIFS v2 single | PyTorch, Earth2Studio | 14–33 GB |
 | `e2s018ens` | AIFS v2 ENS | PyTorch, ensemble utilities | 25 GB |
-| `graphcast` | GraphCast, NeuralGCM | JAX, Graph Neural Networks | 16-18 GB |
+| `graphcast` | GraphCast, NeuralGCM | JAX, Graph Neural Networks | 16–18 GB |
 | `fgn` | FGN (WeatherNext 2) | JAX, Functional Generative Networks | 1.8 GB |
 | `ui` | Streamlit interface | Web framework | N/A |
 
-:::{warning}
-#### Environment Isolation
-Each model runs in its own isolated Python environment. Do not attempt to mix dependencies across environments, as this can cause version conflicts.
-:::
+> #### Environment Isolation
+>
+> Each model runs in its own isolated Python environment. Do not attempt to mix dependencies across environments, as this can cause version conflicts.
+{: .warning}
 
 ### 5.2 Model Weight Downloads
 
@@ -307,14 +326,15 @@ python runners/fgn_convert.py --date 2024-10-08
 ```
 
 **Converter workflow:**
-1. Downloads ECMWF IFS analyses at 13 pressure levels
-2. Regrids to FGN's 1° resolution
-3. Constructs Google's expected file layout
 
-:::{warning}
-#### Sea Surface Temperature Approximation
-The converter uses IFS skin temperature over oceans, floored at 271.46 K under sea ice. This introduces a small bias (correlation 0.997, mean error -0.08 K) compared to true SST.
-:::
+1. Downloads ECMWF IFS analyses at 13 pressure levels.
+2. Regrids to FGN's 1° resolution.
+3. Constructs Google's expected file layout.
+
+> #### Sea Surface Temperature Approximation
+>
+> The converter uses IFS skin temperature over oceans, floored at 271.46 K under sea ice. This introduces a small bias (correlation 0.997, mean error −0.08 K) compared to true SST.
+{: .warning}
 
 ### 6.2 FGN-Specific Configuration
 
@@ -326,9 +346,9 @@ The converter uses IFS skin temperature over oceans, floored at 271.46 K under s
 
 ### 6.3 FGN Performance
 
-- **10-day, 3-member forecast**: ~2 minutes, 1.8 GB peak memory
-- **Model variant**: `WeatherNextCyclones_Mini` (1° resolution, only Mini weights published)
-- **Full 0.25° model**: Does not fit in Spark memory
+- **10-day, 3-member forecast**: ~2 minutes, 1.8 GB peak memory.
+- **Model variant**: `WeatherNextCyclones_Mini` (1° resolution, the only Mini weights published).
+- **Full 0.25° model**: Does not fit in Spark memory.
 
 ## 7. ROMP/MOMP Benchmarking Configuration
 
@@ -346,13 +366,13 @@ uv pip install pyproject.toml
 This installs the `momp-run` command-line tool and all required dependencies for running onset benchmarks.
 
 > #### Installation Verification
-> 
+>
 > After installation, verify that `momp-run` is available:
-> 
+>
 > ```bash
 > momp-run --help
 > ```
-> 
+>
 > This should display the command-line options for the ROMP runner.
 {: .tip}
 
@@ -370,9 +390,9 @@ ROMP uses configuration files (e.g., `notebooks/config_et.in`) to define:
 | `dry_extent` | 20 days | Window after candidate for veto |
 | `start_date` | June 1 | Season search window start |
 | `end_date` | September 30 | Season search window end |
-| `verification_window` | Days 1-15, Days 16-30 | Lead time windows to evaluate |
-| `matching_tolerance` | 3 days (1-15), 5 days (16-30) | How close forecast must match observation |
-| `run_mode` | DET or PROB | Deterministic or probabilistic track |
+| `verification_window` | Days 1–15, Days 16–30 | Lead time windows to evaluate |
+| `matching_tolerance` | 3 days (1–15), 5 days (16–30) | How close forecast must match observation |
+| `run_mode` | `DET` or `PROB` | Deterministic or probabilistic track |
 
 ### 7.3 Model Registration
 
@@ -395,88 +415,9 @@ Models are registered centrally in `BENCHMARK_MODEL_CATALOG` within `config.py`:
 | Seasonal mask | `jjas_seasonal_mask_0p25.nc` | 0.25° |
 
 > #### Next Steps
-> 
+>
 > ROMP installation is complete. For detailed instructions on running benchmarks, configuring experiments, and interpreting results, see [Demo 4: AI Weather Model Scorecard](04-weather-model.md).
 {: .tip}
-```
-
-## Updated 04-weather-model.md - Add Running Section
-
-Add this section near the beginning of 04-weather-model.md, after the "ROMP Specifications" section:
-
-```markdown
-## Running ROMP Benchmarks
-
-> #### Prerequisites
-> 
-> Ensure ROMP is installed. See [Demo 1: ROMP Installation](01-setup.md#7-rompmomp-benchmarking-configuration) for setup instructions.
-{: .prereq}
-
-### Command-Line Execution
-
-ROMP benchmarks are executed using the `momp-run` command:
-
-```bash
-# Deterministic evaluation
-momp-run -p notebooks/config_et.in --mode det
-
-# Probabilistic evaluation
-momp-run -p notebooks/config_et.in --mode prob
-```
-
-> #### Track Separation
-> 
-> Deterministic and probabilistic tracks use non-comparable metric families and must never be mixed within a single evaluation run. Always specify the mode explicitly with `--mode det` or `--mode prob`.
-{: .warning}
-
-### Configuration Options
-
-The `-p` flag specifies the path to your configuration file. Common configuration files:
-
-| Config File | Purpose |
-| --- | --- |
-| `notebooks/config_et.in` | Ethiopia Kiremt season benchmark |
-| `notebooks/config_in.in` | India monsoon benchmark |
-
-### Output Location
-
-Results are written to the `data/ROMP_OUT/` directory, organized by:
-- Country/region code (e.g., `et/` for Ethiopia)
-- Output subdirectory containing:
-  - Spatial metric maps (PNG)
-  - Skill score tables (CSV)
-  - Reliability diagrams (PNG)
-  - NetCDF files with gridded metrics
-
-### Example Workflow
-
-```bash
-# 1. Navigate to the ai_weather directory
-cd ai_weather
-
-# 2. Run deterministic benchmark for Ethiopia
-momp-run -p notebooks/config_et.in --mode det
-
-# 3. Check results
-ls data/ROMP_OUT/et/output/
-
-# 4. Run probabilistic benchmark
-momp-run -p notebooks/config_et.in --mode prob
-
-# 5. View probabilistic results
-ls data/ROMP_OUT/et/output/*AIFS_ENS*.csv
-```
-
-> #### Troubleshooting
-> 
-> For common issues and diagnostic commands, see the [Troubleshooting section](#troubleshooting-common-failure-modes) at the end of this lesson.
-{: .tip}
-
-
-:::{warning}
-#### Track Separation
-Deterministic and probabilistic tracks use non-comparable metric families and must never be mixed within a single evaluation run.
-:::
 
 ## 8. Essential Libraries
 
@@ -497,6 +438,7 @@ AI weather models require specialized libraries for:
 ### 8.2 Library Versions
 
 Pinned in `docker/locks/` for reproducibility. Key versions:
+
 - PyTorch: 2.1+ (CUDA 12.x)
 - JAX: 0.4+ (with CUDA support)
 - xarray: 2023.x+
@@ -538,10 +480,10 @@ systemctl --user status docker
 df -h ~/.cache/demo3/
 ```
 
-:::{tip}
-#### Proactive Monitoring
-Run `docker logs -f demo3` in a separate terminal while testing to catch errors in real-time. This is especially useful during first-time model runs when weights are being downloaded.
-:::
+> #### Proactive Monitoring
+>
+> Run `docker logs -f demo3` in a separate terminal while testing to catch errors in real-time. This is especially useful during first-time model runs when weights are being downloaded.
+{: .tip}
 
 ## 10. Everyday Maintenance Commands
 
@@ -581,15 +523,16 @@ Before running AI weather models, verify:
 
 ### 11.2 Performance Optimization
 
-- **Use pre-built images**: Transfer images between Sparks instead of rebuilding
-- **Cache model weights**: Use `DEMO3_CACHE` to point to shared storage
-- **Pre-run heavy models**: Aurora 1.5 (~26 min) and Atlas CRPS (~19 min) should be pre-run for classroom demonstrations
-- **Monitor GPU utilization**: Use `nvidia-smi` to ensure models are using GPU acceleration
-- **Separate DET and PROB tracks**: Never mix deterministic and probabilistic evaluations
+- **Use pre-built images**: Transfer images between Sparks instead of rebuilding.
+- **Cache model weights**: Use `DEMO3_CACHE` to point to shared storage.
+- **Pre-run heavy models**: Aurora 1.5 (~26 min) and Atlas CRPS (~19 min) should be pre-run for classroom demonstrations.
+- **Monitor GPU utilization**: Use `nvidia-smi` to ensure models are using GPU acceleration.
+- **Separate DET and PROB tracks**: Never mix deterministic and probabilistic evaluations.
 
 ### 11.3 Reporting Checklist
 
 Every benchmark result should document:
+
 - [ ] Onset definition parameters (for ROMP)
 - [ ] Verification dataset and resolution
 - [ ] Model, reforecast period, initialization dates, number of members
@@ -600,94 +543,110 @@ Every benchmark result should document:
 
 ## Summary
 
-- GPU visibility must be verified before running AI weather models in containers
-- Docker rootless mode with NVIDIA CDI provides secure GPU passthrough
-- Runtime configuration flags control development mode, caching, and data sources
-- Model weights are downloaded once and cached locally
-- Model-specific environments ensure dependency isolation
-- FGN requires special configuration for starting conditions
-- ROMP/MOMP has its own configuration system for benchmarking
-- Essential libraries include earth2grid, NATTEN, and model-specific frameworks
-- Troubleshooting common issues requires understanding Docker, GPU, and network interactions
-- Always document configuration choices with benchmark results
+> #### Key Points
+>
+> - GPU visibility must be verified before running AI weather models in containers.
+> - Docker rootless mode with NVIDIA CDI provides secure GPU passthrough.
+> - Runtime configuration flags control development mode, caching, and data sources.
+> - Model weights are downloaded once and cached locally.
+> - Model-specific environments ensure dependency isolation.
+> - FGN requires special configuration for starting conditions.
+> - ROMP/MOMP has its own configuration system for benchmarking.
+> - Essential libraries include earth2grid, NATTEN, and model-specific frameworks.
+> - Troubleshooting common issues requires understanding Docker, GPU, and network interactions.
+> - Always document configuration choices with benchmark results.
+{: .keypoints}
 
 ## Exercises
 
-:::{exercise}
-#### Exercise 2: Diagnose GPU Access (10 min)
-You SSH into a DGX Spark after a reboot and try to run a container, but get the error:
-```
-docker: Error response from daemon: unresolvable CDI devices nvidia.com/gpu=all
-```
-
-1. What caused this error?
-2. What command do you run to fix it immediately?
-3. What configuration change prevents this from happening after future reboots?
-
-<details>
-<summary>Solution</summary>
-
-1. **Cause**: Docker started before the NVIDIA CDI registry was populated after the reboot.
-2. **Immediate fix**: `systemctl --user restart docker`
-3. **Prevention**: Create `~/.config/systemd/user/docker.service.d/wait-for-gpu.conf` with the ExecStartPre hook that waits for `/var/run/cdi/nvidia.yaml`.
-
-</details>
-:::
-
-:::{exercise}
-#### Exercise 3: Container Management (5 min)
-You need to update the code in your running container without rebuilding the entire image. What environment variable do you set, and what command do you run?
+> #### Exercise 2: Diagnose GPU Access (10 min)
+>
+> You SSH into a DGX Spark after a reboot and try to run a container, but get the error:
+>
+> ```
+> docker: Error response from daemon: unresolvable CDI devices nvidia.com/gpu=all
+> ```
+>
+> 1. What caused this error?
+> 2. What command do you run to fix it immediately?
+> 3. What configuration change prevents this from happening after future reboots?
+{: .exercise}
 
 <details>
-<summary>Solution</summary>
+<summary><strong>Check your answer</strong></summary>
+<br>
 
-Set `DEV=1` to mount the local directory into the container:
-
-```bash
-DEV=1 bash docker/run.sh
-```
-
-This allows you to edit code locally and see changes immediately without rebuilding.
+> #### Solution
+>
+> 1. **Cause**: Docker started before the NVIDIA CDI registry was populated after the reboot.
+> 2. **Immediate fix**: `systemctl --user restart docker`
+> 3. **Prevention**: Create `~/.config/systemd/user/docker.service.d/wait-for-gpu.conf` with the ExecStartPre hook that waits for `/var/run/cdi/nvidia.yaml`.
+{: .solution}
 
 </details>
-:::
 
-:::{exercise}
-#### Exercise 4: Configure ROMP Benchmark (15 min)
-You want to run a deterministic benchmark for Ethiopia's Kiremt season with the following requirements:
-- Wet spell: 3 consecutive days ≥ 2 mm/day
-- Dry spell veto: 7 consecutive days < 1 mm within 20 days
-- Verification windows: Days 1-15 and Days 16-30
-- Models: AIFS, GraphCast
-
-Write the configuration parameters you would set in `config_et.in`.
+> #### Exercise 3: Container Management (5 min)
+>
+> You need to update the code in your running container without rebuilding the entire image. What environment variable do you set, and what command do you run?
+{: .exercise}
 
 <details>
-<summary>Solution</summary>
+<summary><strong>Check your answer</strong></summary>
+<br>
 
-```
-wet_init = 20
-wet_spell = 3
-wet_threshold = 2
-dry_spell = 7
-dry_threshold = 1
-dry_extent = 20
-start_date = 2015-06-01
-end_date = 2022-09-30
-verification_windows = [1-15, 16-30]
-matching_tolerance = {1-15: 3, 16-30: 5}
-run_mode = DET
-models = [AIFS, GraphCast]
-```
+> #### Solution
+>
+> Set `DEV=1` to mount the local directory into the container:
+>
+> ```bash
+> DEV=1 bash docker/run.sh
+> ```
+>
+> This allows you to edit code locally and see changes immediately without rebuilding.
+{: .solution}
 
 </details>
-:::
+
+> #### Exercise 4: Configure ROMP Benchmark (15 min)
+>
+> You want to run a deterministic benchmark for Ethiopia's Kiremt season with the following requirements:
+>
+> - Wet spell: 3 consecutive days ≥ 2 mm/day
+> - Dry spell veto: 7 consecutive days < 1 mm within 20 days
+> - Verification windows: Days 1–15 and Days 16–30
+> - Models: AIFS, GraphCast
+>
+> Write the configuration parameters you would set in `config_et.in`.
+{: .exercise}
+
+<details>
+<summary><strong>Check your answer</strong></summary>
+<br>
+
+> #### Solution
+>
+> ```
+> wet_init = 20
+> wet_spell = 3
+> wet_threshold = 2
+> dry_spell = 7
+> dry_threshold = 1
+> dry_extent = 20
+> start_date = 2015-06-01
+> end_date = 2022-09-30
+> verification_windows = [1-15, 16-30]
+> matching_tolerance = {1-15: 3, 16-30: 5}
+> run_mode = DET
+> models = [AIFS, GraphCast]
+> ```
+{: .solution}
+
+</details>
 
 ## Next Steps
 
-After completing this setup, proceed to **Demo 3** to learn how to run AI weather models and generate forecasts, or **Demo 4** to learn systematic benchmarking with ROMP/MOMP.
+After completing this setup, proceed to:
 
-**References:**
-- [Demo 3: Running AI Weather Forecasts](03-forecast.md)
-- [Demo 4: AI Weather Model Scorecard](04-weather-model.md)
+- **[Demo 3: Running AI Weather Forecasts](03-forecast.md)** — Learn how to run AI weather models and generate forecasts.
+- **[Demo 4: AI Weather Model Scorecard](04-weather-model.md)** — Learn systematic benchmarking with ROMP/MOMP.
 
