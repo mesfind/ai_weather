@@ -69,7 +69,7 @@ By the end of this lesson, you will be able to:
 
 In Ethiopian agriculture, the onset of the rainy season (Kiremt: June–September) dictates planting dates for millions of smallholder farmers. A late or false onset signal can lead to crop failure from planting too early, lost growing days from planting too late, and regional food insecurity.
 
-![Map of mean onset date across Ethiopia](..fig/mean_onset_date.png)
+![Map of mean onset date across Ethiopia](../fig/mean_onset_date.png)
 
 *Figure 1. Mean rainy season onset date (day of year), 2003–2024. Onset arrives first in the southwest (mid-to-late May) and progressively later toward the north and east (July–August). This strong spatial gradient is why skill must be examined per grid cell and not only as a national average.*
 
@@ -376,11 +376,11 @@ For each model and verification window the pipeline writes a three-panel map (`s
 
 AIFS is the strongest deterministic model at short lead. Its errors grow quickly in Days 16–30.
 
-![AIFS days 1-15 spatial metrics](../fig/aifs_days_1_15.png)
+![AIFS days 1-15 spatial metrics](../fig/AIFS/spatial_metrics_AIFS_1-15.png)
 
 *Figure 2a. AIFS, Days 1–15. MAE is low (light) across most of the western and central highlands. Errors and misses concentrate in the east and northeast, where onset is late and the season is short. False alarms are highest in the far southwest, where the rainy season starts earliest.*
 
-![AIFS days 16-30 spatial metrics](../fig/aifs_days_16_30.png)
+![AIFS days 16-30 spatial metrics](../fig/AIFS/spatial_metrics_AIFS_16-30.png)
 
 *Figure 2b. AIFS, Days 16–30. MAE rises sharply almost everywhere, and the southwest false-alarm area becomes saturated (close to 100 %). Miss rates in the east are similar to Days 1–15.*
 
@@ -388,11 +388,11 @@ AIFS is the strongest deterministic model at short lead. Its errors grow quickly
 
 FuXi rarely issues an onset, so it has few false alarms but a very high miss rate, especially in Days 16–30.
 
-![FuXi days 1-15 spatial metrics](../fig/fuxi_days_1_15.png)
+![FuXi days 1-15 spatial metrics](../fig/FuXi/spatial_metrics_FuXi_1-15.png)
 
 *Figure 3a. FuXi, Days 1–15. Many grid cells are blank because FuXi produced no matched onset there. Where MAE is defined it is low in the west, but the miss-rate panel is dominated by dark blue across the north and east.*
 
-![FuXi days 16-30 spatial metrics](f../fig/fuxi_days_16_30.png)
+![FuXi days 16-30 spatial metrics](../fig/FuXi/spatial_metrics_FuXi_1-15.png)
 
 *Figure 3b. FuXi, Days 16–30. Almost every cell is either blank or dark blue in the miss-rate panel. The few cells with an MAE value are mostly dark red. This illustrates why a low false-alarm rate can simply reflect a model that rarely predicts onset at all.*
 
@@ -400,11 +400,11 @@ FuXi rarely issues an onset, so it has few false alarms but a very high miss rat
 
 GraphCast detects onset well in Days 1–15 but pays for it with frequent false alarms.
 
-![GraphCast days 1-15 spatial metrics](../fig/graphcast_days_1_15.png)
+![GraphCast days 1-15 spatial metrics](../fig/GraphCast/spatial_metrics_GraphCast_1-15.png)
 
 *Figure 4a. GraphCast, Days 1–15. Miss rates are low over most of the country (light blue) apart from the east. The far-southwest false-alarm area is close to 100 %, reflecting GraphCast's tendency to over-predict onset.*
 
-![GraphCast days 16-30 spatial metrics](../fig/graphcast_days_16_30.png)
+![GraphCast days 16-30 spatial metrics](../fig/GraphCast/spatial_metrics_GraphCast_1-15.png)
 
 *Figure 4b. GraphCast, Days 16–30. MAE is high across the north, where it is defined, and many cells are blank. False alarms are large in the northwest and southwest.*
 
@@ -491,7 +491,7 @@ Every skill score is measured against climatology, so inspect the reference maps
 
 The only positive skill is in the first five days (BSS = +6.4 %). Skill then falls below climatology and AUC drops from 0.85 to 0.53 by Days 11–15.
 
-![AIFS-ENS skill heatmap days 1-15](../fig/aifs_ens_skill_1_15.png)
+![AIFS-ENS skill heatmap days 1-15](../fig/skill_scores_heatmap_AIFS_ENS_1-15.png)
 
 *Figure 7a. AIFS-ENS skill by 5-day bin, Days 1–15. Top row: BSS (%). Bottom row: AUC (climatology reference in brackets). Skill decays quickly with lead time.*
 
@@ -513,7 +513,7 @@ The only positive skill is in the first five days (BSS = +6.4 %). Skill then fal
 
 **Overall Fair BSS**: `-0.258` | **Overall Fair RPSS**: `-0.486`
 
-![AIFS-ENS skill heatmap days 16-30](../fig/aifs_ens_skill_16_30.png)
+![AIFS-ENS skill heatmap days 16-30](../fig/skill_scores_heatmap_AIFS_ENS_16-30.png)
 
 *Figure 7b. AIFS-ENS skill by 5-day bin, Days 16–30. BSS stays negative in every bin, and AUC is 0.5 throughout, meaning the ensemble cannot discriminate onset from non-onset.*
 
@@ -546,11 +546,11 @@ print(binned[["Bin", "Fair_Brier_Skill_Score", "AUC", "AUC_ref"]])
 
 A reliability diagram plots the forecast probability (x) against how often the event actually occurred (y). Points on the dashed 1:1 line are perfectly reliable. Grey bars (log scale, right axis) show how many forecasts fall in each probability bin.
 
-![Reliability diagram AIFS-ENS days 1-15](../fig/reliability_1_15.png)
+![Reliability diagram AIFS-ENS days 1-15](../fig/reliability_AIFS_ENS_1-15.png)
 
 *Figure 8a. Reliability, Days 1–15. The curve is flatter than the diagonal. Near-zero forecasts verify about 10 % of the time (under-forecast), and forecasts near 1.0 verify only about 80 % of the time (over-forecast). The ensemble is overconfident. Most forecasts sit in the lowest probability bin.*
 
-![Reliability diagram AIFS-ENS days 16-30](../fig/reliability_16_30.png)
+![Reliability diagram AIFS-ENS days 16-30](../fig/eliability_AIFS_ENS_16-30.png)
 
 *Figure 8b. Reliability, Days 16–30. Nearly all forecasts are below 0.3, the curve has no upward trend, and the last points have huge error bars from small samples. Probabilities carry almost no information, matching the AUC ≈ 0.5.*
 
