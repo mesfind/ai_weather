@@ -1,2 +1,0 @@
-[console_scripts]
-momp-run = momp.driver:run_momp

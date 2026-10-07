@@ -26,3 +26,5 @@ docs/_site/
 notebooks/*.ipynb
 .agents/skills
 .claude/skills
+ai_weather.egg-info/
+anaconda_projects/db/
