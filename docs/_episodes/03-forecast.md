@@ -3,17 +3,18 @@ title: "Demo 3"
 teaching: 45
 exercises: 30
 questions:
-- "How do we set up and run AI weather models locally in a container?"
-- "What are the core commands needed to go from environment setup to generating a forecast figure?"
+- "How do we run AI weather models locally in a container?"
+- "What are the core commands needed to generate a forecast figure?"
 - "How do we tailor the model execution to specific use cases like onset, cessation, or temperature exceedance?"
 objectives:
 - "Gain hands-on experience with the end-to-end process of running AI weather models locally."
-- "Execute a streamlined 4-command workflow to build a container, run a model, and generate use-case-specific outputs."
+- "Execute a streamlined 4-command workflow to run a model and generate use-case-specific outputs."
 - "Interpret model outputs and compare forecasts against observations."
 keypoints:
 - "A streamlined 4-command workflow (build container, run model, get output, generate figure) simplifies local AI forecasting."
 - "Use-case flags in the code allow groups to tailor outputs for onset/cessation, temperature exceedance, or precipitation exceedance."
 - "Streamlit provides an interactive environment for executing and visualizing the AI weather models."
+- "All configuration options are documented in Demo 1."
 ---
 
 <!-- MathJax -->
@@ -22,6 +23,11 @@ keypoints:
 # Running AI Weather Forecast Models on a DGX Spark
 
 This module provides a comprehensive guide to deploying, executing, and benchmarking modern AI weather forecasting models locally using containerized workflows on a DGX Spark infrastructure. The Demo 3 Streamlit application serves as the unified interface for orchestrating seven state-of-the-art AI weather models.
+
+:::{note}
+#### Prerequisites
+Complete the environment setup in [Demo 1: Setting Up AI Weather Forecasting Lab](01-setup.md) before proceeding. All configuration options (runtime flags, model environments, FGN setup) are documented there.
+:::
 
 ## Learning Objectives
 
@@ -37,7 +43,7 @@ By the end of this lesson, you will be able to:
 | Section | Purpose |
 | --- | --- |
 | Application Overview | Understanding the Demo 3 architecture and capabilities |
-| Environment Setup | Deploying the containerized application |
+| Quick Start | Running your first forecast |
 | Model Execution | Running forecasts with the Streamlit interface |
 | Output Interpretation | Understanding NetCDF outputs and visualization |
 | Use-Case Customization | Tailoring models for specific forecasting challenges |
@@ -76,17 +82,56 @@ The Demo 3 application consists of:
 - **High accuracy**: Aurora 1.5, GraphCast (but slower: 26 min and 3.5 min respectively)
 :::
 
+## 1. Quick Start
 
-## 1. Model Execution
+:::{tip}
+#### Complete Setup Guide
+For detailed setup instructions including GPU verification, container building, and all runtime configuration options, see [Demo 1: Setting Up AI Weather Forecasting Lab](01-setup.md).
+:::
 
-### 1.1 Interactive Workflow
+### 1.1 Core Commands
+
+```bash
+# Clone and navigate to the demo
+git clone https://github.com/mesfind/ai_weather.git
+cd ai_weather/demos/demo3
+
+# Build the container (first time only, ~1 hour)
+docker build -t demo3 -f docker/Dockerfile .
+
+# Start the container
+bash docker/run.sh
+
+# Access from your laptop
+ssh -L 8501:localhost:8501 <user>@<spark>
+# Browse to http://localhost:8501
+```
+
+### 1.2 Runtime Options
+
+Common configuration flags (see [Demo 1](01-setup.md) for complete list):
+
+```bash
+# Development mode (live code updates)
+DEV=1 bash docker/run.sh
+
+# Custom cache location
+DEMO3_CACHE=/shared/cache bash docker/run.sh
+
+# Use Azure mirror for ECMWF data
+DEMO3_IFS_SOURCE=azure bash docker/run.sh
+```
+
+## 2. Model Execution
+
+### 2.1 Interactive Workflow
 
 1. **Model Selection**: Choose Deterministic or Probabilistic, then select a specific model
 2. **Parameterization**: Set start date, lead time, ensemble members, geographic region, and use case
 3. **Execution**: Click "Run forecast" (or "Load saved run" if available)
 4. **Analysis**: Explore results tabs, including event movies comparing forecasts to observations
 
-### 1.2 Use-Case Groups
+### 2.2 Use-Case Groups
 
 Organize into your designated use-case groups to begin the hands-on exercises. Ensure your team uses the specific flag in the code that tailors the model output to your assigned challenge:
 
@@ -117,9 +162,9 @@ Organize into your designated use-case groups to begin the hands-on exercises. E
 </details>
 :::
 
-## 2. Output Interpretation
+## 3. Output Interpretation
 
-### 2.1 Data Contract
+### 3.1 Data Contract
 
 Every model execution produces a NetCDF file with the following structure:
 
@@ -134,7 +179,7 @@ Every model execution produces a NetCDF file with the following structure:
 | **coords** | `valid_time`, `init_time` |
 | **attrs** | `model`, `model_name`, `init_source`, `members`, `synthetic` |
 
-### 2.2 Loading Outputs in Python
+### 3.2 Loading Outputs in Python
 
 ```python
 import xarray as xr
@@ -159,9 +204,9 @@ print(ds)
 - Ensemble dimension has size 1 for deterministic models
 :::
 
-## 3. Use-Case Customization
+## 4. Use-Case Customization
 
-### 3.1 Temperature Exceedance
+### 4.1 Temperature Exceedance
 
 Focus: Heatwave tracking and daily maximum 2m temperature thresholds
 
@@ -170,7 +215,7 @@ Focus: Heatwave tracking and daily maximum 2m temperature thresholds
 - Metric: Daily maximum temperature
 - Threshold: Region-specific (e.g., 35°C for heatwave conditions)
 
-### 3.2 Precipitation Exceedance
+### 4.2 Precipitation Exceedance
 
 Focus: Short-run rainfall accumulation and flood risk mapping
 
@@ -179,13 +224,13 @@ Focus: Short-run rainfall accumulation and flood risk mapping
 - Metric: Accumulated rainfall over 24-72 hours
 - Threshold: Region-specific (e.g., 50mm/day for heavy rainfall)
 
-### 3.3 Onset/Cessation
+### 4.3 Onset/Cessation
 
 Focus: Seasonal transition markers and agricultural climate indices
 
 **Key parameters:**
 - Variable: `tp` (precipitation)
-- Metric: Wet-spell and dry-spell detection (see Demo 4 for details)
+- Metric: Wet-spell and dry-spell detection (see [Demo 4](04-weather-model.md) for details)
 - Application: Rainy season onset timing
 
 :::{tip}
@@ -193,9 +238,9 @@ Focus: Seasonal transition markers and agricultural climate indices
 Each use case activates specific visualization pipelines and metric calculations. The Streamlit interface automatically adjusts the output based on your selection.
 :::
 
-## 4. Model Integration
+## 5. Model Integration
 
-### 4.1 Adding a New Model
+### 5.1 Adding a New Model
 
 To integrate a new AI weather model:
 
@@ -207,7 +252,7 @@ To integrate a new AI weather model:
        pass
    ```
 
-2. **Provision environment**: Ensure `/opt/envs/<env>/bin/python` exists in the container
+2. **Provision environment**: Ensure `/opt/envs/<env>/bin/python` exists in the container (see [Demo 1](01-setup.md) for environment details)
 
 3. **Register model**: Set `status="ready"` in `demo3/catalog.py`
 
@@ -218,9 +263,9 @@ To integrate a new AI weather model:
 New models must strictly adhere to the output format (tp in mm, t2m in K, z500 in m² s⁻²). Non-compliant outputs will break visualization pipelines.
 :::
 
-## 5. Performance Benchmarks
+## 6. Performance Benchmarks
 
-### 5.1 Execution Times (10-day forecast)
+### 6.1 Execution Times (10-day forecast)
 
 | Model | Members | Execution Time | Peak GPU Memory |
 | --- | --- | --- | --- |
@@ -239,39 +284,19 @@ New models must strictly adhere to the output format (tp in mm, t2m in K, z500 i
 - **Deterministic vs. Probabilistic**: Ensemble models provide uncertainty but take longer
 :::
 
-### 5.2 Initialization Overhead
+### 6.2 Initialization Overhead
 
-First-time executions include weight downloads:
-- Atlas CRPS: ~31 min
-- Aurora 1.5: ~7 min
-- AIFS v2 ENS: ~5 min
+First-time executions include weight downloads (see [Demo 1](01-setup.md) for download times). Subsequent runs start in seconds.
 
-Subsequent runs start in seconds.
+## 7. FGN (WeatherNext 2) Integration
 
-## 6. FGN (WeatherNext 2) Integration
+FGN is Google DeepMind's Functional Generative Network for probabilistic forecasting. It requires special handling (detailed configuration in [Demo 1](01-setup.md)).
 
-FGN is Google DeepMind's Functional Generative Network for probabilistic forecasting. It requires special handling:
+### 7.1 Starting Conditions
 
-### 6.1 Starting Conditions
+FGN is not in Earth2Studio, and Google publishes FGN-ready inputs for only one date (2024-10-07 00Z). For other dates, Demo 3 uses a converter (see [Demo 1, Section 6](01-setup.md#6-fgn-weathernext-2-configuration)).
 
-FGN is not in Earth2Studio, and Google publishes FGN-ready inputs for only one date (2024-10-07 00Z). For other dates, Demo 3 uses a converter:
-
-```bash
-# Converter runs in e2s018 environment
-python runners/fgn_convert.py --date 2024-10-08
-```
-
-**Converter workflow:**
-1. Downloads ECMWF IFS analyses at 13 pressure levels
-2. Regrids to FGN's 1° resolution
-3. Constructs Google's expected file layout
-
-:::{warning}
-#### Sea Surface Temperature Approximation
-The converter uses IFS skin temperature over oceans, floored at 271.46 K under sea ice. This introduces a small bias (correlation 0.997, mean error -0.08 K) compared to true SST.
-:::
-
-### 6.2 Performance
+### 7.2 Performance
 
 - **10-day, 3-member forecast**: ~2 minutes, 1.8 GB peak memory
 - **Cached inputs**: 53 MB per start date, reused for subsequent runs
@@ -284,11 +309,12 @@ The converter uses IFS skin temperature over oceans, floored at 271.46 K under s
 - Use-case flags tailor outputs for temperature, precipitation, and onset forecasting
 - All models produce standardized NetCDF outputs for consistent analysis
 - Performance varies from 2 minutes (AIFS) to 26 minutes (Aurora) for 10-day forecasts
+- All configuration options are documented in [Demo 1](01-setup.md)
 
 ## Exercises
 
 :::{exercise}
-#### Exercise 2: Compare Deterministic vs. Probabilistic (10 min)
+#### Exercise 2: Compare Deterministic vs. Probabilistic (20 min)
 Run both AIFS v2 single (deterministic) and AIFS v2 ENS (probabilistic, 3 members) for the same start date and lead time.
 
 **Questions:**
@@ -307,7 +333,7 @@ Run both AIFS v2 single (deterministic) and AIFS v2 ENS (probabilistic, 3 member
 :::
 
 :::{exercise}
-#### Exercise 3: Interpret Model Outputs (10 min)
+#### Exercise 3: Interpret Model Outputs (15 min)
 Load a forecast NetCDF file and answer:
 
 ```python
@@ -340,7 +366,7 @@ tp_24_48 = ds["tp"].sel(lead_time=slice(24, 48)).sum(dim="lead_time")
 :::
 
 :::{exercise}
-#### Exercise 4: Use-Case Group Activity (10 min)
+#### Exercise 4: Use-Case Group Activity (30 min)
 In your assigned use-case group:
 
 1. Run forecasts for your specific challenge (temperature, precipitation, or onset)
@@ -357,7 +383,12 @@ In your assigned use-case group:
 
 ## Troubleshooting
 
-| Symptom | Resolution |
+:::{tip}
+#### Complete Troubleshooting Guide
+For comprehensive troubleshooting including GPU access, container conflicts, network issues, and model-specific problems, see [Demo 1: Troubleshooting Section](01-setup.md#9-troubleshooting).
+:::
+
+| Symptom | Quick Resolution |
 | --- | --- |
 | Container won't start: "unresolvable CDI devices" | `systemctl --user restart docker && docker start demo3` |
 | Port 8501 already in use | Use `ssh -L 8502:localhost:8501` and navigate to `:8502` |
@@ -367,14 +398,20 @@ In your assigned use-case group:
 ## Next Steps
 
 After completing this demo, proceed to **Demo 4** to learn systematic benchmarking of AI weather models against local observations for rainy season onset detection.
+
+**References:**
+- [Demo 1: Complete Setup and Configuration Guide](01-setup.md)
+- [Demo 4: AI Weather Model Scorecard](04-weather-model.md)
 ```
 
-Both files now match the professional structure of `04-weather-model.md` with:
-- Proper YAML frontmatter
-- MathJax support
-- Clear section organization
-- Callout blocks (tip, warning, exercise, solution, keypoints, note)
-- Comprehensive tables
-- Hands-on exercises with solutions
-- Learning objectives and roadmaps
-- Professional formatting throughout
+## Updated 04-weather-model.md (References 01-setup.md for ROMP Configuration)
+
+I'll add a reference note at the beginning of the ROMP configuration section:
+
+```markdown
+[Add this note after the "ROMP Specifications" section header]
+
+:::{note}
+#### Complete Configuration Reference
+For detailed information on runtime configuration, model environments, and troubleshooting, see [Demo 1: Setting Up AI Weather Forecasting Lab](01-setup.md). This includes Docker setup, GPU verification, and all environment variables.
+:::
