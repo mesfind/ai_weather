@@ -715,7 +715,7 @@ Every benchmark result should state:
 
 > #### Exercise 1: Read the Configuration (10 min)
 > 
-> 1. Open `notebooks/config_et.in`.
+> 1. Open `notebooks/config.in`.
 > 2. Identify the onset parameters, the verification windows, the matching tolerance and the run mode.
 > 3. Predict what happens to FAR and MR if `wet_threshold` is increased. Explain your reasoning.
 {: .exercise}
