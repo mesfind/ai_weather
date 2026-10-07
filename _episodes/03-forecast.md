@@ -18,7 +18,9 @@ keypoints:
 <!-- MathJax -->
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
-# Running AI Weather Forecast Models on a DGX Spark
+# Running AI Weather Forecast Models on a DGX Spark'
+
+This module provides a comprehensive guide to deploying, executing, and benchmarking modern AI weather forecasting models locally using containerized workflows on a DGX Spark infrastructure.
 
 ## 1. Environment and Workflow Setup
 
