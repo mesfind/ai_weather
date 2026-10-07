@@ -28,6 +28,7 @@ Requires-Dist: zarr
 Requires-Dist: cartopy
 Requires-Dist: fsspec==2025.3.2.*
 Requires-Dist: jupyterlab>=4.6.4
+Requires-Dist: git-filter-repo>=2.47.0
 Provides-Extra: dev
 Requires-Dist: dask; extra == "dev"
 Requires-Dist: pytest; extra == "dev"

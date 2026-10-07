@@ -41,6 +41,7 @@ dependencies = [
     "cartopy",
     "fsspec==2025.3.2.*",
     "jupyterlab>=4.6.4",
+    "git-filter-repo>=2.47.0",
 ]
 
 [project.optional-dependencies]

@@ -334,7 +334,29 @@ The converter uses IFS skin temperature over oceans, floored at 271.46 K under s
 
 The ROMP (Rainy season Onset Metrics Package) pipeline has its own configuration system.
 
-### 7.1 Configuration File Structure
+### 7.1 Installation
+
+Install ROMP and its dependencies:
+
+```bash
+# From the ai_weather root directory
+uv pip install pyproject.toml
+```
+
+This installs the `momp-run` command-line tool and all required dependencies for running onset benchmarks.
+
+> #### Installation Verification
+> 
+> After installation, verify that `momp-run` is available:
+> 
+> ```bash
+> momp-run --help
+> ```
+> 
+> This should display the command-line options for the ROMP runner.
+{: .tip}
+
+### 7.2 Configuration File Structure
 
 ROMP uses configuration files (e.g., `notebooks/config_et.in`) to define:
 
@@ -351,21 +373,6 @@ ROMP uses configuration files (e.g., `notebooks/config_et.in`) to define:
 | `verification_window` | Days 1-15, Days 16-30 | Lead time windows to evaluate |
 | `matching_tolerance` | 3 days (1-15), 5 days (16-30) | How close forecast must match observation |
 | `run_mode` | DET or PROB | Deterministic or probabilistic track |
-
-### 7.2 Running ROMP
-
-```bash
-# Deterministic evaluation
-momp-run -p notebooks/config_et.in --mode det
-
-# Probabilistic evaluation
-momp-run -p notebooks/config_et.in --mode prob
-```
-
-:::{warning}
-#### Track Separation
-Deterministic and probabilistic tracks use non-comparable metric families and must never be mixed within a single evaluation run.
-:::
 
 ### 7.3 Model Registration
 
@@ -386,6 +393,90 @@ Models are registered centrally in `BENCHMARK_MODEL_CATALOG` within `config.py`:
 | Observations | CHIRPS, ENACTS | 0.05°, 0.1° |
 | Forecasts | Model reforecasts | 0.25° (common grid) |
 | Seasonal mask | `jjas_seasonal_mask_0p25.nc` | 0.25° |
+
+> #### Next Steps
+> 
+> ROMP installation is complete. For detailed instructions on running benchmarks, configuring experiments, and interpreting results, see [Demo 4: AI Weather Model Scorecard](04-weather-model.md).
+{: .tip}
+```
+
+## Updated 04-weather-model.md - Add Running Section
+
+Add this section near the beginning of 04-weather-model.md, after the "ROMP Specifications" section:
+
+```markdown
+## Running ROMP Benchmarks
+
+> #### Prerequisites
+> 
+> Ensure ROMP is installed. See [Demo 1: ROMP Installation](01-setup.md#7-rompmomp-benchmarking-configuration) for setup instructions.
+{: .prereq}
+
+### Command-Line Execution
+
+ROMP benchmarks are executed using the `momp-run` command:
+
+```bash
+# Deterministic evaluation
+momp-run -p notebooks/config_et.in --mode det
+
+# Probabilistic evaluation
+momp-run -p notebooks/config_et.in --mode prob
+```
+
+> #### Track Separation
+> 
+> Deterministic and probabilistic tracks use non-comparable metric families and must never be mixed within a single evaluation run. Always specify the mode explicitly with `--mode det` or `--mode prob`.
+{: .warning}
+
+### Configuration Options
+
+The `-p` flag specifies the path to your configuration file. Common configuration files:
+
+| Config File | Purpose |
+| --- | --- |
+| `notebooks/config_et.in` | Ethiopia Kiremt season benchmark |
+| `notebooks/config_in.in` | India monsoon benchmark |
+
+### Output Location
+
+Results are written to the `data/ROMP_OUT/` directory, organized by:
+- Country/region code (e.g., `et/` for Ethiopia)
+- Output subdirectory containing:
+  - Spatial metric maps (PNG)
+  - Skill score tables (CSV)
+  - Reliability diagrams (PNG)
+  - NetCDF files with gridded metrics
+
+### Example Workflow
+
+```bash
+# 1. Navigate to the ai_weather directory
+cd ai_weather
+
+# 2. Run deterministic benchmark for Ethiopia
+momp-run -p notebooks/config_et.in --mode det
+
+# 3. Check results
+ls data/ROMP_OUT/et/output/
+
+# 4. Run probabilistic benchmark
+momp-run -p notebooks/config_et.in --mode prob
+
+# 5. View probabilistic results
+ls data/ROMP_OUT/et/output/*AIFS_ENS*.csv
+```
+
+> #### Troubleshooting
+> 
+> For common issues and diagnostic commands, see the [Troubleshooting section](#troubleshooting-common-failure-modes) at the end of this lesson.
+{: .tip}
+
+
+:::{warning}
+#### Track Separation
+Deterministic and probabilistic tracks use non-comparable metric families and must never be mixed within a single evaluation run.
+:::
 
 ## 8. Essential Libraries
 
