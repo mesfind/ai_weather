@@ -682,10 +682,10 @@ Explore the AI Almanac and gather feedback on the necessary components required 
 - Guide participants to explore the AI Almanac interface. *(Note: Ethiopia and India onset data are pre-loaded as working examples).*
 - Have paired country groups share their ideas and feedback across both deterministic and probabilistic evaluation tracks.
 
+
 ### Wrap-up Discussion
 
 
----
 
 ## Summary
 
