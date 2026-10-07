@@ -23,4 +23,4 @@ docs/_site/
 # Jupyter / notebooks outputs (optional but helpful)
 *.ipynb_checkpoints
 
-/notebooks/*.ipynb
+notebooks/*.ipynb
