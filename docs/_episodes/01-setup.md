@@ -204,9 +204,7 @@ docker load < demo3-image.tar.gz
 > 3. Load it on the target Spark.
 {: .exercise}
 
-<details>
-<summary><strong>Check your answer</strong></summary>
-<br>
+
 
 > #### Solution
 >
@@ -220,7 +218,6 @@ docker load < demo3-image.tar.gz
 > ```
 {: .solution}
 
-</details>
 
 ## 4. Runtime Configuration
 
