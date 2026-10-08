@@ -69,10 +69,6 @@ By the end of this lesson, you will be able to:
 
 In Ethiopian agriculture, the onset of the rainy season (Kiremt: June–September) dictates planting dates for millions of smallholder farmers. A late or false onset signal can lead to crop failure from planting too early, lost growing days from planting too late, and regional food insecurity.
 
-![Map of mean onset date across Ethiopia](../fig/mean_onset_date.png)
-
-*Figure 1. Mean rainy season onset date (day of year), 2003–2024. Onset arrives first in the southwest (mid-to-late May) and progressively later toward the north and east (July–August). This strong spatial gradient is why skill must be examined per grid cell and not only as a national average.*
-
 Onset is not read directly from raw model output. To ensure genuine comparability, it is derived identically from daily rainfall data for observations, the reference model, and every forecast model using the following rules:
 
 - **Wet-spell trigger**: A candidate onset day requires at least `wet_init` mm of initial rainfall, followed by `wet_spell` consecutive days with ≥ `wet_threshold` mm/day.
@@ -412,24 +408,11 @@ GraphCast detects onset well in Days 1–15 but pays for it with frequent false 
 
 Every skill score is measured against climatology, so inspect the reference maps too. A forecast model must beat these to add value.
 
-![Climatology days 1-15 spatial metrics](../fig/climatology_days_1_15.png)
+![Climatology spatial metrics](../fig/climatology_onset_2003-2024.png)
 
-*Figure 5a. Climatology reference, Days 1–15.*
+*Figure 5. Climatology reference from 2003-2024*
 
-![Climatology days 16-30 spatial metrics](../fig/climatology_days_16_30.png)
 
-*Figure 5b. Climatology reference, Days 16–30. Climatology has low miss rates because it always predicts an onset, but it pays for this with false alarms of nearly 100 % across the west and dark-red MAE in the east. This trade-off is why FAR, MR and MAE must be read together.*
-
-### Deterministic Skill Relative to Climatology
-
-![Portrait panel of delta MAE, FAR and MR](../fig/deterministic_skill_delta.png)
-
-*Figure 6. Change (Δ) in MAE (days), FAR (%) and MR (%) for each deterministic model in each window. Blue cells are reductions and red cells are increases relative to the reference. Days 1–15: all three models reduce MAE by roughly 3.6–4.9 days (FuXi −4.87, AIFS −4.05, GraphCast −3.58). Days 16–30: the MAE advantage largely vanishes (AIFS −0.70, GraphCast +0.33) or reverses (FuXi +2.11). The FAR and MR changes are small in percentage points (all within ±0.6).*
-
-> #### Instructor Note
-> 
-> Figure 6 shows MAE improving over the reference in Days 1–15 for all three models. The Model Skill Rankings table below reports negative mean-MAE skill for AIFS, FuXi and GraphCast. These come from different summaries (per-window Δ vs. a single pooled score) and possibly different runs or references. Ask participants to find what could explain the difference (reference dataset, window, aggregation) before trusting either number.
-{: .tip}
 
 ### Deterministic Main Findings
 
@@ -491,7 +474,7 @@ Every skill score is measured against climatology, so inspect the reference maps
 
 The only positive skill is in the first five days (BSS = +6.4 %). Skill then falls below climatology and AUC drops from 0.85 to 0.53 by Days 11–15.
 
-![AIFS-ENS skill heatmap days 1-15](../fig/skill_scores_heatmap_AIFS_ENS_1-15.png)
+![AIFS-ENS skill heatmap days 1-15](../fig/AIFS_ENS/skill_scores_heatmap_AIFS_ENS_1-15.png)
 
 *Figure 7a. AIFS-ENS skill by 5-day bin, Days 1–15. Top row: BSS (%). Bottom row: AUC (climatology reference in brackets). Skill decays quickly with lead time.*
 
@@ -513,7 +496,7 @@ The only positive skill is in the first five days (BSS = +6.4 %). Skill then fal
 
 **Overall Fair BSS**: `-0.258` | **Overall Fair RPSS**: `-0.486`
 
-![AIFS-ENS skill heatmap days 16-30](../fig/skill_scores_heatmap_AIFS_ENS_16-30.png)
+![AIFS-ENS skill heatmap days 16-30](../fig/AIFS_ENS/skill_scores_heatmap_AIFS_ENS_16-30.png)
 
 *Figure 7b. AIFS-ENS skill by 5-day bin, Days 16–30. BSS stays negative in every bin, and AUC is 0.5 throughout, meaning the ensemble cannot discriminate onset from non-onset.*
 
@@ -546,11 +529,11 @@ print(binned[["Bin", "Fair_Brier_Skill_Score", "AUC", "AUC_ref"]])
 
 A reliability diagram plots the forecast probability (x) against how often the event actually occurred (y). Points on the dashed 1:1 line are perfectly reliable. Grey bars (log scale, right axis) show how many forecasts fall in each probability bin.
 
-![Reliability diagram AIFS-ENS days 1-15](../fig/reliability_AIFS_ENS_1-15.png)
+![Reliability diagram AIFS-ENS days 1-15](../fig/AIFS_ENS/reliability_AIFS_ENS_1-15.png)
 
 *Figure 8a. Reliability, Days 1–15. The curve is flatter than the diagonal. Near-zero forecasts verify about 10 % of the time (under-forecast), and forecasts near 1.0 verify only about 80 % of the time (over-forecast). The ensemble is overconfident. Most forecasts sit in the lowest probability bin.*
 
-![Reliability diagram AIFS-ENS days 16-30](../fig/eliability_AIFS_ENS_16-30.png)
+![Reliability diagram AIFS-ENS days 16-30](../fig/AIFS_ENS/reliability_AIFS_ENS_16-30.png)
 
 *Figure 8b. Reliability, Days 16–30. Nearly all forecasts are below 0.3, the curve has no upward trend, and the last points have huge error bars from small samples. Probabilities carry almost no information, matching the AUC ≈ 0.5.*
 
