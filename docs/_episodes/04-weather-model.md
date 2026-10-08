@@ -30,8 +30,8 @@ This lesson documents the complete ROMP (Rainy season Onset Metrics Package) / M
 
 > #### Prerequisites
 > 
-> - Complete the environment setup in [Demo 1: Setting Up AI Weather Forecasting Lab](01-setup.md) before proceeding.
-> - ROMP must be installed (`uv pip install pyproject.toml`). See [Demo 1, Section 7](01-setup.md#7-rompmomp-benchmarking-configuration).
+> - Complete the environment setup in [Demo 1: Setting Up AI Weather Forecasting Lab](/01-setup) before proceeding.
+> - ROMP must be installed (`uv pip install pyproject.toml`). See [Demo 1, Section 7](/01-setup#7-rompmomp-benchmarking-configuration).
 > - Familiarity with the Demo 3 Streamlit interface and NetCDF output format.
 {: .prereq}
 
