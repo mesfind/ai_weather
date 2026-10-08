@@ -117,7 +117,7 @@ ssh -L 8501:localhost:8501 <user>@<spark>
 
 ### 1.2 Runtime Options
 
-Common configuration flags (see [Demo 1](01-setup.md) for the complete list):
+Common configuration flags (see [Demo 1](/ai_weather/01-setup) for the complete list):
 
 ```bash
 # Development mode (live code updates without rebuild)
@@ -284,7 +284,7 @@ To integrate a new AI weather model into the framework:
        pass
    ```
 
-2. **Provision environment**: Ensure the model's Python environment exists at `/opt/envs/<env>/bin/python` inside the container (see [Demo 1](01-setup.md) for environment details).
+2. **Provision environment**: Ensure the model's Python environment exists at `/opt/envs/<env>/bin/python` inside the container (see [Demo 1](/ai_weather/01-setup) for environment details).
 
 3. **Register model**: Set `status="ready"` for that model in `demo3/catalog.py`.
 
@@ -342,11 +342,11 @@ outputs/               # Persistent storage: outputs/{model}/{YYYYMMDDTHH}_{lead
 
 ### 6.2 Initialization Overhead
 
-First-time executions include weight downloads (see [Demo 1](01-setup.md) for download times per model). Subsequent runs start in seconds.
+First-time executions include weight downloads (see [Demo 1](/ai_weather/01-setup) for download times per model). Subsequent runs start in seconds.
 
 ### 6.3 FGN (WeatherNext 2) Notes
 
-FGN is Google DeepMind's Functional Generative Network for probabilistic forecasting. It requires special handling due to its unique data requirements. Detailed configuration is in [Demo 1, Section 6](01-setup.md).
+FGN is Google DeepMind's Functional Generative Network for probabilistic forecasting. It requires special handling due to its unique data requirements. Detailed configuration is in [Demo 1, Section 6](/ai_weather/01-setup).
 
 - **Model variant**: `WeatherNextCyclones_Mini` (1° resolution, the only Mini weights published)
 - **Starting conditions**: Google's sample file for 2024-10-07 (up to 7.5 days); converter for all other dates
@@ -361,7 +361,7 @@ FGN is Google DeepMind's Functional Generative Network for probabilistic forecas
 - Use-case flags tailor outputs for temperature, precipitation, and onset forecasting.
 - All models produce standardized NetCDF outputs for consistent analysis.
 - Performance varies from 2 minutes (AIFS) to 26 minutes (Aurora) for 10-day forecasts.
-- All configuration options are documented in [Demo 1](01-setup.md).
+- All configuration options are documented in [Demo 1](/ai_weather/01-setup).
 
 ## Exercises
 
