@@ -26,7 +26,7 @@ This module provides a comprehensive guide to executing and benchmarking modern 
 
 > #### Prerequisites
 > 
-> Complete the environment setup in [Demo 1: Setting Up AI Weather Forecasting Lab](01-setup.md) before proceeding. All configuration options (runtime flags, model environments, FGN setup, troubleshooting) are documented there.
+> Complete the environment setup in [Demo 1: Setting Up AI Weather Forecasting Lab](/ai_weather/01-setup) before proceeding. All configuration options (runtime flags, model environments, FGN setup, troubleshooting) are documented there.
 {: .prereq}
 
 ## Learning Objectives
@@ -444,7 +444,7 @@ FGN is Google DeepMind's Functional Generative Network for probabilistic forecas
 
 > #### Complete Troubleshooting Guide
 > 
-> For comprehensive troubleshooting including GPU access, container conflicts, network issues, and model-specific problems, see [Demo 1: Troubleshooting Section](01-setup.md).
+> For comprehensive troubleshooting including GPU access, container conflicts, network issues, and model-specific problems, see [Demo 1: Troubleshooting Section](/ai_weather/01-setup).
 {: .tip}
 
 | Symptom | Quick Resolution |
