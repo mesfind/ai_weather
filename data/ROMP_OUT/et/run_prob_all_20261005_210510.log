@@ -1,0 +1,95 @@
+package base dir /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/ai_weather/apps/benchmarking/ROMP/momp
+Using config file: /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/ai_weather/apps/benchmarking/ROMP/momp/params/config.in
+Mode explicitly set via CLI: PROB (overrides config file and ROMP_MODE)
+work_dir =  None
+pkg_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/ai_weather/apps/benchmarking/ROMP/momp
+ref_model_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/external/ENACTS
+out_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/ROMP_OUT/et/output
+out_fig =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/ROMP_OUT/et/figure
+obs_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/external/CHIRPS_IMERG
+thresh_file =  None
+shpfile_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/external/shapefile
+nc_mask =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/jjas_100mm_rainfall_mask_0p25.nc
+Models to run (prob): ['AIFS_ENS', 'gencast']
+
+>>> /opt/anaconda3/envs/pygmt/bin/python /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/notebooks/run_momp.py --mode prob --model AIFS_ENS --spec /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/benchmark_spec.json
+package base dir /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/ai_weather/apps/benchmarking/ROMP/momp
+Using config file: /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/ai_weather/apps/benchmarking/ROMP/momp/params/config.in
+Mode explicitly set via CLI: PROB (overrides config file and ROMP_MODE)
+work_dir =  None
+pkg_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/ai_weather/apps/benchmarking/ROMP/momp
+ref_model_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/external/ENACTS
+out_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/ROMP_OUT/et/output
+out_fig =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/ROMP_OUT/et/figure
+obs_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/external/CHIRPS_IMERG
+thresh_file =  None
+shpfile_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/external/shapefile
+nc_mask =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/jjas_100mm_rainfall_mask_0p25.nc
+Models to run (prob): ['AIFS_ENS']
+============================================================
+MOMP [PROB]  model=AIFS_ENS  (catalog key: AIFS_ENS)
+============================================================
+Traceback (most recent call last):
+  File [35m"/Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/notebooks/run_momp.py"[0m, line [35m805[0m, in [35m<module>[0m
+    [31mmain[0m[1;31m()[0m
+    [31m~~~~[0m[1;31m^^[0m
+  File [35m"/Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/notebooks/run_momp.py"[0m, line [35m796[0m, in [35mmain[0m
+    [31mexecute_momp_benchmark[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31margs.mode,[0m
+        [1;31m^^^^^^^^^^[0m
+        [1;31margs.model,[0m
+        [1;31m^^^^^^^^^^^[0m
+        [1;31margs.in_process,[0m
+        [1;31m^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"/Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/notebooks/run_momp.py"[0m, line [35m711[0m, in [35mexecute_momp_benchmark[0m
+    [31mrun_single_model[0m[1;31m(mode, key, meta)[0m
+    [31m~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^[0m
+  File [35m"/Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/notebooks/run_momp.py"[0m, line [35m656[0m, in [35mrun_single_model[0m
+    raise FileNotFoundError(f"Driver not found at {driver_path}")
+[1;35mFileNotFoundError[0m: [35mDriver not found at /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/apps/benchmarking/ROMP/momp/driver.py[0m
+
+>>> /opt/anaconda3/envs/pygmt/bin/python /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/notebooks/run_momp.py --mode prob --model gencast --spec /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/benchmark_spec.json
+package base dir /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/ai_weather/apps/benchmarking/ROMP/momp
+Using config file: /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/ai_weather/apps/benchmarking/ROMP/momp/params/config.in
+Mode explicitly set via CLI: PROB (overrides config file and ROMP_MODE)
+work_dir =  None
+pkg_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/ai_weather/apps/benchmarking/ROMP/momp
+ref_model_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/external/ENACTS
+out_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/ROMP_OUT/et/output
+out_fig =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/ROMP_OUT/et/figure
+obs_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/external/CHIRPS_IMERG
+thresh_file =  None
+shpfile_dir =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/external/shapefile
+nc_mask =  /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/data/jjas_100mm_rainfall_mask_0p25.nc
+Models to run (prob): ['gencast']
+============================================================
+MOMP [PROB]  model=gencast  (catalog key: gencast)
+============================================================
+Traceback (most recent call last):
+  File [35m"/Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/notebooks/run_momp.py"[0m, line [35m805[0m, in [35m<module>[0m
+    [31mmain[0m[1;31m()[0m
+    [31m~~~~[0m[1;31m^^[0m
+  File [35m"/Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/notebooks/run_momp.py"[0m, line [35m796[0m, in [35mmain[0m
+    [31mexecute_momp_benchmark[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31margs.mode,[0m
+        [1;31m^^^^^^^^^^[0m
+        [1;31margs.model,[0m
+        [1;31m^^^^^^^^^^^[0m
+        [1;31margs.in_process,[0m
+        [1;31m^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"/Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/notebooks/run_momp.py"[0m, line [35m711[0m, in [35mexecute_momp_benchmark[0m
+    [31mrun_single_model[0m[1;31m(mode, key, meta)[0m
+    [31m~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^[0m
+  File [35m"/Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/notebooks/run_momp.py"[0m, line [35m656[0m, in [35mrun_single_model[0m
+    raise FileNotFoundError(f"Driver not found at {driver_path}")
+[1;35mFileNotFoundError[0m: [35mDriver not found at /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/apps/benchmarking/ROMP/momp/driver.py[0m
+
+============================================================
+FAILED: AIFS_ENS (exit code 1)
+FAILED: gencast (exit code 1)

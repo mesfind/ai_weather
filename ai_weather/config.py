@@ -2,75 +2,68 @@ import os
 import sys
 import warnings
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Any, Dict, Optional
 from dotenv import load_dotenv
 
-# Load environment variables if present
 load_dotenv()
 
 # ==============================================================================
 # Dynamic Project Root & Directory Resolution
 # ==============================================================================
 CURRENT_FILE = Path(__file__).resolve()
-MODULE_DIR = CURRENT_FILE.parent.parent
+PKG_DIR = CURRENT_FILE.parent.parent
 
-_HOME = Path.home().resolve()
-
-
-def _find_root(start: Path, markers) -> Optional[Path]:
+def _find_base_dir(start: Path) -> Path:
     for p in [start] + list(start.parents):
-        if p == _HOME or p == p.parent:
-            break
-        if any((p / m).exists() for m in markers):
+        if (p / "data").exists() and (p / "apps").exists():
             return p
-    return None
+        if p == p.parent or p == Path.home():
+            break
+    return start
 
-
+BASE_DIR = _find_base_dir(PKG_DIR)
 _env_root = os.getenv("AI_WEATHER_REPO")
-PROJ_ROOT = (
-    Path(_env_root).expanduser().resolve() if _env_root
-    else _find_root(MODULE_DIR, ("data",))
-    or _find_root(MODULE_DIR, ("pyproject.toml", ".git"))
-    or MODULE_DIR
-)
+PROJ_ROOT = Path(_env_root).expanduser().resolve() if _env_root else BASE_DIR
 
-_PROJ_ROOT = os.getenv("PROJ_ROOT", os.getcwd())
-
-DATA_DIR = os.getenv("ROMP_DATA_DIR", os.path.join(MODULE_DIR, "data"))
-DATA_DIR = PROJ_ROOT / "data"
+_env_data_dir = os.getenv("ROMP_DATA_DIR")
+DATA_DIR = Path(_env_data_dir).expanduser().resolve() if _env_data_dir else (PROJ_ROOT / "data")
 EXTERNAL_DATA_DIR = DATA_DIR / "external"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 ENACTS_DIR = EXTERNAL_DATA_DIR / "ENACTS_regridded_025"
 CHIRPS_DIR = EXTERNAL_DATA_DIR / "CHIRPS_IMERG"
 JJAS_MASK_FILE = DATA_DIR / "jjas_100mm_rainfall_mask_0p25.nc"
-JJAS_DIR = JJAS_MASK_FILE  # backward-compatible alias (it is a file, not a directory)
-MONSOON_DIR = PROCESSED_DATA_DIR / "Monsoon" / "2026" 
+JJAS_DIR = JJAS_MASK_FILE
+MONSOON_DIR = PROCESSED_DATA_DIR / "Monsoon" / "2026"
 
-# ROMP & MOMP Internal Package Directories
-APPS_DIR = MODULE_DIR / "apps" if (MODULE_DIR / "apps").exists() else PROJ_ROOT / "ai_weather" / "apps"
+def _find_apps_dir(proj_root: Path) -> Path:
+    """
+    Locate the folder holding apps/benchmarking/ROMP/momp.
+
+    PROJ_ROOT is where data/ lives, but the code (apps/) can sit elsewhere, e.g. next to this
+    file when the project is nested (ai_weather/ai_weather/apps with data in ai_weather/data).
+    """
+    marker = Path("benchmarking") / "ROMP" / "momp" / "driver.py"
+    for base in (proj_root, CURRENT_FILE.parent, PKG_DIR):
+        if (base / "apps" / marker).exists():
+            return base / "apps"
+    return proj_root / "apps"          # default (may not exist; same behaviour as before)
+
+APPS_DIR = _find_apps_dir(PROJ_ROOT)
 ROMP_ROOT = APPS_DIR / "benchmarking" / "ROMP"
 MOMP_PKG_DIR = ROMP_ROOT / "momp"
 
-
-
-# Output & Graphics Directory Structures
 ROMP_OUT_DIR = DATA_DIR / "ROMP_OUT" / "et" / "output"
 ROMP_FIG_DIR = DATA_DIR / "ROMP_OUT" / "et" / "figure"
 
 ROMP_OUT_DIR.mkdir(parents=True, exist_ok=True)
 ROMP_FIG_DIR.mkdir(parents=True, exist_ok=True)
 
-# Register core package paths in sys.path
-for path_obj in [PROJ_ROOT, MODULE_DIR, ROMP_ROOT, MOMP_PKG_DIR]:
+for path_obj in [PROJ_ROOT, PKG_DIR, ROMP_ROOT, MOMP_PKG_DIR]:
     path_str = str(path_obj.resolve())
     if path_str not in sys.path:
         sys.path.insert(0, path_str)
-del path_obj, path_str
-
 
 def resolve_path(p: Any, root: Optional[Path] = None) -> str:
-    """Resolves relative paths against PROJ_ROOT if not absolute."""
     if not p:
         return ""
     if root is None:
@@ -80,81 +73,113 @@ def resolve_path(p: Any, root: Optional[Path] = None) -> str:
         path_obj = Path(root) / path_obj
     return str(path_obj.resolve())
 
-
 def setup_earthdata_auth() -> None:
-    """
-    Placeholder for Earthdata authentication setup, referenced by the
-    benchmark entry point. Configure a .netrc file or credentials here
-    as needed for your environment.
-    """
     pass
 
-
 # ==============================================================================
-# BENCHMARKING CATALOG — single source of truth for model → mode mapping
+# BENCHMARKING CATALOG — single source of truth
 # ==============================================================================
-# `category` and `probabilistic` MUST always agree for every entry.
-# compute_mode_overrides() validates this at call time and raises loudly
-# on any mismatch rather than silently picking the wrong models.
+# IMPORTANT: Directory names MUST match the actual filesystem case exactly.
+# Verify with: ls data/external/
 BENCHMARK_MODEL_CATALOG: Dict[str, Dict[str, Any]] = {
     "AIFS": {
         "label": "Deterministic · AIFS",
-        "dir": DATA_DIR / "external/AIFS",
+        "dir": EXTERNAL_DATA_DIR / "AIFS" / "0p25",
         "model_name": "AIFS",
+        "file_pattern": "{}.nc",
+        "var": "tp",
         "probabilistic": False,
         "category": "Deterministic",
     },
     "FuXi": {
         "label": "Deterministic · FuXi",
-        "dir": DATA_DIR / "external/fuxi",
+        "dir": EXTERNAL_DATA_DIR / "fuxi", 
         "model_name": "FuXi",
+        "file_pattern": "{}.nc",
+        "var": "tp",
         "probabilistic": False,
         "category": "Deterministic",
     },
     "GraphCast": {
         "label": "Deterministic · GraphCast",
-        "dir": DATA_DIR / "external/graphcast",
+        "dir": EXTERNAL_DATA_DIR / "graphcast",
         "model_name": "GraphCast",
+        "file_pattern": "{}.nc",
+        "var": "tp",
         "probabilistic": False,
         "category": "Deterministic",
     },
     "AIFS_ENS": {
         "label": "Probabilistic · AIFS ENS",
-        "dir": DATA_DIR / "external/AIFS_ENS/0p25",
+        "dir": EXTERNAL_DATA_DIR / "AIFS_ENS" / "0p25",  
         "model_name": "AIFS_ENS",
+        "file_pattern": "{}.nc",
+        "var": "tp",
         "probabilistic": True,
         "category": "Probabilistic",
     },
     "gencast": {
         "label": "Probabilistic · GenCast",
-        "dir": DATA_DIR / "external/gencast/0p25",
+        "dir": EXTERNAL_DATA_DIR / "gencast" / "0p25",  
         "model_name": "gencast",
+        "file_pattern": "{}.nc",
+        "var": "tp",
         "probabilistic": True,
         "category": "Probabilistic",
     },
 }
 
+# ==============================================================================
+# AUTO-DETECT ACTUAL FOLDER CASE ON DISK
+# ==============================================================================
+# This prevents "File not found" errors caused by case mismatches
+# (e.g., catalog says "AIFS_ENS" but folder is "aifs_ens")
+def _autocorrect_catalog_paths(catalog: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    """
+    For each catalog entry, check if the declared directory exists.
+    If not, try case-insensitive match in the parent directory.
+    """
+    for key, meta in catalog.items():
+        declared_dir = Path(meta["dir"])
+        if declared_dir.exists():
+            continue
+
+        parent = declared_dir.parent
+        target_name = declared_dir.name.lower()
+
+        if not parent.exists():
+            continue
+
+        # Try to find a case-insensitive match
+        for child in parent.iterdir():
+            if child.is_dir() and child.name.lower() == target_name:
+                meta["dir"] = child
+                print(f"[config] Auto-corrected catalog path for '{key}': "
+                      f"{declared_dir} -> {child}")
+                break
+
+    return catalog
+
+BENCHMARK_MODEL_CATALOG = _autocorrect_catalog_paths(BENCHMARK_MODEL_CATALOG)
 
 def _catalog_models(category: str, catalog: Optional[Dict[str, Any]] = None):
     catalog = catalog or BENCHMARK_MODEL_CATALOG
     return [m for m in catalog.values() if m["category"] == category]
 
-
 # ==============================================================================
-# SANITY CHECKS ON THE CATALOG ITSELF (fail at import time, not mid-benchmark)
+# SANITY CHECKS
 # ==============================================================================
 for _key, _meta in BENCHMARK_MODEL_CATALOG.items():
     _expected_bool = (_meta.get("category") == "Probabilistic")
     if _meta.get("probabilistic") != _expected_bool:
         raise ValueError(
             f"BENCHMARK_MODEL_CATALOG['{_key}'] is inconsistent: "
-            f"category='{_meta.get('category')}' but probabilistic={_meta.get('probabilistic')}. "
-            f"These must always agree."
+            f"category='{_meta.get('category')}' but probabilistic={_meta.get('probabilistic')}."
         )
 del _key, _meta, _expected_bool
 
 # ==============================================================================
-# 1. CORE STRUCTURE & DIMENSIONS (mode-independent project metadata only)
+# 1. CORE STRUCTURE & DIMENSIONS
 # ==============================================================================
 project_name = "probabilistic benchmarking with ENACTS data"
 work_dir = str(ROMP_ROOT.resolve())
@@ -164,12 +189,15 @@ layout = ("model", "verification_window")
 # ==============================================================================
 # 2. OBSERVATION DATA SETTINGS
 # ==============================================================================
-# Pick the observation dataset with the ROMP_OBS env var ("ENACTS" or "CHIRPS").
+# IMPORTANT: Use "CHIRPS" as the key to match config.in expectations.
+# The config.in uses obs = "CHIRPS_IMERG" but the variable name is "RAINFALL"
+# and the directory is CHIRPS_DIR. We unify this here.
 _OBS_SETS = {
     "ENACTS": dict(dir=ENACTS_DIR, pattern=("{}_0p25.nc",), var="precip"),
     "CHIRPS": dict(dir=CHIRPS_DIR, pattern=("{}.nc",), var="RAINFALL"),
+    "CHIRPS_IMERG": dict(dir=CHIRPS_DIR, pattern=("{}.nc",), var="RAINFALL"),  # Alias for config.in compatibility
 }
-obs = os.getenv("ROMP_OBS", "ENACTS").upper()
+obs = os.getenv("ROMP_OBS", "CHIRPS_IMERG").upper()  # Default to CHIRPS to match config.in
 if obs not in _OBS_SETS:
     raise ValueError(f"ROMP_OBS must be one of {list(_OBS_SETS)}, got '{obs}'")
 _obs = _OBS_SETS[obs]
@@ -204,12 +232,12 @@ wet_threshold = 20
 wet_spell = 3
 dry_threshold = 1
 dry_spell = 7
-dry_extent = 21  # must be >= dry_spell
+dry_extent = 21
 thresh_file = None
 thresh_var = None
 
 # ==============================================================================
-# 6. TEMPORAL SETTINGS (Dates & Years)
+# 6. TEMPORAL SETTINGS
 # ==============================================================================
 start_date = (2007, 5, 1)
 end_date = (2023, 7, 31)
@@ -222,19 +250,19 @@ date_filter_year = 2024
 # ==============================================================================
 # 7. EVALUATION & VERIFICATION PARAMETERS
 # ==============================================================================
-verification_window_list = ((1, 15),)
-tolerance_days_list = (3,)
-max_forecast_day = 15
-day_bins = ((1, 5), (6, 10), (11, 15))
+verification_window_list = ((1, 15), (16, 30))
+tolerance_days_list = (3, 5)
+max_forecast_day = 30
+day_bins = ((1, 5), (6, 10), (11, 15), (16, 20), (21, 25), (26, 30))
 
 # ==============================================================================
-# 8. OUTPUT & GRAPHICS SETTINGS (mode-independent only)
+# 8. OUTPUT & GRAPHICS SETTINGS
 # ==============================================================================
 dir_out = os.getenv("ROMP_OUT_DIR", str(ROMP_OUT_DIR.resolve()))
 dir_fig = os.getenv("ROMP_FIG_DIR", str(ROMP_FIG_DIR.resolve()))
 
 save_fig = True
-save_nc_spatial_far_mr_mae = False
+save_nc_spatial_far_mr_mae = True  # Changed to True to match config.in
 save_csv_score = True
 save_nc_climatology = True
 
@@ -257,40 +285,26 @@ years = None
 years_clim = None
 fallback_date = None
 
-# ===============================
-# calibartion with idr 
-#================================
-
 apply_idr_calibration = False
+
 # ==============================================================================
-# SANITY CHECKS (warn early instead of failing later with an empty map)
+# SANITY CHECKS (paths)
 # ==============================================================================
-for _label, _p in (("data directory", DATA_DIR), ("observation directory", Path(obs_dir)),
-                   ("region mask (nc_mask)", Path(nc_mask))):
+for _label, _p in (
+    ("data directory", DATA_DIR),
+    ("observation directory", Path(obs_dir)),
+    ("region mask (nc_mask)", Path(nc_mask)),
+):
     if not _p.exists():
         warnings.warn(f"config: {_label} not found: {_p} (PROJ_ROOT={PROJ_ROOT})", stacklevel=2)
 del _label, _p
 
 # ==============================================================================
-# MODE-DEPENDENT OVERRIDES — the ONE function that defines everything that
-# differs between deterministic and probabilistic evaluation.
-#
-# This replaces the old `configure_benchmark_mode(cfg, mode)`, which mutated
-# a cfg object in place and required manually keeping two model lists
-# (deter_model_list / prob_model_list) in sync with a separately hand-typed
-# model_dir_list. That pattern is gone: model lists are derived from
-# BENCHMARK_MODEL_CATALOG, and every metric/plot flag is set atomically
-# alongside `probabilistic`, so nothing can drift out of sync.
-#
-# This function is PURE — it returns a plain dict and touches no global
-# state. It is applied by momp.lib.loader.build_cfg() on every get_cfg()
-# call, using the `mode` value from config.in / ROMP_MODE / apply_overrides().
+# MODE-DEPENDENT OVERRIDES
 # ==============================================================================
 def compute_mode_overrides(mode: str = "det", catalog: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
-    Returns a dict of config overrides for the given mode. Does not mutate
-    any object — callers are responsible for applying the result to
-    wherever their configuration actually lives (see momp.lib.loader).
+    Returns a dict of config overrides for the given mode.
     """
     mode_str = str(mode).lower().strip()
     if mode_str not in ["det", "deterministic", "prob", "probabilistic"]:
@@ -324,16 +338,21 @@ def compute_mode_overrides(mode: str = "det", catalog: Optional[Dict[str, Any]] 
         "probabilistic": is_prob,
         "model_list": tuple(m["model_name"] for m in selected_models),
         "model_dir_list": tuple(resolve_path(m["dir"]) for m in selected_models),
-        "model_var_list": ("tp",) * n,
+        "model_var_list": tuple(m.get("var", "tp") for m in selected_models),
         "unit_cvt_list": (None,) * n,
-        "file_pattern_list": ("{}.nc",) * n,
+        "file_pattern_list": tuple(m.get("file_pattern", "{}.nc") for m in selected_models),
         "skill_score": True,
+        # Align with config.in values
+        "verification_window_list": ((1, 15), (16, 30)),
+        "tolerance_days_list": (3, 5),
+        "max_forecast_day": 30,
+        "day_bins": ((1, 5), (6, 10), (11, 15), (16, 20), (21, 25), (26, 30)),
+        "onset_percentage_threshold": 0.5,  # Match config.in
+        "members": "All",
     }
 
     if is_prob:
         overrides.update(
-            members="All",
-            onset_percentage_threshold=0.6,
             BS=True, RPS=True, AUC=True, Reliability=True,
             FAR=False, MAE=False, MR=False,
             plot_heatmap_bss_auc=True,
@@ -345,10 +364,8 @@ def compute_mode_overrides(mode: str = "det", catalog: Optional[Dict[str, Any]] 
         )
     else:
         overrides.update(
-            members=None,
-            onset_percentage_threshold=None,
-            FAR=True, MAE=True, MR=True,
             BS=False, RPS=False, AUC=False, Reliability=False,
+            FAR=True, MAE=True, MR=True,
             plot_spatial_far_mr_mae=True,
             plot_panel_heatmap_error=True,
             plot_heatmap_bss_auc=False,

@@ -1,0 +1,8 @@
+package base dir /var/folders/bx/f3n6g1gj3qs1pqwy6h4nhbzc0000gn/T/tmp0dl2h0v_/momp
+Traceback (most recent call last):
+  File [35m"/Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/notebooks/run_momp.py"[0m, line [35m104[0m, in [35m<module>[0m
+    [1;31mfrom momp.lib.loader import get_cfg[0m  # noqa: E402
+    [1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"/Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/ai_weather/apps/benchmarking/ROMP/momp/lib/loader.py"[0m, line [35m90[0m, in [35m<module>[0m
+    raise FileNotFoundError(f"Could not find configuration file: {requested_path}")
+[1;35mFileNotFoundError[0m: [35mCould not find configuration file: /Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/apps/benchmarking/ROMP/momp/params/config.in[0m

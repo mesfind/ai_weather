@@ -18,6 +18,11 @@ Demos are designed to provide an interactive learning experience over the AI wea
 │   ├── processed      <- The final, canonical data sets for modeling.
 │   └── raw            <- The original, immutable data dump.
 │
+├── demos              <- src for each demos
+│   ├── demo3          <- Demo3 source code
+│   ├── demo4          <- Demo4 source code
+│   ├── demo5          <- Demo5 source code
+│   └── demo6          <- Demo6 source code
 ├── docs               <- A default mkdocs project; see www.mkdocs.org for details
 │   └── _episodes      <-  md lesson for each demos
 │   └── _layouts       <-  layout of the lesson for the training on GitHub pages
