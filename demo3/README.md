@@ -26,7 +26,7 @@ first run) in `~/.cache/demo3`; set `DEMO3_CACHE` to reuse an existing cache.
 **From your laptop:** open a tunnel, then browse to http://localhost:8501.
 
 ```bash
-ssh -L 8501:localhost:8501 <you>@hcwfpgx
+ssh -L 8501:localhost:8501 <you>@rwanda-spark
 ```
 
 **After a reboot**, if the container won't start with "unresolvable CDI devices", Docker started

@@ -6,7 +6,7 @@ SSH tunnel.
 
 There are two ways in:
 
-- **A. Use a Spark where Demo 3 already runs** (e.g. `hcwfpgx`): only step 5 below.
+- **A. Use a Spark where Demo 3 already runs** (e.g. `rwanda-spark`): only step 5 below.
   You need Tailscale access to the Spark and an account on it.
 - **B. Set up your own Spark:** steps 1–5. Budget about an hour for the first build,
   plus model downloads on first use (or copy them from a Spark that has them; step 4).
@@ -93,7 +93,7 @@ rsync -a --info=progress2 <user>@<spark>:<its weights cache>/ ~/.cache/demo3/
 rsync -a --info=progress2 <user>@<spark>:ai_weather/demo3/outputs/ ai_weather/demo3/outputs/
 ```
 
-On `hcwfpgx` the weights cache is `~/e2s-spark/root_cache`.
+On `rwanda-spark` the weights cache is `~/e2s-spark/root_cache`.
 
 ## 5. Open the page
 
