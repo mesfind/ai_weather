@@ -13,14 +13,17 @@ Four choices, all on the command line:
   * --domain  lon_min lon_max lat_min lat_max in -180..180 (meridian-safe)
   * --init / --lead   which forecast run (snapped to the nearest store)
 
-Two outputs per run:
-  1. <name>_<model>_init<YYYYMMDD>_movie.gif (+ .mp4)
-       TOP obs map | forecast map (ens mean, model's NATIVE grid), animating
-       over valid days; BOTTOM time series building up to the frame: obs
+Output per init (one movie each; --init takes several dates):
+  <name>_<model>_init<YYYYMMDD>_movie.gif (+ .mp4)
+       Same layout as mali_movie.py. TOP obs map | forecast map (ens mean,
+       model's NATIVE grid), animating over valid days; BOTTOM time series
+       building up to the frame with the legend outside on the right: obs
        (black) vs forecast (median + 10-90 band if ensemble), plus any
-       --overlay models as extra lines (snapped to the nearest init).
-  2. <name>_<model>_init<YYYYMMDD>_track.png
-       Static event footprint + daily threshold contours + centroid track.
+       --overlay models as extra lines (nearest init within --overlay-tol,
+       default 3 d).
+  With --track, also <name>_<model>_init<YYYYMMDD>_track.png: a static
+  event footprint + daily threshold contours + centroid track (off by
+  default).
 
 HOW "ANY MODEL" WORKS
   Per store, the forecast loader auto-detects instead of assuming AIFS:
@@ -68,6 +71,10 @@ Run on the cluster:
     # init N days before the obs peak; overlay other models as lines
     python forecast_event_movie.py --case bangladesh_precip --lead 7 \
         --overlay GraphCast AIFS-single
+
+    # several inits in one run (one movie each), like mali_movie.py
+    python forecast_event_movie.py --case mali_heat \
+        --init 2024-03-25 2024-03-31 2024-04-01
 
     --still renders only the last movie frame (fast layout check).
 
@@ -153,6 +160,13 @@ def _alpha_faded_cmap(name, gamma=0.5):
     base = plt.get_cmap(name)(np.linspace(0, 1, 256))
     base[:, 3] = np.linspace(0.0, 1.0, 256) ** gamma
     return mcolors.ListedColormap(base)
+
+
+def _map_aspect(lat_min, lat_max):
+    """y/x aspect for a PlateCarree map so shapes are true at the box centre
+    (1 deg lon is cos(lat) shorter than 1 deg lat; equal-degree axes stretch
+    mid-latitude countries east-west)."""
+    return 1.0 / np.cos(np.deg2rad(0.5 * (lat_min + lat_max)))
 
 
 def _basemap_scale():
@@ -357,6 +371,7 @@ def make_event_movie(
             ax = map_axes[k]
             ax.set_extent([lon_min, lon_max, lat_min, lat_max],
                           crs=ccrs.PlateCarree())
+            ax.set_aspect(_map_aspect(lat_min, lat_max))
 
             if elevation is not None:
                 lv = elevation_levels if elevation_levels is not None \
@@ -676,13 +691,17 @@ KINDS = {
         units="degC", cbar_label="2 m Tmax (degC)", ts_label="2 m Tmax (degC)",
         reduce="max",
         footprint="max", footprint_label="Max daily Tmax over window (degC)",
-        track_cmap="cool", fc_color="orangered", threshold_pct=95),
+        track_cmap="cool", fc_color="orangered", threshold_pct=95,
+        overlay_colors=OVERLAY_COLORS),
     "precip": dict(
         obs="imerg", cmap="YlGnBu", extend="max", transparent_low=True,
         units="mm/day", cbar_label="Precipitation (mm/day)",
         ts_label="Precip (mm/day)", reduce="mean",
         footprint="sum", footprint_label="Total precipitation over window (mm)",
-        track_cmap="plasma", fc_color="dodgerblue", threshold_pct=97.5),
+        track_cmap="plasma", fc_color="dodgerblue", threshold_pct=97.5,
+        # no blues: they clash with the dodgerblue forecast line
+        overlay_colors=["tab:orange", "tab:green", "tab:purple", "tab:brown",
+                        "tab:olive", "tab:pink"]),
 }
 
 # Ready-made cases mirroring the existing drivers. CLI flags override these.
@@ -690,7 +709,8 @@ KINDS = {
 PRESETS = {
     "mali_heat": dict(
         kind="heat", name="mali_heat", domain=(-13.0, 5.0, 9.5, 25.5),
-        model="AIFS-ENS", overlay=["Aurora"],
+        model="AIFS-ENS", fc_label="AIFS", overlay=["Aurora"],
+        overlay_tol=3,                        # mali_movie.py SNAP_TOL
         init="2024-03-29", end="2024-04-15",
         reduce="point", point=(14.44, -11.44), point_name="Kayes",
         threshold=44.0, vmin=28.0, vmax=48.0,
@@ -780,7 +800,8 @@ def _subset(da, domain, coarse_deg=0.5):
         raise RuntimeError(f"empty selection for domain {domain} - check the "
                            "box is (lon_min, lon_max, lat_min, lat_max) in "
                            "-180..180")
-    return da
+    # maps plot .values as (lat, lon); IMERG and some stores are (lon, lat)
+    return da.transpose(..., "lat", "lon")
 
 
 def _pad(start, end, days=1):
@@ -1243,7 +1264,8 @@ def make_track_map(panels, outfile, *, domain, threshold, kind_cfg, units,
     # explicit grid (not constrained_layout): cartopy gridline labels plus two
     # colorbars otherwise push the first panel off the canvas
     n = len(labels)
-    aspect = min(max((lat_max - lat_min) / max(lon_max - lon_min, 1e-6), 0.5), 1.4)
+    aspect = min(max((lat_max - lat_min) / max(lon_max - lon_min, 1e-6)
+                     * _map_aspect(lat_min, lat_max), 0.5), 1.4)
     fig = plt.figure(figsize=(6.0 * n + 1.5, 6.0 * aspect + 1.8))
     gs = fig.add_gridspec(2, n + 1, width_ratios=[1] * n + [0.04],
                           height_ratios=[1, 0.045], wspace=0.18, hspace=0.14,
@@ -1255,6 +1277,7 @@ def make_track_map(panels, outfile, *, domain, threshold, kind_cfg, units,
         mean = da.mean(ENS_DIM) if ENS_DIM in da.dims else da
         lon, lat = mean["lon"].values, mean["lat"].values
         ax.set_extent([lon_min, lon_max, lat_min, lat_max], crs=pc)
+        ax.set_aspect(_map_aspect(lat_min, lat_max))
 
         shade = ax.contourf(lon, lat, foot[label].values, levels=flevels,
                             cmap=kind_cfg["cmap"], extend="both", alpha=0.55,
@@ -1385,13 +1408,19 @@ def parse_args():
     g.add_argument("--peek", action="store_true",
                    help="print the detected forecast conventions and exit")
 
-    p.add_argument("--init", help="forecast init date (snapped to nearest store)")
+    p.add_argument("--init", nargs="+",
+                   help="forecast init date(s), one movie each (each snapped "
+                        "to the nearest store; duplicates after snapping are "
+                        "rendered once)")
     p.add_argument("--lead", type=int,
                    help="instead of --init: init this many days before --peak")
     p.add_argument("--peak", help="event peak day for --lead "
                                   "(default: obs peak of the reduced series)")
     p.add_argument("--snap-tol", type=int, default=7,
                    help="max days between requested and available init")
+    p.add_argument("--overlay-tol", type=int, default=3,
+                   help="max days between the movie init and an --overlay "
+                        "model's init (default 3, as in mali_movie.py)")
     p.add_argument("--start", help="time-series start (default: the init)")
     p.add_argument("--end", help="window end (default init + 15 d)")
     p.add_argument("--obs", choices=["imerg", "era5"],
@@ -1415,7 +1444,11 @@ def parse_args():
                    help="draw the threshold line + obs-onset marker on the "
                         "movie time series (off by default, as in mali_movie)")
     p.add_argument("--skip-movie", action="store_true")
-    p.add_argument("--skip-track", action="store_true")
+    p.add_argument("--track", action="store_true",
+                   help="also write the static event footprint/track map "
+                        "(off by default, so output matches mali_movie.py)")
+    p.add_argument("--skip-track", action="store_true",
+                   help=argparse.SUPPRESS)          # kept for old commands
     p.add_argument("--track-window", nargs=2, metavar=("START", "END"),
                    help="days shown on the track map (default: event window "
                         "+/- 2 d, else the whole movie window)")
@@ -1477,6 +1510,27 @@ def _slug(s):
 
 def main():
     cfg = parse_args()
+    inits = cfg.get("init")
+    if inits is None:                       # --lead: one movie
+        run(cfg, set())
+        return
+    if isinstance(inits, str):
+        inits = [inits]
+    done = set()
+    for one in inits:
+        print(f"\n=== movie for init {one} ===")
+        try:
+            run(dict(cfg, init=one), done)
+        except SystemExit as exc:
+            if len(inits) == 1:
+                raise
+            print(f"  init {one} failed: {exc}")
+
+
+def run(cfg, done):
+    """Render the outputs for one init. `done` holds snapped init dates
+    already rendered in this call, so two requests that snap to the same
+    store do not write the same movie twice."""
     kind = cfg["kind"]
     K = dict(KINDS[kind])
     domain = tuple(cfg["domain"])
@@ -1523,6 +1577,10 @@ def main():
     init = pd.Timestamp(init_d)
     if init_d != target.date():
         print(f"requested init {target.date()} -> using nearest store {init_d}")
+    if init_d in done:
+        print(f"  init {init_d} already rendered - skipping")
+        return
+    done.add(init_d)
     print(f"forecast ({model_label}): {fc_path}")
 
     if cfg.get("peek"):
@@ -1589,7 +1647,9 @@ def main():
     # --- movie ---------------------------------------------------------------
     if not cfg.get("skip_movie"):
         lines = [
-            {"label": obs_label, "data": obs_s, "color": "black",
+            # obs on the shared valid days only, as in mali_movie.py
+            {"label": obs_label,
+             "data": reduce_series(obs_movie, reduce, point), "color": "black",
              "lw": 2.0, "ms": 4, "zorder": 4},
             forecast_line(reduce_series(fc, reduce, point), fc_label,
                           K["fc_color"]),
@@ -1603,7 +1663,7 @@ def main():
                 continue
             try:
                 od, opath = pick_init(init_index(ospec["path"]), init,
-                                      cfg["snap_tol"])
+                                      cfg["overlay_tol"])
                 ofc, _ = load_fc(kind, opath, ospec, domain, movie_start, end_s)
             except Exception as exc:
                 print(f"  overlay {name} failed: {type(exc).__name__}: {exc}")
@@ -1615,7 +1675,8 @@ def main():
             lab = f"{name} (init {od:%m-%d})" + \
                 (" median" if ENS_DIM in ofc.dims else "")
             lines.append({"label": lab, "data": os_,
-                          "color": OVERLAY_COLORS[j % len(OVERLAY_COLORS)],
+                          "color": K["overlay_colors"][
+                              j % len(K["overlay_colors"])],
                           "lw": 1.6, "ms": 4, "zorder": 3})
             print(f"  overlay {name}: init {od} "
                   f"({abs((od - init_d).days)} d from {init_d}), "
@@ -1642,7 +1703,7 @@ def main():
             still_only=cfg.get("still", False))
 
     # --- event track map ----------------------------------------------------
-    if not cfg.get("skip_track"):
+    if cfg.get("track") and not cfg.get("skip_track"):
         print("rendering event track map ...")
         # default to the event window +/- 2 d: a whole 3-week window of daily
         # contours (esp. scattered convective rain) buries the event itself
