@@ -1558,7 +1558,7 @@ def _analyze_onset_streamlit(year, lat, lon):
     Path(env["MPLCONFIGDIR"]).mkdir(parents=True, exist_ok=True)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
 
-    
+
 
     with tempfile.TemporaryDirectory() as tmp:
         payload_file = Path(tmp) / "payload.pkl"
@@ -1638,16 +1638,9 @@ def run_momp_benchmark(
         }
 
     # ==================================================================
-    # FIX: Inherit the FULL environment from the parent process.
-    # subprocess.Popen does fork()+exec() which creates a completely
-    # fresh process — there is NO inherited thread state. The previous
-    # approach of filtering to only a few variables was REMOVING
-    # critical macOS library paths (PROJ_LIB, GDAL_DATA, DYLD_*)
-    # that geopandas/pyproj/GDAL need to initialize, causing SIGSEGV.
-    # ==================================================================
     env = dict(os.environ)
-
-    # Only ADD/OVERRIDE specific variables, never remove existing ones
+    env["PYTHONFAULTHANDLER"] = "1"
+    env["PYTHONUNBUFFERED"] = "1"
     env["PYTHONUNBUFFERED"] = "1"
     env["MPLBACKEND"] = "Agg"
     env["MPLCONFIGDIR"] = str((PROJECT_ROOT / ".mplcache").resolve())

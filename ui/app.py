@@ -92,19 +92,19 @@ MAX_WORKERS = min(4, os.cpu_count() or 1)
 
 @st.cache_resource
 def pre_import_modules():
-    """Concurrently imports all pages into sys.modules to cache their initialization."""
-    modules_to_load = list(PAGE_MODULE_MAPPING.values())
-    def safe_import(module_path):
+    """Load page modules sequentially to avoid concurrent native-library imports."""
+    for module_path in PAGE_MODULE_MAPPING.values():
         try:
-            return importlib.import_module(module_path)
-        except Exception as e:
-            return e
-
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        results = list(executor.map(safe_import, modules_to_load))
-    for path, res in zip(modules_to_load, results):
-        if isinstance(res, Exception):
-            print(f"[WARMUP ERROR] Failed to pre-import {path}: {type(res).__name__}: {res}")
+            importlib.import_module(module_path)
+        except Exception as exc:
+            print(
+                f"[WARMUP ERROR] Failed to pre-import {module_path}: "
+                f"{type(exc).__name__}: {exc}",
+                file=sys.stderr,
+                flush=True,
+            )
+            # Continue loading other pages. The active page can report
+            # its own import error when Streamlit attempts to render it.
     return True
 
 @st.cache_data(ttl=30, show_spinner=False)
