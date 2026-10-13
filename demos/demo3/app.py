@@ -19,7 +19,7 @@ import pandas as pd
 import streamlit as st
 import xarray as xr
 
-from demo3 import catalog, jobs, movie, results, store, theme
+from demo3 import catalog, compare, jobs, movie, onset, onset_view, results, store, theme
 from demo3.regions import COUNTRIES, GROUPS, Box, country_box
 
 st.set_page_config(page_title="Demo 3 · AI Weather Forecast", layout="wide")
@@ -84,7 +84,8 @@ def event_results(path, m, full, run_req, box, region_name, lead_days, use_case)
         st.caption("The first movie for a new date fetches ERA5 observations from the cloud and "
                    "can take a few minutes; later ones reuse the cached data.")
     elif s["state"] == "running":
-        st.info("Rendering the movie… (fetching observations and drawing one frame per day)")
+        frac, what = movie.progress(req)
+        st.progress(frac, text=what)
         with st.expander("Log"):
             st.code(s["log"] or "…")
         time.sleep(3)
@@ -217,11 +218,12 @@ else:
 
 # ── Step 2d: use case ────────────────────────────────────────────────────────
 theme.section("What do you want to look at?")
-use_case = st.segmented_control("Use case", ["Heat", "Precipitation"], default="Precipitation",
+use_case = st.segmented_control("Use case", ["Heat", "Precipitation", "Onset"], default="Precipitation",
                                 label_visibility="collapsed") or "Precipitation"
 st.caption("**Heat:** daily maximum 2 m temperature (°C).  **Precipitation:** daily rainfall "
-           "total (mm). The result is a movie of the forecast next to the observations, and a "
-           "map of where the event went.")
+           "total (mm); for both, a movie of the forecast next to the observations and a map of "
+           "where the event went.  **Onset:** when the rainy season starts, by a definition you "
+           "choose (ICPAC, Moron–Robertson), from observed rain so far plus the forecast.")
 
 problems = catalog.check(model, init, lead_days, int(members), box, region_name, use_case)
 for level, msg in problems:
@@ -232,6 +234,7 @@ blocked = any(level == "error" for level, _ in problems)
 theme.section("Run the forecast", "Step 3 ·")
 req = store.RunRequest(model.key, init, lead_days * 24, int(members), synthetic)
 saved_path = store.find_saved(req)
+remote = None if saved_path else store.find_remote(req)
 theme.pills([("Model", model.name), ("Mode", mode), ("Start", f"{init:%Y-%m-%d %HZ}"),
              ("Lead", f"{lead_days} days"), ("Members", str(members)), ("Region", region_name),
              ("Use case", use_case)] + ([("Output", "synthetic")] if synthetic else []))
@@ -242,6 +245,14 @@ if saved_path:
     clicked = b1.button("Load saved run", type="primary", width="stretch",
                         disabled=not box.is_valid() or blocked)
     b2.markdown(theme.tag("saved run found — loads instantly", "ok"), unsafe_allow_html=True)
+elif remote:
+    if b1.button(f"Download saved run ({remote[1] / 1e6:,.0f} MB)", type="primary", width="stretch",
+                 disabled=not box.is_valid() or blocked):
+        with st.spinner("Downloading the saved run from the shared bucket…"):
+            ss.result = (str(store.download(model.key, remote[0])), req)
+        st.rerun()
+    b2.markdown(theme.tag("saved run in the shared bucket", "ok"), unsafe_allow_html=True)
+    clicked = False
 else:
     clicked = b1.button("Run forecast", type="primary", width="stretch",
                         disabled=not can_run or ss.job_id is not None)
@@ -291,12 +302,16 @@ if ss.result:
         theme.section("Results")
         if full.attrs.get("synthetic"):
             st.caption("ⓘ Synthetic output — not a real forecast.")
-        st.markdown(f"**How this forecast was made** · {m.name}, started "
-                    f"{run_req.init:%-d %b %Y %HZ} from {full.attrs.get('init_source', m.init_source)}")
-        results.pipeline(path, full, m, timings)
-        movie_tab, maps_tab = st.tabs(["Event movie (vs observations)", "Forecast maps"])
+        with st.expander(f"How this forecast was made · {m.name}, started "
+                         f"{run_req.init:%-d %b %Y %HZ} from {full.attrs.get('init_source', m.init_source)}"):
+            results.pipeline(path, full, m, timings)
+        first = "Onset (vs observations)" if use_case == "Onset" else "Event movie (vs observations)"
+        movie_tab, maps_tab = st.tabs([first, "Forecast maps"])
         with movie_tab:
-            event_results(path, m, full, run_req, box, region_name, lead_days, use_case)
+            if use_case == "Onset":
+                onset_view.view(path, p.stat().st_mtime, full, m, run_req, box, region_name, lead_days)
+            else:
+                event_results(path, m, full, run_req, box, region_name, lead_days, use_case)
         with maps_tab:
             ds = results.crop(full, box, lead_days * 24)
             if ds.sizes["lat"] < 2 or ds.sizes["lon"] < 2:
@@ -314,3 +329,12 @@ if ss.result:
         st.caption(f"Variables tp (mm per 6 h), t2m (K), z500 (m² s⁻²) by member and lead time. "
                    f"The full global file is on the Spark at `{p.relative_to(store.OUTPUT_DIR.parent)}` "
                    f"({p.stat().st_size / 1e6:.0f} MB).")
+
+# ── Compare models ───────────────────────────────────────────────────────────
+theme.section("Compare models")
+st.caption(f"The same start ({init:%-d %b %Y %HZ}), lead time ({lead_days} days) and region "
+           f"({region_name}) for several models, as one time series"
+           + (" with each model's onset" if use_case == "Onset" else "") + ".")
+compare.section(init, lead_days, box, region_name, use_case, synthetic,
+                ss.get("onset_defn") or onset.DEFINITIONS[onset.default_definition(region_name)],
+                main_job_running=ss.job_id is not None)

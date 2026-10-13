@@ -1,12 +1,15 @@
 # Demo 3 — Running Your First AI Weather Forecast
 
-A Streamlit app, running on the DGX Spark, for running AI weather models. Participants choose a model, start date, lead time, region and use case (heat or precipitation), run the forecast (or load a saved run), and compare it with observations.
+A Streamlit app, running on the DGX Spark, for running AI weather models. Participants choose a model, start date, lead time, region and use case (heat, precipitation or rainy-season onset), run the forecast (or load a saved run), and compare it with observations.
 
 **Status:**
 - All 7 models run live on the Spark from one Docker image (`docker/`), and saved runs load instantly.
 - The event movie tab (forecast vs observations) is Panchali's `demo3/event_movie/forecast_event_movie.py`.
 - Results are Panchali's event movie (forecast next to ERA5 observations, day by day) and event-track map, for heat or precipitation; plus how the forecast was made (load, inputs, run, save, with times on the Spark), maps of z500 / 2 m temperature / rainfall, and a NetCDF download.
 - Each model card lists what it needs on the Spark: weight size, peak GPU memory, output size, grid and inputs.
+- **Onset** use case: onset maps (forecast vs observed), the rainfall series and an onset movie, by a choice of definitions (ICPAC, Moron–Robertson, Moron–Robertson with MOK filter), each adjustable.
+- **Compare models:** up to 4 models for the same start, lead time and region as one time series; saved runs load, missing ones run one after another.
+- Sharing saved runs through a bucket (`runners/sync_bucket.py`, `DEMO3_BUCKET`).
 
 ## Run it
 
@@ -47,10 +50,16 @@ demo3/store.py         where outputs live; reusing saved runs
 demo3/jobs.py          launches runs in the background and tracks progress
 demo3/movie.py         runs the event movie in the background for the loaded run
 demo3/results.py       pipeline stages, model requirements, forecast maps, NetCDF download
+demo3/onset.py         onset definitions and detection (matches ROMP), observed + forecast series
+demo3/onset_view.py    the onset tab: definition picker, maps, series, onset movie
+demo3/obs.py           CHIRPS daily rainfall (yearly files, downloaded once)
+demo3/compare.py       compare up to 4 models as one time series
+demo3/data/            ROMP's MWset: local 5-day wet-spell amounts for Moron–Robertson
 demo3/event_movie/     Panchali's forecast_event_movie.py (unchanged) + the Spark adapter
 demo3/theme.py         styling, matching the Demo 5 platform
 runners/run_model.py   runner entry point (+ synthetic output generator)
 runners/fgn_convert.py FGN starting conditions from ECMWF open data (see the FGN section)
+runners/sync_bucket.py push/pull saved runs to/from a shared bucket
 timings.json           measured Spark runtimes shown in brackets in the app
 docker/                the image: Dockerfile, run.sh, per-environment package locks
 outputs/               saved runs: outputs/{model}/{YYYYMMDDTHH}_{lead}h_m{members}.nc
@@ -81,6 +90,52 @@ movie: **Heat** = daily max 2 m temperature, **Precipitation** = daily rainfall.
 rendered once per request and saved under `outputs/_movies/`.
 
 To get test data without a GPU, turn on **Use synthetic output** in the sidebar and press Run. This writes a fake file in exactly this format.
+
+## Results: onset
+
+The **Onset** use case finds when the rainy season starts, at every grid point, by a definition
+chosen on the page (defaults: Moron–Robertson with MOK filter for India and Bangladesh, ICPAC
+elsewhere). The definitions follow Narayana's note and the ROMP package
+(`ai_weather/apps/benchmarking/ROMP`):
+
+| Definition | Wet spell | Dry-spell check | Search from |
+|---|---|---|---|
+| ICPAC (Ethiopia; used across Africa) | 3 days, each ≥ 1 mm, total > 20 mm | no 7 consecutive days < 1 mm in the next 21 days | the region's rainy-season start |
+| Moron–Robertson (India) | 5 days, each ≥ 1 mm, total > local climatological amount (ROMP's MWset) | no 10-day spell < 5 mm in total in the next 30 days | 1 April |
+| Moron–Robertson with MOK filter | as above | none | 2 June (median monsoon onset over Kerala, 1901–2024) |
+
+Every setting (thresholds, dry-spell length and window, search start) can be changed on the page.
+
+- **Rainfall used:** observed CHIRPS (`demo3/obs.py`; one ~90 MB file per year, downloaded once
+  into `outputs/_obs/chirps/`) from the search start to the day before the forecast, then the
+  forecast's daily rainfall put on the CHIRPS grid. CHIRPS covers land, 50°S–50°N, and runs about
+  a month behind; days missing before the forecast are flagged on the page.
+- **Possible onset:** confirming onset needs the wet spell plus the dry-spell window (24 days for
+  ICPAC, 35 for Moron–Robertson), longer than a 10–15 day forecast. A wet spell whose check runs
+  past the end of the data is shown as possible onset, not onset.
+- **Observed onset** (for checking the forecast) uses CHIRPS alone, including days after the start.
+- **Onset movie:** one frame per forecast day of where onset has happened, forecast next to observed.
+- Rainy-season start dates per country are in `onset.SEASON_STARTS`, to be checked against
+  Narayana's country/phenomenon table.
+- Checked against the onset explorer's ICPAC code on 2,000 random series: identical, except that
+  the explorer skips the last day whose 24-day window just fits.
+
+## Comparing models
+
+**Compare models** (below the results) takes up to 4 models with the page's start date, lead
+time and region. Saved runs load at once (any member count); models without one run on the
+Spark one after another, never two at once, and join the chart as they finish. The chart is the
+area mean of daily rainfall over land (on the CHIRPS grid, with CHIRPS observations) or of daily
+maximum 2 m temperature (with ERA5 on request), with the range across ensemble members shaded.
+For Onset it adds a table of each model's onset share next to the observed one.
+
+## Sharing saved runs through a bucket
+
+To share runs between Sparks, set `DEMO3_BUCKET` (e.g. `gs://<bucket>/demo3`) when starting the
+container (`DEMO3_BUCKET=... bash docker/run.sh`). The page then offers **Download saved run** for
+runs that are in the bucket but not on this Spark. `runners/sync_bucket.py push|pull [--dry-run]`
+copies runs in bulk; pushing needs write access (`DEMO3_GCP_KEY=<service-account.json>` mounts a
+key into the container); pulling from a public bucket needs none.
 
 ## FGN (WeatherNext 2): starting conditions from ECMWF open data
 

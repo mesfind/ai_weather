@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
+import os
 import sys
 import time
 import traceback
@@ -27,6 +28,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import xarray as xr
+
+# JAX (GraphCast, NeuralGCM, FGN) grabs 75% of GPU memory up front by default. On the
+# Spark that memory is shared with the CPU, so the rest of the machine starts swapping.
+# The largest JAX model needs ~18 GB; 35% (~42 GB) leaves room for everything else.
+os.environ.setdefault("XLA_PYTHON_CLIENT_MEM_FRACTION", "0.35")
 
 APP_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(APP_ROOT))

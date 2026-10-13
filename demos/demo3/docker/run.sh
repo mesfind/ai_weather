@@ -11,11 +11,15 @@ mkdir -p "$OUTPUTS" "$CACHE"
 
 code=()
 [ "${DEV:-0}" = 1 ] && code=(-v "$here:/app")
+# Shared runs (optional): DEMO3_BUCKET=gs://<bucket>/demo3; DEMO3_GCP_KEY=<service-account.json> to push
+cloud=(-e DEMO3_BUCKET="${DEMO3_BUCKET:-}")
+[ -n "${DEMO3_GCP_KEY:-}" ] && cloud+=(-v "$DEMO3_GCP_KEY:/run/gcp-key.json:ro"
+                                       -e GOOGLE_APPLICATION_CREDENTIALS=/run/gcp-key.json)
 
 docker run -d --name demo3 --restart unless-stopped \
   --device nvidia.com/gpu=all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
   -p 127.0.0.1:8501:8501 \
-  "${code[@]}" -v "$OUTPUTS:/app/outputs" -v "$CACHE:/root/.cache" \
+  "${code[@]}" "${cloud[@]}" -v "$OUTPUTS:/app/outputs" -v "$CACHE:/root/.cache" \
   -e DEMO3_IFS_SOURCE="${DEMO3_IFS_SOURCE:-aws}" \
   demo3
 echo "Demo 3 starting: http://localhost:8501"

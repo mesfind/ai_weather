@@ -69,15 +69,28 @@ def _era5(var, start, end, domain):
     da = fem._subset(ds[var], domain)
     if var == "total_precipitation":
         # hourly totals -> 6 h totals ending at each 00/06/12/18 stamp
-        da = da.sel(time=slice(np.datetime64(lo) - np.timedelta64(5, "h"), hi)).load()
+        da = _load_in_parts(da.sel(time=slice(np.datetime64(lo) - np.timedelta64(5, "h"), hi)))
         da = da.rolling(time=6, min_periods=6).sum()
     else:
         # instantaneous field: keep the 6-hourly stamps, like the forecasts
-        da = da.sel(time=slice(lo, hi)).load()
+        da = _load_in_parts(da.sel(time=slice(lo, hi)))
     da = da.sel(time=da.time.dt.hour % 6 == 0).sel(time=slice(lo, hi)).dropna("time", how="all")
     OBS_CACHE.mkdir(parents=True, exist_ok=True)
     da.to_netcdf(cached)
     return da
+
+
+def _load_in_parts(da, parts=10):
+    """Load a lazy ARCO selection in ~`parts` pieces, printing "ERA5 fetch k/N" after each
+    so the app can show a progress bar (each piece still downloads its hours in parallel)."""
+    n = da.sizes["time"]
+    step = max(24, -(-n // parts))
+    pieces = range(0, n, step)
+    out = []
+    for k, i in enumerate(pieces, 1):
+        out.append(da.isel(time=slice(i, i + step)).load())
+        print(f"  ERA5 fetch {k}/{len(pieces)}", flush=True)
+    return xr.concat(out, "time") if len(out) > 1 else out[0]
 
 
 fem.open_store = open_store

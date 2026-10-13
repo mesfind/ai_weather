@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from dataclasses import asdict, dataclass
@@ -84,6 +85,31 @@ def _alive(pid_file: Path) -> bool:
         return "Z" not in Path(f"/proc/{pid}/stat").read_text().split()[2]
     except (FileNotFoundError, ValueError, ProcessLookupError, PermissionError, IndexError):
         return False
+
+
+def progress(req: MovieRequest, log: str | None = None) -> tuple[float, str]:
+    """(fraction, what it's doing) for a running movie, from its log and the frames written so far."""
+    out = req.folder()
+    if log is None:
+        p = out / "log.txt"
+        log = p.read_text() if p.exists() else ""
+    if "rendering event track map" in log:
+        return 0.93, "Drawing the event track map…"
+    days = (pd.Timestamp(req.end) - pd.Timestamp(req.init)).days + 1
+    if "rendering movie" in log:
+        done = len(list(out.glob("_frames_*/frame_*.png")))
+        return 0.55 + 0.35 * min(done, days) / days, f"Drawing frame {min(done + 1, days)} of {days}…"
+    if "loading forecast" in log:
+        return 0.5, "Reading the forecast…"
+    fetched = re.findall(r"ERA5 fetch (\d+)/(\d+)", log)
+    if fetched:
+        k, n = map(int, fetched[-1])
+        return 0.05 + 0.43 * k / n, f"Fetching ERA5 observations from the cloud ({k} of {n} parts)…"
+    if "fetching ERA5" in log:
+        return 0.05, "Fetching ERA5 observations from the cloud (first time for these dates)…"
+    if "loading obs" in log:
+        return 0.04, "Loading observations…"
+    return 0.02, "Starting…"
 
 
 def status(req: MovieRequest) -> dict:
