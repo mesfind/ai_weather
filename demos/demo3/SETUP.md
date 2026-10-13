@@ -6,7 +6,7 @@ SSH tunnel.
 
 There are two ways in:
 
-- **A. Use a Spark where Demo 3 already runs** (e.g. `hcwfpgx`): only step 5 below.
+- **A. Use a Spark where Demo 3 already runs** (e.g. `rwanda-spark`): only step 5 below.
   You need Tailscale access to the Spark and an account on it.
 - **B. Set up your own Spark:** steps 1–5. Budget about an hour for the first build,
   plus model downloads on first use (or copy them from a Spark that has them; step 4).
@@ -43,7 +43,7 @@ systemctl --user daemon-reload
 
 ```bash
 git clone https://github.com/mesfind/ai_weather.git
-cd ai_weather/demo3
+cd ai_weather/demos/demo3
 ```
 
 ## 3. Build the image (once, ~1 hour)
@@ -75,7 +75,7 @@ This starts a container named `demo3` that restarts by itself after reboots, and
 
 | What | Where on the Spark | Size |
 |---|---|---|
-| Saved forecasts, event movies, job logs | `ai_weather/demo3/outputs/` | grows with use |
+| Saved forecasts, event movies, job logs | `ai_weather/demos/demo3/outputs/` | grows with use |
 | Model weights (downloaded on each model's first run) | `~/.cache/demo3/` | up to ~75 GB |
 
 Options (put them before `bash docker/run.sh`):
@@ -90,10 +90,10 @@ has them (replace `<user>@<spark>` and the source paths with the right ones):
 
 ```bash
 rsync -a --info=progress2 <user>@<spark>:<its weights cache>/ ~/.cache/demo3/
-rsync -a --info=progress2 <user>@<spark>:ai_weather/demo3/outputs/ ai_weather/demo3/outputs/
+rsync -a --info=progress2 <user>@<spark>:ai_weather/demos/demo3/outputs/ ai_weather/demos/demo3/outputs/
 ```
 
-On `hcwfpgx` the weights cache is `~/e2s-spark/root_cache`.
+On `rwanda-spark` the weights cache is `~/e2s-spark/root_cache`.
 
 ## 5. Open the page
 

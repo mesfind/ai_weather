@@ -15,7 +15,7 @@ A Streamlit app, running on the DGX Spark, for running AI weather models. Partic
 **On the Spark** (aarch64; build once, about an hour, mostly compiling two libraries):
 
 ```bash
-cd ~/ai_weather/demo3
+cd ~/ai_weather/demos/demo3
 docker build -t demo3 -f docker/Dockerfile .
 bash docker/run.sh            # or DEV=1 bash docker/run.sh to use this folder's code live
 ```
@@ -26,7 +26,7 @@ first run) in `~/.cache/demo3`; set `DEMO3_CACHE` to reuse an existing cache.
 **From your laptop:** open a tunnel, then browse to http://localhost:8501.
 
 ```bash
-ssh -L 8501:localhost:8501 <you>@hcwfpgx
+ssh -L 8501:localhost:8501 <you>@rwanda-spark
 ```
 
 **After a reboot**, if the container won't start with "unresolvable CDI devices", Docker started

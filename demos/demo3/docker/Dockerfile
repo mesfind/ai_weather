@@ -1,6 +1,6 @@
 # Demo 3 on a DGX Spark: the Streamlit page and every model in one image.
 #
-# Build (from the demo3/ folder, on the Spark; aarch64 only):
+# Build (from the demos/demo3/ folder, on the Spark; aarch64 only):
 #   docker build -t demo3 -f docker/Dockerfile .
 # Run: see docker/run.sh
 #
