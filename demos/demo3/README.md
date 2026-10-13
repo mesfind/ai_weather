@@ -96,7 +96,7 @@ To get test data without a GPU, turn on **Use synthetic output** in the sidebar 
 The **Onset** use case finds when the rainy season starts, at every grid point, by a definition
 chosen on the page (defaults: Moron–Robertson with MOK filter for India and Bangladesh, ICPAC
 elsewhere). The definitions follow Narayana's note and the ROMP package
-(`ai_weather/apps/benchmarking/ROMP`):
+(`apps/benchmarking/ROMP`):
 
 | Definition | Wet spell | Dry-spell check | Search from |
 |---|---|---|---|
