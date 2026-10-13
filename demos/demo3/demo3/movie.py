@@ -49,7 +49,8 @@ class MovieRequest:
              "--init", self.init, "--end", self.end, "--reduce", self.reduce,
              "--name", self.region_name.replace(" ", "_").lower(),
              "--title", f"{self.region_name}: {self.model_name}",
-             "--outdir", str(out), "--no-mp4", "--result", str(out / "result.json")]
+             "--outdir", str(out), "--no-mp4", "--track",  # track map is opt-in
+             "--result", str(out / "result.json")]
         if self.kind == "precip" and not imerg.is_dir():
             a += ["--obs", "era5"]          # IMERG not on this Spark yet
         if self.threshold is not None:

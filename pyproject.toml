@@ -42,6 +42,8 @@ dependencies = [
     "fsspec==2025.3.2.*",
     "jupyterlab>=4.6.4",
     "git-filter-repo>=2.47.0",
+    "plotly>=7.1.0",
+    "google-cloud-storage>=3.16.0",
 ]
 
 [project.optional-dependencies]

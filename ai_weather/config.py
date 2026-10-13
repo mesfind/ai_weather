@@ -22,16 +22,29 @@ def _find_base_dir(start: Path) -> Path:
     return start
 
 BASE_DIR = _find_base_dir(PKG_DIR)
-_env_root = os.getenv("AI_WEATHER_REPO")
+_env_root = os.getenv("ai_weather")
 PROJ_ROOT = Path(_env_root).expanduser().resolve() if _env_root else BASE_DIR
+PROJECT_ROOT = PROJ_ROOT  
+APP_DIR = PROJ_ROOT
 
 _env_data_dir = os.getenv("ROMP_DATA_DIR")
-DATA_DIR = Path(_env_data_dir).expanduser().resolve() if _env_data_dir else (PROJ_ROOT / "data")
+
+home_data_dir = Path.home() / "data"
+
+DATA_DIR = (
+    home_data_dir
+    if home_data_dir.is_dir()
+    else PROJ_ROOT / "data"
+)
+
 EXTERNAL_DATA_DIR = DATA_DIR / "external"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 ENACTS_DIR = EXTERNAL_DATA_DIR / "ENACTS_regridded_025"
 CHIRPS_DIR = EXTERNAL_DATA_DIR / "CHIRPS_IMERG"
-JJAS_MASK_FILE = DATA_DIR / "jjas_100mm_rainfall_mask_0p25.nc"
+
+
+# ==============================================================================
+JJAS_MASK_FILE = EXTERNAL_DATA_DIR / "jjas_100mm_rainfall_mask_0p25.nc"
 JJAS_DIR = JJAS_MASK_FILE
 MONSOON_DIR = PROCESSED_DATA_DIR / "Monsoon" / "2026"
 
@@ -66,12 +79,18 @@ for path_obj in [PROJ_ROOT, PKG_DIR, ROMP_ROOT, MOMP_PKG_DIR]:
 def resolve_path(p: Any, root: Optional[Path] = None) -> str:
     if not p:
         return ""
+    path_obj = Path(str(p)).expanduser()
+    if path_obj.is_absolute():
+        return str(path_obj.resolve())
+    
+    parts = path_obj.parts
+    # If path starts with "data/...", resolve against DATA_DIR (~/data)
+    if parts and parts[0] == "data":
+        return str(DATA_DIR.joinpath(*parts[1:]).resolve())
+        
     if root is None:
         root = PROJ_ROOT
-    path_obj = Path(p).expanduser()
-    if not path_obj.is_absolute():
-        path_obj = Path(root) / path_obj
-    return str(path_obj.resolve())
+    return str((Path(root) / path_obj).resolve())
 
 def setup_earthdata_auth() -> None:
     pass
@@ -79,8 +98,6 @@ def setup_earthdata_auth() -> None:
 # ==============================================================================
 # BENCHMARKING CATALOG — single source of truth
 # ==============================================================================
-# IMPORTANT: Directory names MUST match the actual filesystem case exactly.
-# Verify with: ls data/external/
 BENCHMARK_MODEL_CATALOG: Dict[str, Dict[str, Any]] = {
     "AIFS": {
         "label": "Deterministic · AIFS",
@@ -112,28 +129,28 @@ BENCHMARK_MODEL_CATALOG: Dict[str, Dict[str, Any]] = {
     "AIFS_ENS": {
         "label": "Probabilistic · AIFS ENS",
         "dir": EXTERNAL_DATA_DIR / "AIFS_ENS" / "0p25",  
-        "model_name": "AIFS_ENS",
+        "model_name": "AIFS_ENS", 
         "file_pattern": "{}.nc",
         "var": "tp",
         "probabilistic": True,
         "category": "Probabilistic",
+        "slow": True,
     },
-    "gencast": {
+    "GenCast": {
         "label": "Probabilistic · GenCast",
-        "dir": EXTERNAL_DATA_DIR / "gencast" / "0p25",  
-        "model_name": "gencast",
+        "dir": EXTERNAL_DATA_DIR / "GenCast" / "0p25",  
+        "model_name": "GenCast",
         "file_pattern": "{}.nc",
         "var": "tp",
         "probabilistic": True,
         "category": "Probabilistic",
+        "slow": True,
     },
 }
 
 # ==============================================================================
 # AUTO-DETECT ACTUAL FOLDER CASE ON DISK
 # ==============================================================================
-# This prevents "File not found" errors caused by case mismatches
-# (e.g., catalog says "AIFS_ENS" but folder is "aifs_ens")
 def _autocorrect_catalog_paths(catalog: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     """
     For each catalog entry, check if the declared directory exists.
@@ -181,7 +198,7 @@ del _key, _meta, _expected_bool
 # ==============================================================================
 # 1. CORE STRUCTURE & DIMENSIONS
 # ==============================================================================
-project_name = "probabilistic benchmarking with ENACTS data"
+project_name = "probabilistic benchmarking with CHIRPS data"
 work_dir = str(ROMP_ROOT.resolve())
 pkg_dir = str(MOMP_PKG_DIR.resolve())
 layout = ("model", "verification_window")
@@ -189,15 +206,12 @@ layout = ("model", "verification_window")
 # ==============================================================================
 # 2. OBSERVATION DATA SETTINGS
 # ==============================================================================
-# IMPORTANT: Use "CHIRPS" as the key to match config.in expectations.
-# The config.in uses obs = "CHIRPS_IMERG" but the variable name is "RAINFALL"
-# and the directory is CHIRPS_DIR. We unify this here.
 _OBS_SETS = {
-    "ENACTS": dict(dir=ENACTS_DIR, pattern=("{}_0p25.nc",), var="precip"),
     "CHIRPS": dict(dir=CHIRPS_DIR, pattern=("{}.nc",), var="RAINFALL"),
-    "CHIRPS_IMERG": dict(dir=CHIRPS_DIR, pattern=("{}.nc",), var="RAINFALL"),  # Alias for config.in compatibility
+    "IMERG": dict(dir=CHIRPS_DIR, pattern=("{}.nc",), var="RAINFALL"),
+    #"ENACTS": dict(dir=ENACTS_DIR, pattern=("{}_0p25.nc",), var="precip"),  
 }
-obs = os.getenv("ROMP_OBS", "CHIRPS_IMERG").upper()  # Default to CHIRPS to match config.in
+obs = os.getenv("ROMP_OBS", "CHIRPS").upper()  # Default to CHIRPS to match config.in
 if obs not in _OBS_SETS:
     raise ValueError(f"ROMP_OBS must be one of {list(_OBS_SETS)}, got '{obs}'")
 _obs = _OBS_SETS[obs]
@@ -239,7 +253,7 @@ thresh_var = None
 # ==============================================================================
 # 6. TEMPORAL SETTINGS
 # ==============================================================================
-start_date = (2007, 5, 1)
+start_date = (2003, 5, 1)
 end_date = (2023, 7, 31)
 start_year_clim = 2007
 end_year_clim = 2024
@@ -251,7 +265,7 @@ date_filter_year = 2024
 # 7. EVALUATION & VERIFICATION PARAMETERS
 # ==============================================================================
 verification_window_list = ((1, 15), (16, 30))
-tolerance_days_list = (3, 5)
+tolerance_days_list = (3, 3, 3, 5, 5, 5)
 max_forecast_day = 30
 day_bins = ((1, 5), (6, 10), (11, 15), (16, 20), (21, 25), (26, 30))
 

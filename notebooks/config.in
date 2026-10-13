@@ -7,8 +7,9 @@
 # ------------------------------------------------------------------------------
 # 1. CORE STRUCTURE & DIMENSIONS
 # ------------------------------------------------------------------------------
+import os
 project_name = "test ROMP run with sample data"
-work_dir = "/Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/ETAgroMetAIx/Training/ai-weather/ai_weather/"
+work_dir = ".."
 pkg_dir = work_dir + "apps/benchmarking/ROMP/momp/" # package dir where the momp/ folder is
 
 # Internal data layout (e.g., dimensions in the processed case).
@@ -29,16 +30,17 @@ model_list = ("AIFS_ENS",)
 # 2. OBSERVATION DATA SETTINGS
 # ------------------------------------------------------------------------------
 # Name of the observational dataset (e.g., IMD, CHIRPS).
-obs = "CHIRPS_IMERG"
 
-# Root directory for observational NetCDF files.
-obs_dir = work_dir + "data/external/CHIRPS_IMERG"
+data_dir = os.path.join(os.path.expanduser("~"), "data")
+obs = "CHIRPS"
+obs_dir = os.path.join(data_dir, "external", obs)
 
 # Pattern to find files. {} is replaced by date/year components.
 obs_file_pattern = ("{}.nc",)
 
 # Variable name for rainfall in the NetCDF file.
-obs_var = "RAINFALL"
+#obs_var = 
+obs_var = "precip"
 
 # Multiplier for unit conversion (e.g., 1000 to convert m to mm). None if no change.
 obs_unit_cvt = None
@@ -50,13 +52,14 @@ obs_unit_cvt = None
 ref_model = "climatology"
 
 # Directory for the reference model data.
-ref_model_dir = work_dir + "data/external/CHIRPS_IMERG"
+ref_model_dir = data_dir + "CHIRPS_IMERG"
 
 # File naming pattern for the reference model.
 ref_model_file_pattern = "{}.nc"
 
 # Variable name for rainfall in the reference dataset.
-ref_model_var = "RAINFALL"
+#ref_model_var = "RAINFALL"
+ref_model_var = "precip"
 
 # Unit conversion factor for the reference model.
 ref_model_unit_cvt = None
@@ -65,7 +68,7 @@ ref_model_unit_cvt = None
 # 4. FORECAST MODEL SETTINGS
 # ------------------------------------------------------------------------------
 # List of directories corresponding to the 'model_list'.
-model_dir_list = (work_dir + "data/external/aifs_ens/0p25",)
+model_dir_list = (data_dir + "/external/AIFS_ENS/0p25",)
 
 # Variable names for rainfall in each forecast model (e.g., 'tp' for Total Precip).
 model_var_list = ("tp", )
@@ -83,7 +86,9 @@ file_pattern_list = ("{}.nc", )
 region = "Ethiopia"
 
 # regional mask in .NetCDF format with 1s and 0s
-nc_mask = work_dir + "data/jjas_seasonal_mask_0p25.nc"
+#nc_mask = data_dir + "jjas_seasonal_mask_0p25.nc"
+
+nc_mask = os.path.join(data_dir, "external", "jjas_seasonal_mask_0p25.nc")
 
 # shapefile to define region boundary, None if not drawing boundary using shapefile
 shpfile_dir = None

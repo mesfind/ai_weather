@@ -26,7 +26,12 @@ _env_root = os.getenv("AI_WEATHER_REPO")
 PROJ_ROOT = Path(_env_root).expanduser().resolve() if _env_root else BASE_DIR
 
 _env_data_dir = os.getenv("ROMP_DATA_DIR")
-DATA_DIR = Path(_env_data_dir).expanduser().resolve() if _env_data_dir else (PROJ_ROOT / "data")
+#DATA_DIR = Path(_env_data_dir).expanduser().resolve() if _env_data_dir else (PROJ_ROOT / "data")
+DATA_DIR = Path(
+    "/Users/mesfind/opt/Research/uchicago/ETAgroMetAIx/HCWF/"
+    "ETAgroMetAIx/etagrometaix/data"
+)
+
 EXTERNAL_DATA_DIR = DATA_DIR / "external"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 ENACTS_DIR = EXTERNAL_DATA_DIR / "ENACTS_regridded_025"
