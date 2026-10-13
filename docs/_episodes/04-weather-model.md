@@ -24,7 +24,7 @@ keypoints:
 
 ---
 
-# The AI Weather Model Scorecard: Multi-Country Benchmarking
+# The AI Weather Model Scorecard:  Benchmarking
 
 This lesson documents the complete ROMP (Rainy season Onset Metrics Package) / MOMP benchmarking workflow. Developed as part of the **AI4AG Initiative** and the **Human-Centered Weather Forecasts Initiative at the University of Chicago**, this framework evaluates state-of-the-art AI weather forecast models (AIFS, FuXi, GraphCast, GenCast, AIFS-ENS) against observational rainfall datasets (e.g., CHIRPS).
 
