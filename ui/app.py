@@ -81,7 +81,7 @@ PAGE_MODULE_MAPPING = {
 PRIMARY_MENU_CONFIG = {
     "Home": {"target": "Home", "label": "Home"},
     "AI Forecast": {"target": "AI Forecast", "label": "AI Forecast"},
-    "AI Benchmarking": {"target": "SM_Benchmarking", "label": "AI Benchmarking"},
+    "AI Benchmarking": {"target": "SM_Benchmarking", "label": "Benchmarking"},
 }
 
 COMING_SOON = {
@@ -145,7 +145,7 @@ def load_css():
     styles_dir = os.path.join(os.path.dirname(__file__), "components", "styles")
     decoupled_sheets = [
         "main.css", "nav.css", "header.css", "control_center.css", "tabs.css",
-        "filters.css", "footer.css", "loader.css", "forecast.css",
+        "filters.css", "footer.css", "loader.css", "forecast.css", "page_stuyles/benchmarking.css",
     ]
     compiled_bundle = ""
     for sheet in decoupled_sheets:

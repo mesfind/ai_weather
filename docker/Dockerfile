@@ -69,5 +69,4 @@ ENV PATH=/app/.venv/bin:$PATH \
     DEMO_ENV_ROOT=/opt/envs
 
 EXPOSE 8501
-CMD ["streamlit", "run", "ui/app.py", "--server.headless", "true", "--server.port", "8501", \
-     "--browser.gatherUsageStats", "false"]
+CMD ["streamlit", "run", "ui/app.py", "--server.headless", "true", "--server.address", "0.0.0.0", "--server.port", "8501", "--browser.gatherUsageStats", "false"]

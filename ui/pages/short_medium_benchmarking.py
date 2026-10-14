@@ -1898,6 +1898,38 @@ def section_header(text: str, accent: str = "sky") -> None:
     )
 
 
+# Countries offered under "Benchmark coverage" as (flag, name), in display order.
+BENCHMARK_COVERAGE_COUNTRIES = (
+    ("🇸🇳", "Senegal"),
+    ("🇷🇼", "Rwanda"),
+    ("🇨🇴", "Colombia"),
+    ("🇵🇪", "Peru"),
+    ("🇧🇴", "Bolivia"),
+    ("🇵🇭", "Philippines"),
+    ("🇮🇩", "Indonesia"),
+    ("🇵🇰", "Pakistan"),
+    ("🇳🇬", "Nigeria"),
+    ("🇪🇹", "Ethiopia"),
+    ("🇰🇪", "Kenya"),
+    ("🇸🇱", "Sierra Leone"),
+    ("🇨🇱", "Chile"),
+    ("🇧🇩", "Bangladesh"),
+)
+DEFAULT_BENCHMARK_COVERAGE = "Ethiopia"
+
+# Countries that have data and a mask configured. config.py currently sets up Ethiopia only
+# (region, JJAS mask, CHIRPS grid). Add a country here once its data is in place. Run
+# Benchmark is disabled for the others; otherwise the run would silently use Ethiopia's data
+# under another country's name.
+CONFIGURED_COVERAGE = {"Ethiopia"}
+
+
+def _coverage_label(name: str) -> str:
+    flags = {n: f for f, n in BENCHMARK_COVERAGE_COUNTRIES}
+    label = f"{flags[name]} {name}" if name in flags else name
+    return f"{label} (Default)" if name == DEFAULT_BENCHMARK_COVERAGE else label
+
+
 def render_kpi_row(models: int, presets: int, status: str, runtime: str) -> None:
     st.markdown(
         f"""
@@ -2566,12 +2598,23 @@ def page() -> None:
     bi1, bi2, bi3 = st.columns(3)
     ground_truth = bi1.selectbox("Ground truth", ["CHIRPS", "ENACTS"])
     rp = get_region_presets()
+    preset_names = [p["name"] for p in rp] if rp else []
+    coverage_options = [name for _, name in BENCHMARK_COVERAGE_COUNTRIES]
+    coverage_options += [n for n in preset_names if n not in coverage_options]
+
     benchmark_coverage = bi2.selectbox(
         "Benchmark coverage",
-        ["Ethiopia (Default)"] + [p["name"] for p in rp]
-        if rp
-        else ["Ethiopia (Default)"],
+        coverage_options,
+        index=coverage_options.index(DEFAULT_BENCHMARK_COVERAGE),
+        format_func=_coverage_label,
     )
+
+    coverage_ready = benchmark_coverage in CONFIGURED_COVERAGE or benchmark_coverage in preset_names
+    if not coverage_ready:
+        bi2.caption(
+            f"⚠️ No data or mask is configured for {benchmark_coverage} yet, "
+            "so Run Benchmark is disabled."
+        )
     forecast_window = bi3.selectbox(
         "Forecast window",
         ["1-15 days", "16-30 days"],
@@ -2793,6 +2836,7 @@ def page() -> None:
         key="btn_run",
         type="primary",
         width="stretch",
+        disabled=not coverage_ready,
     )
     st.markdown("</div>", unsafe_allow_html=True)
 
