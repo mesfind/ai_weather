@@ -1,4 +1,4 @@
-# Demo 3 on a DGX Spark: the Streamlit page and every model in one image.
+# Demo 4 on a DGX Spark: the Streamlit page and every model in one image.
 #
 # Build (from the ai_weather/demos/d folder, on the Spark; aarch64 only):
 #   docker build -t ai_weather -f docker/Dockerfile .
@@ -41,6 +41,14 @@ RUN python -m venv --system-site-packages /opt/envs/graphcast \
 RUN python -m venv --system-site-packages /opt/envs/fgn \
  && /opt/envs/fgn/bin/pip install --no-deps -r /tmp/locks/fgn.txt \
  && /opt/envs/fgn/bin/python -c "from weathernext.weathernext2 import fgn; import xarray_jax"
+
+
+# Create .venv using uv and activate it to install requirements-ui.txt
+RUN rm -rf .venv \
+ && uv venv .venv \
+ && . .venv/bin/activate \
+ && uv pip install -r docker/requirements-ui.txt \
+ && python -c "\
 
 # The Streamlit page and Panchali's event movie, kept apart from the model stacks
 COPY docker/requirements-ui.txt /tmp/requirements-ui.txt
