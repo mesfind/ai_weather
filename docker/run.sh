@@ -18,5 +18,5 @@ docker run -d --name ai_weather --restart unless-stopped \
   -p 127.0.0.1:8501:8501 \
   "${code[@]}" -v "$OUTPUTS:/app/outputs" -v "$CACHE:/root/.cache" \
   -e DEMO_IFS_SOURCE="${DEMO3_IFS_SOURCE:-aws}" \
-  demo3
+  ai_weather
 echo "AI Forecasting starting: http://localhost:8501"
