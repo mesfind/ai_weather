@@ -1,3 +1,3 @@
 VERIFICATION_COUNTRY=Ethiopia \
 VERIFICATION_DATA_DIR=$(pwd)/data/diagnostics \
-streamlit run ui/app.py
+OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES streamlit run ui/app.py

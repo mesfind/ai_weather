@@ -43,7 +43,7 @@ for _p in (PROJECT_ROOT, ROMP_ROOT):
 # folder), so defaults below must be built from these rather than "data/...".
 DATA_DIR = Path(config.DATA_DIR).expanduser()
 EXTERNAL_DATA_DIR = Path(config.EXTERNAL_DATA_DIR).expanduser()
-# config.py defines ROMP_DEMO_OUT_DIR / ROMP_DEMO_FIG_DIR (there is no ROMP_OUT_DIR / ROMP_FIG_DIR)
+# Current config.py defines ROMP_OUT_DIR / ROMP_FIG_DIR; older versions used ROMP_DEMO_OUT_DIR / ROMP_DEMO_FIG_DIR.
 ROMP_OUT_DIR = Path(getattr(config, "ROMP_OUT_DIR", getattr(config, "ROMP_DEMO_OUT_DIR", PROJECT_ROOT / "romp_output")))
 ROMP_FIG_DIR = Path(getattr(config, "ROMP_FIG_DIR", getattr(config, "ROMP_DEMO_FIG_DIR", PROJECT_ROOT / "romp_figure")))
 
