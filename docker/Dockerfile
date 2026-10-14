@@ -42,24 +42,20 @@ RUN python -m venv --system-site-packages /opt/envs/fgn \
  && /opt/envs/fgn/bin/pip install --no-deps -r /tmp/locks/fgn.txt \
  && /opt/envs/fgn/bin/python -c "from weathernext.weathernext2 import fgn; import xarray_jax"
 
+# Install uv for fast virtual environment management
+RUN pip install uv
 
-# Create .venv using uv and activate it to install requirements-ui.txt
+# Set workdir and copy app code early so we can create .venv inside /app
+WORKDIR /app
+COPY . /app
+
+# Create .venv using uv, activate it, install requirements, and pre-download cartopy maps
+# (Written on a single line to prevent Dockerfile line-continuation parsing errors)
 RUN rm -rf .venv \
  && uv venv .venv \
  && . .venv/bin/activate \
  && uv pip install -r docker/requirements-ui.txt \
- && python -c "\
-
-# The Streamlit page and Panchali's event movie, kept apart from the model stacks
-COPY docker/requirements-ui.txt /tmp/requirements-ui.txt
-RUN python -m venv /opt/envs/ui \
- && /opt/envs/ui/bin/pip install -r /tmp/requirements-ui.txt \
- && /opt/envs/ui/bin/python -c "\
-import cartopy.feature as cf, cartopy.io.shapereader as sr; \
-[sr.natural_earth(resolution=r, category=c, name=n) for r in ('10m', '50m', '110m') \
- for c, n in [('physical', 'coastline'), ('physical', 'land'), ('physical', 'ocean'), \
-              ('cultural', 'admin_0_boundary_lines_land'), ('cultural', 'admin_0_countries')]]"
-# (map outlines are fetched now so the page works without internet at the venue)
+ && python -c "import cartopy.feature as cf, cartopy.io.shapereader as sr; [sr.natural_earth(resolution=r, category=c, name=n) for r in ('10m', '50m', '110m') for c, n in [('physical', 'coastline'), ('physical', 'land'), ('physical', 'ocean'), ('cultural', 'admin_0_boundary_lines_land'), ('cultural', 'admin_0_countries')]]"
 
 # Earth2Studio 0.16's GraphCast wraps Datasets in xr.Dataset(...), which newer
 # xarray rejects; copy them instead (the same fix the summer environment carried).
@@ -69,11 +65,9 @@ RUN cd /opt/envs/graphcast/lib/python3.12/site-packages/earth2studio/models/px \
  && grep -q "forcings = forcings.copy()" graphcast_operational.py \
  && grep -q "forcings = forcings.copy()" graphcast_small.py
 
-ENV PATH=/opt/envs/ui/bin:$PATH \
+ENV PATH=/app/.venv/bin:$PATH \
     DEMO_ENV_ROOT=/opt/envs
 
-WORKDIR /app
-COPY . /app
 EXPOSE 8501
 CMD ["streamlit", "run", "ui/app.py", "--server.headless", "true", "--server.port", "8501", \
      "--browser.gatherUsageStats", "false"]
