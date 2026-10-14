@@ -17,13 +17,13 @@ import pandas as pd
 import streamlit as st
 import xarray as xr
 
+# ─── FIX: Ensure 'apps' package is discoverable ─────────────────────────────
 try:
     _root = Path(__file__).resolve().parent.parent  # ui/pages -> ui -> ROOT
     if str(_root) not in sys.path:
         sys.path.insert(0, str(_root))
         
-    from apps.forecasting import catalog, compare, jobs, movie, results, store, theme
-    from apps.forecasting import onset, onset_view
+    from apps.forecasting import catalog, compare, jobs, movie, onset, onset_view, results, store, theme
     from apps.forecasting.regions import COUNTRIES, GROUPS, Box, country_box
 except ImportError as e:
     st.error(f"Failed to import forecasting modules: {e}")
@@ -53,7 +53,7 @@ def event_results(path, m, full, run_req, box, region_name, lead_days, use_case)
     kind, var = ("heat", "t2m") if use_case == "Heat" else ("precip", "tp")
     if var in catalog.missing_in_run(full):
         other = "Precipitation" if use_case == "Heat" else "Heat"
-        st.markdown(f'<div class="ibox amber">ⓘ {m.name} does not forecast {catalog.VAR_LABELS[var]}, so there is no '
+        st.markdown(f'<div class="ibox ibox-amber">ⓘ {m.name} does not forecast {catalog.VAR_LABELS[var]}, so there is no '
                     f'{use_case.lower()} movie for this run. Switch the use case to {other}, or '
                     'choose another model.</div>', unsafe_allow_html=True)
         return
@@ -76,12 +76,12 @@ def event_results(path, m, full, run_req, box, region_name, lead_days, use_case)
     obs_end = pd.Timestamp(catalog.era5_dates()[1])
 
     if run_req.init >= obs_end:
-        st.markdown(f'<div class="ibox sky"> Observations (ERA5) currently end on {obs_end:%-d %b %Y}, so there is nothing yet '
+        st.markdown(f'<div class="ibox ibox-sky">ⓘ Observations (ERA5) currently end on {obs_end:%-d %b %Y}, so there is nothing yet '
                     f'to compare this {run_req.init:%-d %b %Y} forecast with.</div>', unsafe_allow_html=True)
         return
     if run_req.init + pd.Timedelta(days=days) > obs_end:
         days = max(1, (obs_end - run_req.init).days)
-        st.markdown(f'<div class="ibox sky">ⓘ Observations (ERA5) currently end on {obs_end:%-d %b %Y}, so the movie covers '
+        st.markdown(f'<div class="ibox ibox-sky">ⓘ Observations (ERA5) currently end on {obs_end:%-d %b %Y}, so the movie covers '
                     f'the first {days} day{"s" if days > 1 else ""} of the forecast.</div>', unsafe_allow_html=True)
 
     req = movie.request_for(path, m.name, kind, run_req.init, days, box,
@@ -145,7 +145,7 @@ def render():
             st.markdown("**Saved runs**")
             st.dataframe(saved.drop(columns="path"), hide_index=True, width="stretch")
 
-    # ── Header & Stats (Using forecast.css KPI cards) ───────────────────
+    # ── Header & Stats ───────────────────────────────────────────────────
     st.title("Running Your First AI Weather Forecast")
     st.caption("Pick a model, a start date and a region, run the forecast on your Spark, "
                "and compare it with what was observed.")
@@ -153,58 +153,15 @@ def render():
     ready = [m for m in catalog.MODELS if m.live]
     free_gb = shutil.disk_usage(store.OUTPUT_DIR if store.OUTPUT_DIR.exists() else "/").free / 1e9
 
-    # FIX: Use st.columns(4) to force horizontal layout instead of CSS grid
     col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Models", len(catalog.MODELS))
+    col2.metric("Live on Spark", f"{len(ready)} / {len(catalog.MODELS)}")
+    col3.metric("Saved Runs", len(saved))
+    col4.metric("Free Disk", f"{free_gb:,.0f} GB")
     
-    with col1:
-        st.markdown(f'''
-        <div class="forecast-kpi-card forecast-kpi-high">
-            <div class="forecast-kpi-accent"></div>
-            <div class="forecast-kpi-content">
-                <div class="forecast-kpi-label">Total Models</div>
-                <div class="forecast-kpi-value">{len(catalog.MODELS)}</div>
-                <div class="forecast-kpi-subtitle">Available in catalog</div>
-            </div>
-        </div>''', unsafe_allow_html=True)
-
-    with col2:
-        st.markdown(f'''
-        <div class="forecast-kpi-card forecast-kpi-moderate">
-            <div class="forecast-kpi-accent"></div>
-            <div class="forecast-kpi-content">
-                <div class="forecast-kpi-label">Live on Spark</div>
-                <div class="forecast-kpi-value">{len(ready)} / {len(catalog.MODELS)}</div>
-                <div class="forecast-kpi-subtitle">Ready to run</div>
-            </div>
-        </div>''', unsafe_allow_html=True)
-
-    with col3:
-        st.markdown(f'''
-        <div class="forecast-kpi-card forecast-kpi-uncertain">
-            <div class="forecast-kpi-accent"></div>
-            <div class="forecast-kpi-content">
-                <div class="forecast-kpi-label">Saved Runs</div>
-                <div class="forecast-kpi-value">{len(saved)}</div>
-                <div class="forecast-kpi-subtitle">Cached locally</div>
-            </div>
-        </div>''', unsafe_allow_html=True)
-
-    with col4:
-        st.markdown(f'''
-        <div class="forecast-kpi-card forecast-kpi-high">
-            <div class="forecast-kpi-accent"></div>
-            <div class="forecast-kpi-content">
-                <div class="forecast-kpi-label">Free Disk Space</div>
-                <div class="forecast-kpi-value">{free_gb:,.0f} <span style="font-size:1rem;color:var(--muted)">GB</span></div>
-                <div class="forecast-kpi-subtitle">Available for output</div>
-            </div>
-        </div>''', unsafe_allow_html=True)
-
-    # ── Step 2a: Model Selection ────────────────────────────────────────
-    st.markdown('<div class="sec-hd teal"><span class="sec-hd-accent"></span>Select model</div>', unsafe_allow_html=True)
-    
-    mode = st.radio("Mode", ["Deterministic", "Probabilistic"], horizontal=True, 
-                    label_visibility="collapsed", key="forecast_mode")
+    # ── Step 2a: Model Selection ─────────────────────────────────────────
+    st.subheader("Step 2 · Select model")
+    mode = st.radio("Mode", ["Deterministic", "Probabilistic"], horizontal=True, label_visibility="collapsed", key="forecast_mode")
     kind = "deterministic" if mode == "Deterministic" else "ensemble"
     choices = [m for m in catalog.MODELS if m.kind == kind]
 
@@ -214,37 +171,58 @@ def render():
                              key="forecast_model_select")
     model = catalog.BY_KEY[model_key]
 
-    def model_tags(m: catalog.Model) -> str:
-        kind_tag = "ENS" if m.kind == "ensemble" else "DET"
-        status_tag = "LIVE" if m.live else "SAVED ONLY"
-        return f"{kind_tag} · {status_tag}"
-
     num_cols = min(len(choices), 3)
     cols = st.columns(num_cols)
     
     for idx, m in enumerate(choices):
         with cols[idx % num_cols]:
-            is_selected = m.key == model.key
-            accent_color = "#10B981" if m.kind == "ensemble" else "#0F766E"
+            is_selected = m.key == model_key
+            
+            # Colors based on model type (Ensemble = Violet, Deterministic = Teal)
+            accent_color = "#8B5CF6" if m.kind == "ensemble" else "#0F766E"
+            accent_bg = "#F5F3FF" if m.kind == "ensemble" else "#F0FDF4"
+            
+            # Dynamic border and shadow for selected state
+            border_color = accent_color if is_selected else "#E2E8F0"
+            box_shadow = "0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 0 0 3px rgba(59, 130, 246, 0.12)" if is_selected else "0 1px 3px rgba(0, 0, 0, 0.05)"
+            
+            kind_tag = "ENS" if m.kind == "ensemble" else "DET"
+            status_tag = "LIVE" if m.live else "SAVED ONLY"
+            badge_text = f"{kind_tag} · {status_tag}"
             
             st.markdown(f'''
-            <div class="model-card {'selected' if is_selected else ''}" style="--card-accent: {accent_color};">
-                <div class="mc-title">{m.name}</div>
-                <div class="mc-desc">{m.org}</div>
-                <div class="mc-badge">{model_tags(m)}</div>
+            <div style="
+                background: #ffffff;
+                border: 1px solid {border_color};
+                border-top: 4px solid {accent_color};
+                border-radius: 12px;
+                padding: 1.1rem 1.25rem;
+                box-shadow: {box_shadow};
+                transition: all 0.2s ease;
+                position: relative;
+                overflow: hidden;
+                height: 100%;
+                box-sizing: border-box;
+                cursor: pointer;
+            ">
+                <div style="font-size: 1rem; font-weight: 700; color: #0F172A; margin-bottom: 0.15rem;">{m.name}</div>
+                <div style="font-size: 0.8rem; color: #64748B; line-height: 1.4; margin-bottom: 0.6rem;">{m.org}</div>
+                <div style="
+                    display: inline-block;
+                    padding: 0.15rem 0.55rem;
+                    background: {accent_bg};
+                    color: {accent_color};
+                    border-radius: 999px;
+                    font-size: 0.7rem;
+                    font-weight: 600;
+                    letter-spacing: 0.03em;
+                    text-transform: uppercase;
+                ">{badge_text}</div>
             </div>
             ''', unsafe_allow_html=True)
 
-    if model.notes:
-        st.markdown(f'<div class="ibox sky">ⓘ {model.notes}</div>', unsafe_allow_html=True)
-    if model.slow:
-        st.markdown('<div class="ibox amber">ⓘ This model is slow on the Spark. In class, load a saved run where possible.</div>', unsafe_allow_html=True)
-    
-    st.markdown("**What this model needs on the Spark**")
-    results.requirements(model, timings, store.OUTPUT_DIR)
-
     # ── Step 2b: Forecast Setup ─────────────────────────────────────────
-    st.markdown('<div class="sec-hd sky"><span class="sec-hd-accent"></span>Forecast setup</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-hd sec-hd-sky"><span class="sec-hd-accent"></span>Forecast setup</div>', unsafe_allow_html=True)
     
     c1, c2, c3, c4 = st.columns([2, 1, 2, 2])
     init_lo, init_hi = model.date_range()
@@ -261,8 +239,8 @@ def render():
     st.caption(f"ⓘ Start dates for {model.name}: {init_lo:%-d %b %Y} – {init_hi:%-d %b %Y}. "
                f"{model.date_reason()}")
 
-    # ─ Step 2c: Region ─────────────────────────────────────────────────
-    st.markdown('<div class="sec-hd violet"><span class="sec-hd-accent"></span>Region</div>', unsafe_allow_html=True)
+    # ── Step 2c: Region ─────────────────────────────────────────────────
+    st.markdown('<div class="sec-hd sec-hd-violet"><span class="sec-hd-accent"></span>Region</div>', unsafe_allow_html=True)
     
     r1, r2 = st.columns([1, 3])
     region_mode = r1.radio("Region", ["Country", "Custom box"], label_visibility="collapsed", key="forecast_region_mode")
@@ -283,7 +261,7 @@ def render():
             r2.error("Min must be below max; latitude within ±90°, longitude within ±180°.")
 
     # ── Step 2d: Use Case ────────────────────────────────────────────────
-    st.markdown('<div class="sec-hd amber"><span class="sec-hd-accent"></span>What do you want to look at?</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-hd sec-hd-amber"><span class="sec-hd-accent"></span>What do you want to look at?</div>', unsafe_allow_html=True)
     
     use_case = st.segmented_control("Use case", ["Heat", "Precipitation", "Onset"], default="Precipitation",
                                     label_visibility="collapsed", key="forecast_use_case") or "Precipitation"
@@ -296,13 +274,12 @@ def render():
     blocked = any(level == "error" for level, _ in problems)
 
     # ── Step 3: Run ─────────────────────────────────────────────────────
-    st.markdown('<div class="sec-hd green"><span class="sec-hd-accent"></span>Run the forecast</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-hd sec-hd-green"><span class="sec-hd-accent"></span>Step 3 · Run the forecast</div>', unsafe_allow_html=True)
     
     req = store.RunRequest(model.key, init, lead_days * 24, int(members), synthetic)
     saved_path = store.find_saved(req)
     remote = None if saved_path else store.find_remote(req)
 
-    # Render run configuration tags using benchmarking.css metric-pills
     tags = [("Model", model.name), ("Mode", mode), ("Start", f"{init:%Y-%m-%d %HZ}"),
             ("Lead", f"{lead_days} days"), ("Members", str(members)), ("Region", region_name),
             ("Use case", use_case)]
@@ -378,10 +355,10 @@ def render():
         else:
             full = open_output(path, p.stat().st_mtime)
             m = catalog.BY_KEY[run_req.model]
-            st.markdown('<div class="sec-hd teal"><span class="sec-hd-accent"></span>Results</div>', unsafe_allow_html=True)
+            st.markdown('<div class="sec-hd sec-hd-teal"><span class="sec-hd-accent"></span>Results</div>', unsafe_allow_html=True)
             
             if full.attrs.get("synthetic"):
-                st.markdown('<div class="ibox amber">ⓘ Synthetic output — not a real forecast.</div>', unsafe_allow_html=True)
+                st.markdown('<div class="ibox ibox-amber">ⓘ Synthetic output — not a real forecast.</div>', unsafe_allow_html=True)
             
             with st.expander(f"How this forecast was made · {m.name}, started {run_req.init:%-d %b %Y %HZ}", key="forecast_pipeline_expander"):
                 results.pipeline(path, full, m, timings)
@@ -414,7 +391,7 @@ def render():
                        f"({p.stat().st_size / 1e6:.0f} MB).")
 
     # ── Compare Models ──────────────────────────────────────────────────
-    st.markdown('<div class="sec-hd violet"><span class="sec-hd-accent"></span>Compare models</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-hd sec-hd-violet"><span class="sec-hd-accent"></span>Compare models</div>', unsafe_allow_html=True)
     st.caption(f"The same start ({init:%-d %b %Y %HZ}), lead time ({lead_days} days) and region "
                f"({region_name}) for several models, as one time series "
                + (" with each model's onset" if use_case == "Onset" else "") + ".")
