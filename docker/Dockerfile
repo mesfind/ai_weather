@@ -50,7 +50,6 @@ WORKDIR /app
 COPY . /app
 
 # Create .venv using uv, activate it, install requirements, and pre-download cartopy maps
-# (Written on a single line to prevent Dockerfile line-continuation parsing errors)
 RUN rm -rf .venv \
  && uv venv .venv \
  && . .venv/bin/activate \
@@ -65,7 +64,9 @@ RUN cd /opt/envs/graphcast/lib/python3.12/site-packages/earth2studio/models/px \
  && grep -q "forcings = forcings.copy()" graphcast_operational.py \
  && grep -q "forcings = forcings.copy()" graphcast_small.py
 
-ENV PATH=/app/.venv/bin:$PATH \
+# ENV is the Docker-native way to "activate" a venv for the CMD and docker exec sessions
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH=/app/.venv/bin:$PATH \
     DEMO_ENV_ROOT=/opt/envs
 
 EXPOSE 8501
