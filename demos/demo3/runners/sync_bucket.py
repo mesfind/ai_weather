@@ -25,6 +25,7 @@ def main() -> int:
     ap.add_argument("direction", choices=["push", "pull"])
     ap.add_argument("--bucket", default=os.environ.get("DEMO3_BUCKET", ""))
     ap.add_argument("--models", nargs="+", help="only these models (default: all)")
+    ap.add_argument("--files", nargs="+", help="push only these saved runs (paths to .nc files)")
     ap.add_argument("--dry-run", action="store_true", help="list what would be copied; copy nothing")
     a = ap.parse_args()
     if not a.bucket:
@@ -35,6 +36,9 @@ def main() -> int:
     remote = {(m, n): size for m, n, size in store.remote_runs(max_age_s=0)}
     local = {(p.parent.name, p.name): p for p in store.OUTPUT_DIR.glob("*/*.nc")
              if store._NAME.match(p.name) and "_synthetic" not in p.name}
+    if a.files:
+        keep = {(Path(f).parent.name, Path(f).name) for f in a.files}
+        local = {k: p for k, p in local.items() if k in keep}
     want = lambda m: not a.models or m in a.models
     if a.direction == "push":
         todo = [(k, p) for k, p in sorted(local.items()) if want(k[0]) and remote.get(k) != p.stat().st_size]

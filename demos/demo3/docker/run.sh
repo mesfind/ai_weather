@@ -13,8 +13,13 @@ code=()
 [ "${DEV:-0}" = 1 ] && code=(-v "$here:/app")
 # Shared runs (optional): DEMO3_BUCKET=gs://<bucket>/demo3; DEMO3_GCP_KEY=<service-account.json> to push
 cloud=(-e DEMO3_BUCKET="${DEMO3_BUCKET:-}")
-[ -n "${DEMO3_GCP_KEY:-}" ] && cloud+=(-v "$DEMO3_GCP_KEY:/run/gcp-key.json:ro"
-                                       -e GOOGLE_APPLICATION_CREDENTIALS=/run/gcp-key.json)
+# Credentials: a service-account key, else this user's `gcloud auth application-default login`
+ADC="$HOME/.config/gcloud/application_default_credentials.json"
+if [ -n "${DEMO3_GCP_KEY:-}" ]; then
+  cloud+=(-v "$DEMO3_GCP_KEY:/run/gcp-key.json:ro" -e GOOGLE_APPLICATION_CREDENTIALS=/run/gcp-key.json)
+elif [ -f "$ADC" ]; then
+  cloud+=(-v "$ADC:/run/gcp-adc.json:ro" -e GOOGLE_APPLICATION_CREDENTIALS=/run/gcp-adc.json)
+fi
 
 docker run -d --name demo3 --restart unless-stopped \
   --device nvidia.com/gpu=all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \

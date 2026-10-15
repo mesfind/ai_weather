@@ -131,6 +131,36 @@ def find_remote(req: RunRequest) -> tuple[str, int] | None:
     return (best[1], best[2]) if best else None
 
 
+def in_bucket(path: Path) -> bool:
+    """True if this saved run is already in the bucket (same name and size)."""
+    size = path.stat().st_size
+    return any(m == path.parent.name and n == path.name and s == size for m, n, s in remote_runs())
+
+
+def upload(path: Path) -> None:
+    """Copy a saved run (and its timings file) into the bucket."""
+    fs, root = bucket_fs()
+    model = path.parent.name
+    fs.makedirs(f"{root}/{model}", exist_ok=True)  # a no-op on cloud buckets
+    side = path.with_suffix(".json")
+    if side.exists():
+        fs.put(str(side), f"{root}/{model}/{side.name}")
+    fs.put(str(path), f"{root}/{model}/{path.name}")
+    _remote_cache.pop(BUCKET, None)
+
+
+def upload_in_background(path: Path) -> None:
+    """Upload a finished run without holding up the page (log in _jobs/upload.log)."""
+    import subprocess
+    import sys
+    script = Path(__file__).resolve().parent.parent / "runners" / "sync_bucket.py"
+    JOBS_DIR.mkdir(parents=True, exist_ok=True)
+    with open(JOBS_DIR / "upload.log", "a") as log:
+        subprocess.Popen([sys.executable, str(script), "push", "--files", str(path)],
+                         stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+    _remote_cache.pop(BUCKET, None)
+
+
 def download(model: str, name: str) -> Path:
     """Copy a run (and its timings file) from the bucket into OUTPUT_DIR."""
     fs, root = bucket_fs()

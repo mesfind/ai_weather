@@ -129,13 +129,22 @@ area mean of daily rainfall over land (on the CHIRPS grid, with CHIRPS observati
 maximum 2 m temperature (with ERA5 on request), with the range across ensemble members shaded.
 For Onset it adds a table of each model's onset share next to the observed one.
 
-## Sharing saved runs through a bucket
+## Sharing saved runs through the bucket
 
-To share runs between Sparks, set `DEMO3_BUCKET` (e.g. `gs://<bucket>/demo3`) when starting the
-container (`DEMO3_BUCKET=... bash docker/run.sh`). The page then offers **Download saved run** for
-runs that are in the bucket but not on this Spark. `runners/sync_bucket.py push|pull [--dry-run]`
-copies runs in bulk; pushing needs write access (`DEMO3_GCP_KEY=<service-account.json>` mounts a
-key into the container); pulling from a public bucket needs none.
+Saved runs are shared between Sparks through the program's bucket,
+`gs://aim4scale_training_2026/demo3/<model>/` (same file names as `outputs/`).
+
+- **Start the container with it:** `DEMO3_BUCKET=gs://aim4scale_training_2026/demo3 bash docker/run.sh`
+  (add `DEV=1`, `DEMO3_CACHE`, `DEMO3_OUTPUTS` as usual).
+- **Credentials:** the bucket is private. On the Spark, as an account with access:
+  `gcloud auth application-default login --no-launch-browser` (tick every permission on Google's
+  consent page). `run.sh` passes the resulting `~/.config/gcloud/application_default_credentials.json`
+  into the container. A service-account key instead: `DEMO3_GCP_KEY=<key.json>`.
+- **On the page:** a run in the bucket but not on this Spark shows **Download saved run**; a run
+  made on the page uploads itself when it finishes; the results say whether the run is in the
+  bucket and offer **Upload this run to the shared bucket** if not.
+- **In bulk:** `runners/sync_bucket.py push|pull [--models ...] [--files ...] [--dry-run]`
+  (inside the container), or `gcloud storage rsync` on the Spark.
 
 ## FGN (WeatherNext 2): starting conditions from ECMWF open data
 

@@ -280,6 +280,8 @@ if ss.job_id:
     elif s["state"] == "done":
         ss.result = (s["output"], req)
         ss.job_id = None
+        if store.BUCKET and not synthetic:
+            store.upload_in_background(Path(s["output"]))  # share it with the other Sparks
         st.success(f"Forecast finished in {s.get('runtime_s', s['elapsed_s']):.0f} s.")
         st.rerun()
     else:
@@ -322,6 +324,13 @@ if ss.result:
         data = results.netcdf_bytes(path, p.stat().st_mtime,
                                     (box.lat_min, box.lat_max, box.lon_min, box.lon_max),
                                     lead_days * 24)
+        if store.BUCKET and not full.attrs.get("synthetic"):
+            if store.in_bucket(p):
+                st.caption("ⓘ This run is in the shared bucket, so other Sparks can load it.")
+            elif st.button("Upload this run to the shared bucket", key="upload_run"):
+                with st.spinner("Uploading to the shared bucket…"):
+                    store.upload(p)
+                st.rerun()
         st.download_button(f"Download this forecast for {region_name} (NetCDF, "
                            f"{len(data) / 1e6:.1f} MB)", data, mime="application/x-netcdf",
                            file_name=f"{m.key}_{run_req.init:%Y%m%dT%H}_{lead_days}d_"
