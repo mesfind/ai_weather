@@ -11,13 +11,12 @@ metres (checked against ERA5: mean hourly rain ~6e-5 m vs ERA5 ~1e-4 m).
 """
 import numpy as np
 
-from _e2s import run_e2s
+from _e2s import arco, run_e2s
 
 EPS = 1e-3
 
 
 def run(init, lead_hours, members, report):
-    from earth2studio.data import ARCO
     from earth2studio.models.px import Aurora1p5
-    return run_e2s(Aurora1p5, ARCO(), init, lead_hours, 1, report, step_hours=1,
+    return run_e2s(Aurora1p5, arco(), init, lead_hours, 1, report, step_hours=1,
                    precip_fix=lambda tp: np.log1p(tp / EPS))

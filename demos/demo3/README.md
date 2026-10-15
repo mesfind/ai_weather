@@ -1,6 +1,6 @@
 # Demo 3 — Running Your First AI Weather Forecast
 
-A Streamlit app, running on the DGX Spark, for running AI weather models. Participants choose a model, start date, lead time, region and use case (heat, precipitation or rainy-season onset), run the forecast (or load a saved run), and compare it with observations.
+A Streamlit app, running on the DGX Spark, for running AI weather models. Participants choose up to four models, a start date, lead time, region and use case (heat, precipitation or rainy-season onset), run the forecast (or load a saved run), and compare it with observations.
 
 **Status:**
 - All 7 models run live on the Spark from one Docker image (`docker/`), and saved runs load instantly.
@@ -8,7 +8,7 @@ A Streamlit app, running on the DGX Spark, for running AI weather models. Partic
 - Results are Panchali's event movie (forecast next to ERA5 observations, day by day) and event-track map, for heat or precipitation; plus how the forecast was made (load, inputs, run, save, with times on the Spark), maps of z500 / 2 m temperature / rainfall, and a NetCDF download.
 - Each model card lists what it needs on the Spark: weight size, peak GPU memory, output size, grid and inputs.
 - **Onset** use case: onset maps (forecast vs observed), the rainfall series and an onset movie, by a choice of definitions (ICPAC, Moron–Robertson, Moron–Robertson with MOK filter), each adjustable.
-- **Compare models:** up to 4 models for the same start, lead time and region as one time series; saved runs load, missing ones run one after another.
+- **Several models at once:** pick up to 4 models at the start. Saved runs load (or download from the shared bucket) and the rest run one after another. Results: how each forecast was made, event movies (or onset maps and movies) for the models you choose, a time-series comparison of all of them, and forecast maps.
 - Sharing saved runs through a bucket (`runners/sync_bucket.py`, `DEMO3_BUCKET`).
 
 ## Run it
@@ -53,7 +53,8 @@ demo3/results.py       pipeline stages, model requirements, forecast maps, NetCD
 demo3/onset.py         onset definitions and detection (matches ROMP), observed + forecast series
 demo3/onset_view.py    the onset tab: definition picker, maps, series, onset movie
 demo3/obs.py           CHIRPS daily rainfall (yearly files, downloaded once)
-demo3/compare.py       compare up to 4 models as one time series
+demo3/runs.py          gets the selected models' forecasts: saved, downloaded, or run one at a time
+demo3/compare.py       the time-series comparison of the loaded models
 demo3/data/            ROMP's MWset: local 5-day wet-spell amounts for Moron–Robertson
 demo3/event_movie/     Panchali's forecast_event_movie.py (unchanged) + the Spark adapter
 demo3/theme.py         styling, matching the Demo 5 platform
@@ -120,14 +121,21 @@ Every setting (thresholds, dry-spell length and window, search start) can be cha
 - Checked against the onset explorer's ICPAC code on 2,000 random series: identical, except that
   the explorer skips the last day whose 24-day window just fits.
 
-## Comparing models
+## Several models at once
 
-**Compare models** (below the results) takes up to 4 models with the page's start date, lead
-time and region. Saved runs load at once (any member count); models without one run on the
-Spark one after another, never two at once, and join the chart as they finish. The chart is the
-area mean of daily rainfall over land (on the CHIRPS grid, with CHIRPS observations) or of daily
-maximum 2 m temperature (with ERA5 on request), with the range across ensemble members shaded.
-For Onset it adds a table of each model's onset share next to the observed one.
+Step 2 takes up to 4 models. The date picker offers the start dates all of them can use (if
+none is common, every date is offered and models that can't start are left out), the lead time
+goes up to the shortest maximum among them, and the member count applies to the ensemble
+models, each capped at its own limit. One button then loads saved runs (any member count),
+downloads runs from the shared bucket, and runs the rest on the Spark one after another, never
+two at once.
+
+Results, in order: how each forecast was made (pick the model); event movies, made one at a
+time and only for the models chosen (default: the first); for Onset, onset maps per chosen model
+and onset movies; the time-series comparison of every loaded model (area-mean daily rainfall on
+the CHIRPS grid with CHIRPS, or daily maximum 2 m temperature with ERA5 on request; for Onset,
+each model's onset share next to the observed one); forecast maps and the NetCDF download (pick
+the model).
 
 ## Sharing saved runs through the bucket
 

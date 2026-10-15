@@ -5,6 +5,7 @@ import hashlib
 import io
 import json
 from dataclasses import asdict
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -213,16 +214,18 @@ def _land_share(mask, land) -> float:
     return 100 * float((mask & land).sum()) / n if n else 0.0
 
 
-def view(path, mtime, full, m, run_req, box: Box, region_name: str, lead_days: int) -> None:
+def usable(full, m, box) -> str | None:
+    """Why this run can't show onset, or None."""
     if "tp" in catalog.missing_in_run(full):
-        st.info(f"{m.name} does not forecast rainfall, so it can't forecast onset. Choose another model.")
-        return
+        return f"{m.name} does not forecast rainfall, so it can't forecast onset."
     if not obs.covers(box):
-        st.info("Onset needs observed rainfall from CHIRPS, which covers 50°S–50°N only.")
-        return
+        return "Onset needs observed rainfall from CHIRPS, which covers 50°S–50°N only."
+    return None
+
+
+def controls(region_name: str, init: pd.Timestamp):
+    """Definition and search start, shared by every model on the page."""
     defn = pick_definition(region_name)
-    st.session_state["onset_defn"] = defn  # the comparison below uses the same definition
-    init = run_req.init
     auto_from = onset.search_start(defn, region_name, init)
     c1, c2 = st.columns([1, 3])
     search_from = pd.Timestamp(c1.date_input(
@@ -230,12 +233,27 @@ def view(path, mtime, full, m, run_req, box: Box, region_name: str, lead_days: i
     c2.caption(f"ⓘ {'Fixed by the definition' if defn.search_from else f'Start of the main rainy season for {region_name}'}"
                f": {auto_from:%-d %b %Y}. Observed rainfall (CHIRPS) is used from here to the day "
                f"before the forecast starts; the forecast's rainfall after that.")
+    return defn, search_from
+
+
+def result(path, box: Box, init, lead_days, defn, search_from):
+    p = Path(path)
+    return compute(path, p.stat().st_mtime, (box.lat_min, box.lat_max, box.lon_min, box.lon_max),
+                   init, lead_days, defn, search_from)
+
+
+def view(path, full, m, init, box: Box, region_name: str, lead_days: int, defn, search_from) -> None:
+    """Onset maps, shares and rainfall series for one model's run."""
+    why = usable(full, m, box)
+    if why:
+        st.info(why)
+        return
     try:
-        r = compute(path, mtime, (box.lat_min, box.lat_max, box.lon_min, box.lon_max), init,
-                    lead_days, defn, search_from)
+        r = result(path, box, init, lead_days, defn, search_from)
     except (OSError, FileNotFoundError) as e:
         st.error(f"Couldn't get CHIRPS observations: {e}")
         return
+    key = m.key
     init_day, fc_end, obs_last = r["init_day"], r["fc_end"], r["obs_last"]
     n_days = (fc_end - init_day).days + 1
     if obs_last is not None and obs_last < init_day - pd.Timedelta(days=1):
@@ -251,7 +269,7 @@ def view(path, mtime, full, m, run_req, box: Box, region_name: str, lead_days: i
     ens = "ensemble" in f_on.dims and f_on.sizes["ensemble"] > 1
     members = [int(e) for e in f_on.ensemble.values] if "ensemble" in f_on.dims else [0]
     pick = (st.selectbox("Forecast shown", ["chance of onset"] + [f"member {e + 1}" for e in members],
-                         key="onset_member") if ens else "member 1")
+                         key=f"onset_member_{key}") if ens else "member 1")
     one = f_on.isel(ensemble=members.index(int(pick.split()[1]) - 1)) if pick.startswith("member") \
         and "ensemble" in f_on.dims else (f_on.isel(ensemble=0) if "ensemble" in f_on.dims else f_on)
     fday, fposs = _day_field(one, init_day, land)
@@ -288,36 +306,29 @@ def view(path, mtime, full, m, run_req, box: Box, region_name: str, lead_days: i
                "started. Hatched: possible onset during the forecast (its dry-spell check runs past the "
                "data). White: no onset yet.")
 
-    st.plotly_chart(_series_figure(r, defn, search_from, region_name, "area-mean"), width="stretch")
+    st.plotly_chart(_series_figure(r, defn, search_from, region_name, "area-mean"), width="stretch",
+                    key=f"onset_series_{key}")
     st.caption("Onset on the area-mean rainfall, for illustration; the maps apply the definition "
                "at every grid point.")
 
-    st.markdown("**Onset movie**")
-    movie(r, m, box, region_name, defn, n_days, path)
 
-
-def movie(r, m, box, region_name, defn, n_days, path):
-    """Day-by-day maps of where onset has happened: forecast next to observed."""
+def movie_path(path, box: Box, defn, init, lead_days) -> Path:
     key = json.dumps([path, (box.lat_min, box.lat_max, box.lon_min, box.lon_max), asdict(defn),
-                      str(r["init_day"]), n_days, str(r["obs_last"])], default=str)
-    gif = MOVIES / f"onset_{hashlib.md5(key.encode()).hexdigest()[:12]}.gif"
-    if not gif.exists():
-        if not st.button("Make onset movie", key="onset_movie_go"):
-            st.caption("One frame per forecast day: where onset has happened so far in the forecast "
-                       "and in the observations.")
-            return
-        bar = st.progress(0.0, text="Drawing frames…")
-        frames = render_frames(r, m, box, region_name, n_days,
-                               lambda i, n: bar.progress(i / n, text=f"Drawing frame {i} of {n}"))
-        bar.progress(1.0, text="Assembling the GIF…")
-        MOVIES.mkdir(parents=True, exist_ok=True)
-        frames[0].save(gif, save_all=True, append_images=frames[1:], duration=900, loop=0)
-        bar.empty()
-    import base64
-    st.html(f'<img src="data:image/gif;base64,{base64.b64encode(gif.read_bytes()).decode()}" '
-            'style="width:100%" alt="Onset by day, forecast vs observed">')
-    st.download_button("Download onset movie (GIF)", gif.read_bytes(), file_name=gif.name,
-                       mime="image/gif", key="onset_movie_dl")
+                      str(pd.Timestamp(init).normalize()), lead_days], default=str)
+    return MOVIES / f"onset_{hashlib.md5(key.encode()).hexdigest()[:12]}.gif"
+
+
+def make_movie(path, m, box, region_name, init, lead_days, defn, search_from, progress) -> Path:
+    """Render one model's onset movie (one frame per forecast day) and return the GIF."""
+    gif = movie_path(path, box, defn, init, lead_days)
+    if gif.exists():
+        return gif
+    r = result(path, box, init, lead_days, defn, search_from)
+    n_days = (r["fc_end"] - r["init_day"]).days + 1
+    frames = render_frames(r, m, box, region_name, n_days, progress)
+    MOVIES.mkdir(parents=True, exist_ok=True)
+    frames[0].save(gif, save_all=True, append_images=frames[1:], duration=900, loop=0)
+    return gif
 
 
 def render_frames(r, m, box, region_name, n_days, progress):
