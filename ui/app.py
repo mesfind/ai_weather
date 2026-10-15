@@ -74,12 +74,14 @@ ensure_light_theme_config()
 # ─── EXTENDED SYSTEM MODULE CONFIGURATION MATRIX ───────────────────────────
 PAGE_MODULE_MAPPING = {
     "Home": "ui.pages.home",
+    "AI Forecast": "ui.pages.ai_forecasting", 
     "SM_Benchmarking": "ui.pages.short_medium_benchmarking",
 }
 
 PRIMARY_MENU_CONFIG = {
     "Home": {"target": "Home", "label": "Home"},
-    "Onset Benchmarking": {"target": "SM_Benchmarking", "label": "Benchmarking"},
+    "AI Forecast": {"target": "AI Forecast", "label": "AI Forecast"},
+    "AI Benchmarking": {"target": "SM_Benchmarking", "label": "Benchmarking"},
 }
 
 COMING_SOON = {
@@ -143,7 +145,7 @@ def load_css():
     styles_dir = os.path.join(os.path.dirname(__file__), "components", "styles")
     decoupled_sheets = [
         "main.css", "nav.css", "header.css", "control_center.css", "tabs.css",
-        "filters.css", "footer.css", "loader.css", "forecast.css",
+        "filters.css", "footer.css", "loader.css", "forecast.css", "page_stuyles/benchmarking.css",
     ]
     compiled_bundle = ""
     for sheet in decoupled_sheets:
@@ -227,25 +229,41 @@ def get_inline_svg(filename: str) -> str:
     return svg_text.strip()
 
 # Fetch raw SVGs
-EMI_SVG_RAW = get_inline_svg("emi_seal_reversed.svg")
-UCHICAGO_SVG_RAW = get_inline_svg("uchicago.svg")
-AI4AG_SVG_RAW = get_inline_svg("ai4ag.svg")
+UCHICAGO_SVG_RAW = get_inline_svg("UChicago.svg")
+AICE_SVG_RAW = get_inline_svg("AICE.svg")
+AIMFORSCALE_SVG_RAW = get_inline_svg("aimforscale.svg")
+MBZUAI_SVG_RAW = get_inline_svg("MBZUSIAIMForScale.svg") 
+AI4AG_SVG_RAW = get_inline_svg("AI4AG.svg")
 
 # Wrap them in containers
-EMI_LOGO_HTML = (
-    f'<div class="footer-logo-wrapper emi-wrapper">{EMI_SVG_RAW}</div>'
-    if EMI_SVG_RAW else '<span style="color:#fff;font-weight:bold;">EMI</span>'
-)
 
 UCHICAGO_LOGO_HTML = (
     f'<div class="footer-logo-wrapper uchicago-wrapper">{UCHICAGO_SVG_RAW}</div>'
     if UCHICAGO_SVG_RAW else '<span style="color:#fff;font-weight:bold;">UChicago</span>'
 )
 
+AICE_LOGO_HTML = (
+    f'<div class="footer-logo-wrapper uchicago-wrapper">{AICE_SVG_RAW}</div>'
+    if AICE_SVG_RAW else '<span style="color:#fff;font-weight:bold;">AICE</span>'
+)
+
+AIMFORSCALE_LOGO_HTML = (
+    f'<div class="footer-logo-wrapper logo-wrapper">{AIMFORSCALE_SVG_RAW}</div>'
+    if AIMFORSCALE_SVG_RAW else '<span style="color:#fff;font-weight:bold;">AIMFORSCALE</span>'
+)
+
+
+MBZUAI_LOGO_HTML = (
+    f'<div class="footer-logo-wrapper logo-wrapper">{MBZUAI_SVG_RAW}</div>'
+    if MBZUAI_SVG_RAW else '<span style="color:#fff;font-weight:bold;">MBZUAI</span>'
+)
+
+
 AI4AG_LOGO_HTML = (
-    f'<div class="footer-logo-wrapper emi-wrapper">{AI4AG_SVG_RAW}</div>'
+    f'<div class="footer-logo-wrapper logo-wrapper">{AI4AG_SVG_RAW}</div>'
     if AI4AG_SVG_RAW else '<span style="color:#fff;font-weight:bold;">AI4AG</span>'
 )
+
 
 def main():
     st.set_page_config(
@@ -308,7 +326,7 @@ def main():
 
     # ─── SUB-NAVIGATION LOGIC ────────────────────────────────────────────────
     if active_primary == "Verification":
-        sub_cols = st.columns([1, 1, 3])
+        sub_cols = st.columns([1, 1, 2])
         sm_actions = {
             "SM_Verification": "Verification Metrics",
             "SM_Threshold": "Threshold Engine",
@@ -392,20 +410,24 @@ def main():
 <div class="green-footer">
     <div class="footer-content">
         <div class="footer-row">
-            <div class="footer-left">{AI4AG_LOGO_HTML}</div>
+            <div class="footer-left">{AIMFORSCALE_LOGO_HTML}</div>
+            <div class="footer-left">{MBZUAI_LOGO_HTML}</div>
             <div class="footer-center">
                 <div class="brand-group">
-                    <span class="brand">AI4AG</span>
+                    <span class="brand">AIM FOR SCALE</span>
                     <span class="sep">|</span>
                     <span class="brand">Human-Centered Weather Forecasts Initiative</span>
                     <span class="sep">|</span>
                     <span class="brand">University of Chicago</span>
+                     <span class="sep">|</span>
+                    <span class="brand">AICE</span>
                 </div>
             </div>
             <div class="footer-right">{UCHICAGO_LOGO_HTML}</div>
+            <div class="footer-right">{AICE_LOGO_HTML}</div>
         </div>
         <div class="meta">
-            &copy; 2026 EMI &amp; HCWF · Built with Streamlit · Data refreshed daily
+            &copy; 2026 AI4AG &amp; HCWF </br>
             <span> All rights reserved.</span>
         </div>
     </div>

@@ -6,14 +6,6 @@ from __future__ import annotations
 import os
 import sys
 
-# MUST be set before importing numpy, scipy, matplotlib, or xarray
-os.environ["OPENBLAS_NUM_THREADS"] = "1"
-os.environ["MKL_NUM_THREADS"] = "1"
-os.environ["OMP_NUM_THREADS"] = "1"
-os.environ["NUMEXPR_NUM_THREADS"] = "1"
-os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
-os.environ["MPLBACKEND"] = "Agg"
-
 import base64
 import importlib
 import inspect
@@ -1515,9 +1507,56 @@ def _fig_to_png(fig):
     return buf.getvalue()
 
 
+# Code run in a separate process for the onset analysis (started with `python -c`, so no extra
+# file is needed). A separate process keeps anything the analysis changes (working folder,
+# sys.argv, environment, matplotlib state) away from the Streamlit server.
+_ONSET_WORKER_SOURCE = r"""
+import os, pickle, sys, warnings
+from pathlib import Path
+
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+sys.path.insert(0, os.getcwd())  # project root: the page starts this process there
+
+payload = pickle.loads(Path(sys.argv[1]).read_bytes())
+out_dir = Path(sys.argv[2])
+out_dir.mkdir(parents=True, exist_ok=True)
+sys.argv = [sys.argv[0]]  # ROMP may parse sys.argv
+
+import config  # noqa: F401  (puts the ROMP folders on sys.path)
+import momp.app.onset_time_series as ots
+
+real_close = plt.close
+plt.show = lambda *a, **k: None
+plt.close = lambda *a, **k: None  # keep figures alive until they are saved
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    ots.obs_onset_analysis(
+        year=payload["year"],
+        lat_select=payload["lat_select"],
+        lon_select=payload["lon_select"],
+        **payload["kwargs"],
+    )
+
+saved = 0
+for num in plt.get_fignums():
+    fig = plt.figure(num)
+    if not fig.get_axes():
+        continue
+    fig.savefig(out_dir / f"fig_{saved:02d}.png", format="png", dpi=110, bbox_inches="tight")
+    saved += 1
+
+real_close("all")
+print(f"[onset] saved {saved} figure(s)")
+"""
+
+
 def _analyze_onset_streamlit(year, lat, lon):
     """
-    Run the onset analysis in a separate process (onset_worker.py) and return its figures.
+    Run the onset analysis in a separate process and return its figures.
     """
     import pickle
     import tempfile
@@ -1525,11 +1564,6 @@ def _analyze_onset_streamlit(year, lat, lon):
     base_kwargs, CHIRPS_DIR = _get_onset_base_kwargs()
     grid_lat, grid_lon = _snap_to_grid(lat, lon, str(CHIRPS_DIR))
     pngs: List[bytes] = []
-
-    worker = PROJECT_ROOT / "onset_worker.py"
-    if not worker.exists():
-        st.error(f"onset_worker.py not found in {PROJECT_ROOT}. Copy it next to run_momp.py.")
-        return pngs, grid_lat, grid_lon
 
     # Minimal environment isolation
     env = {}
@@ -1574,14 +1608,19 @@ def _analyze_onset_streamlit(year, lat, lon):
                     }
                 )
             )
-            proc = subprocess.run(
-                [sys.executable, str(worker), str(payload_file), str(out_dir)],
-                cwd=str(PROJECT_ROOT.resolve()),
-                env=env,
-                capture_output=True,
-                text=True,
-                timeout=900,
+            from types import SimpleNamespace
+
+            _worker_out: List[str] = []
+            _rc, _timed_out = _spawn_no_fork(
+                [sys.executable, "-c", _ONSET_WORKER_SOURCE, str(payload_file), str(out_dir)],
+                env,
+                str(PROJECT_ROOT.resolve()),
+                900,
+                _worker_out.append,
             )
+            if _timed_out:
+                raise subprocess.TimeoutExpired("onset analysis", 900)
+            proc = SimpleNamespace(returncode=_rc, stdout="\n".join(_worker_out), stderr="")
         except subprocess.TimeoutExpired:
             st.error("Onset analysis timed out after 15 minutes.")
             return pngs, grid_lat, grid_lon
@@ -1616,6 +1655,105 @@ def _locate_run_momp() -> Optional[Path]:
     return None
 
 
+def _spawn_no_fork(argv, env, cwd, timeout, on_line=None):
+    """
+    Run `argv` in `cwd` and stream its combined stdout/stderr, line by line, to `on_line`.
+    Returns (returncode, timed_out); returncode is negative when the process was killed by
+    a signal (-11 = segmentation fault) and 124 on timeout.
+
+    Why not subprocess.run/Popen: they fork() the Streamlit process and then exec(). On macOS a
+    fork from this large multi-threaded process (numpy, xarray, matplotlib, ... loaded) can crash
+    in the CHILD before exec - exit code -11 and no output at all, even for a plain shell - while
+    the same command works in a terminal. Environment variables cannot help because they only
+    take effect after exec. os.posix_spawn starts the new program directly and never runs code in
+    a forked copy of this process.
+    """
+    import select
+    import signal
+    import time
+
+    started = time.time()
+
+    if not hasattr(os, "posix_spawn"):  # e.g. Windows, which has no fork problem
+        proc = subprocess.Popen(
+            argv, cwd=cwd, env=env, stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT, text=True, bufsize=1,
+        )
+        timed_out = False
+        try:
+            for line in proc.stdout:
+                if on_line:
+                    on_line(line.rstrip("\n"))
+                if time.time() - started > timeout:
+                    proc.kill()
+                    timed_out = True
+                    break
+        finally:
+            proc.stdout.close()
+            proc.wait()
+        return (124 if timed_out else proc.returncode), timed_out
+
+    read_fd, write_fd = os.pipe()
+    actions = [
+        (os.POSIX_SPAWN_OPEN, 0, os.devnull, os.O_RDONLY, 0),  # never inherit Streamlit's stdin
+        (os.POSIX_SPAWN_DUP2, write_fd, 1),
+        (os.POSIX_SPAWN_DUP2, write_fd, 2),
+        (os.POSIX_SPAWN_CLOSE, read_fd),
+        (os.POSIX_SPAWN_CLOSE, write_fd),
+    ]
+    # posix_spawn has no working-directory option, so let sh do `cd` and then exec the program
+    # (the program replaces sh, so it runs exactly as if started from a terminal in `cwd`)
+    shell_argv = ["/bin/sh", "-c", 'cd "$1" && shift && exec "$@"', "sh", str(cwd), *map(str, argv)]
+
+    try:
+        pid = os.posix_spawn("/bin/sh", shell_argv, env, file_actions=actions)
+    except BaseException:
+        os.close(read_fd)
+        os.close(write_fd)
+        raise
+    os.close(write_fd)
+
+    timed_out = False
+    buf = b""
+    try:
+        while True:
+            left = timeout - (time.time() - started)
+            if left <= 0:
+                os.kill(pid, signal.SIGKILL)
+                timed_out = True
+                break
+
+            ready, _, _ = select.select([read_fd], [], [], min(left, 0.5))
+            if not ready:
+                continue
+
+            chunk = os.read(read_fd, 65536)
+            if not chunk:  # EOF: the process (and anything it started) closed its output
+                break
+
+            buf += chunk
+            *done, buf = buf.split(b"\n")
+            for raw in done:
+                if on_line:
+                    on_line(raw.decode("utf-8", "replace").rstrip("\r"))
+
+        if buf and on_line:
+            on_line(buf.decode("utf-8", "replace").rstrip("\r"))
+    except BaseException:
+        # e.g. Streamlit interrupting the script because the user touched the page
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        raise
+    finally:
+        os.close(read_fd)
+        _, status = os.waitpid(pid, 0)
+
+    rc = os.waitstatus_to_exitcode(status)
+    return (124 if timed_out else rc), timed_out
+
+
 def run_momp_benchmark(
     mode: str,
     model_key: Optional[str] = None,
@@ -1638,26 +1776,19 @@ def run_momp_benchmark(
         }
 
     # ==================================================================
-    env = dict(os.environ)
-    env["PYTHONFAULTHANDLER"] = "1"
-    env["PYTHONUNBUFFERED"] = "1"
-    env["PYTHONUNBUFFERED"] = "1"
-    env["MPLBACKEND"] = "Agg"
+    # Same environment as the working version of this page. The extra band-aids
+    # (thread limits, KMP_DUPLICATE_LIB_OK, HDF5 locking, forced MPLBACKEND, fork-safety
+    # flags, faulthandler) are NOT set: the child gets exactly what the terminal run gets.
+    env = os.environ.copy()
+
+    env["PYTHONPATH"] = os.pathsep.join(
+        [str(PROJECT_ROOT.resolve()), env.get("PYTHONPATH", "")]
+    )
+
     env["MPLCONFIGDIR"] = str((PROJECT_ROOT / ".mplcache").resolve())
     Path(env["MPLCONFIGDIR"]).mkdir(parents=True, exist_ok=True)
 
-    # Single-threaded execution (safe, prevents OpenMP conflicts)
-    env["OPENBLAS_NUM_THREADS"] = "1"
-    env["MKL_NUM_THREADS"] = "1"
-    env["OMP_NUM_THREADS"] = "1"
-    env["NUMEXPR_NUM_THREADS"] = "1"
-    env["VECLIB_MAXIMUM_THREADS"] = "1"
-
-    # macOS fork safety
-    env["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
-
-    # HDF5 file locking (prevents deadlocks)
-    env["HDF5_USE_FILE_LOCKING"] = "FALSE"
+    env["PYTHONUNBUFFERED"] = "1"  # only so the live log updates while the run is going
 
     # ==================================================================
     # Pass run_config as environment variables
@@ -1702,34 +1833,20 @@ def run_momp_benchmark(
         last_draw = 0.0
         timed_out = False
 
-        proc = subprocess.Popen(
-            cmd,
-            cwd=str(rmp.parent.resolve()),
-            env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,
-        )
+        def _on_line(line: str) -> None:
+            nonlocal last_draw
+            lines.append(line)
+            now = time.time()
+            if now - last_draw > 0.5:
+                live.code(
+                    f"[{int(now - started)}s elapsed]  {' '.join(cmd[-4:])}\n"
+                    + "\n".join(lines[-20:])
+                )
+                last_draw = now
 
-        try:
-            for line in proc.stdout:
-                lines.append(line.rstrip("\n"))
-                now = time.time()
-                if now - last_draw > 0.5:
-                    live.code(
-                        f"[{int(now - started)}s elapsed]  {' '.join(cmd[-4:])}\n"
-                        + "\n".join(lines[-20:])
-                    )
-                    last_draw = now
-                if now - started > 1800:
-                    proc.kill()
-                    timed_out = True
-                    break
-        finally:
-            if proc.stdout:
-                proc.stdout.close()
-            proc.wait()
+        returncode, timed_out = _spawn_no_fork(
+            cmd, env, str(PROJECT_ROOT.resolve()), 1800, _on_line
+        )
 
         text = "\n".join(lines)
         if timed_out:
@@ -1737,11 +1854,11 @@ def run_momp_benchmark(
 
         return {
             "mode": mode,
-            "returncode": 124 if timed_out else proc.returncode,
+            "returncode": returncode,
             "runtime_dir": str(ROMP_DEMO_OUT_DIR),
             "stdout": text,
             "stderr": "",
-            "ok": (not timed_out) and proc.returncode == 0,
+            "ok": (not timed_out) and returncode == 0,
             "command": " ".join(cmd),
         }
     except Exception as e:
@@ -1779,6 +1896,38 @@ def section_header(text: str, accent: str = "sky") -> None:
         f"</div>",
         unsafe_allow_html=True,
     )
+
+
+# Countries offered under "Benchmark coverage" as (flag, name), in display order.
+BENCHMARK_COVERAGE_COUNTRIES = (
+    ("🇸🇳", "Senegal"),
+    ("🇷🇼", "Rwanda"),
+    ("🇨🇴", "Colombia"),
+    ("🇵🇪", "Peru"),
+    ("🇧🇴", "Bolivia"),
+    ("🇵🇭", "Philippines"),
+    ("🇮🇩", "Indonesia"),
+    ("🇵🇰", "Pakistan"),
+    ("🇳🇬", "Nigeria"),
+    ("🇪🇹", "Ethiopia"),
+    ("🇰🇪", "Kenya"),
+    ("🇸🇱", "Sierra Leone"),
+    ("🇨🇱", "Chile"),
+    ("🇧🇩", "Bangladesh"),
+)
+DEFAULT_BENCHMARK_COVERAGE = "Ethiopia"
+
+# Countries that have data and a mask configured. config.py currently sets up Ethiopia only
+# (region, JJAS mask, CHIRPS grid). Add a country here once its data is in place. Run
+# Benchmark is disabled for the others; otherwise the run would silently use Ethiopia's data
+# under another country's name.
+CONFIGURED_COVERAGE = {"Ethiopia"}
+
+
+def _coverage_label(name: str) -> str:
+    flags = {n: f for f, n in BENCHMARK_COVERAGE_COUNTRIES}
+    label = f"{flags[name]} {name}" if name in flags else name
+    return f"{label} (Default)" if name == DEFAULT_BENCHMARK_COVERAGE else label
 
 
 def render_kpi_row(models: int, presets: int, status: str, runtime: str) -> None:
@@ -2449,12 +2598,23 @@ def page() -> None:
     bi1, bi2, bi3 = st.columns(3)
     ground_truth = bi1.selectbox("Ground truth", ["CHIRPS", "ENACTS"])
     rp = get_region_presets()
+    preset_names = [p["name"] for p in rp] if rp else []
+    coverage_options = [name for _, name in BENCHMARK_COVERAGE_COUNTRIES]
+    coverage_options += [n for n in preset_names if n not in coverage_options]
+
     benchmark_coverage = bi2.selectbox(
         "Benchmark coverage",
-        ["Ethiopia (Default)"] + [p["name"] for p in rp]
-        if rp
-        else ["Ethiopia (Default)"],
+        coverage_options,
+        index=coverage_options.index(DEFAULT_BENCHMARK_COVERAGE),
+        format_func=_coverage_label,
     )
+
+    coverage_ready = benchmark_coverage in CONFIGURED_COVERAGE or benchmark_coverage in preset_names
+    if not coverage_ready:
+        bi2.caption(
+            f"⚠️ No data or mask is configured for {benchmark_coverage} yet, "
+            "so Run Benchmark is disabled."
+        )
     forecast_window = bi3.selectbox(
         "Forecast window",
         ["1-15 days", "16-30 days"],
@@ -2676,6 +2836,7 @@ def page() -> None:
         key="btn_run",
         type="primary",
         width="stretch",
+        disabled=not coverage_ready,
     )
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -2728,6 +2889,9 @@ def page() -> None:
                 "Open the log below for details."
             )
         for _i, _r in enumerate(_runs):
+            if _r.get("ok"):
+                continue  # successful runs print nothing; only failures show a log
+
             _name = _r.get("model") or _r.get("mode", "run")
             _icon = "✅" if _r.get("ok") else "❌"
             with st.expander(f"{_icon} {_name} - log", expanded=not _r.get("ok")):
