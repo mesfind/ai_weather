@@ -283,19 +283,6 @@ def render():
     saved = store.list_saved()
     gpu = gpu_name()
 
-    # ── Sidebar: developer options ───────────────────────────────────────
-    with st.sidebar:
-        st.markdown("### Developer options")
-        synthetic = st.toggle("Use synthetic output", value=False, key="forecast_synthetic",
-                              help="Generate fake fields in the output format instead of running a model. "
-                                   "For building the visualizations before the model runners exist.")
-        st.caption(f"Output folder: `{store.OUTPUT_DIR}`")
-        if store.BUCKET:
-            st.caption(f"Shared bucket: `{store.BUCKET}`")
-        if not saved.empty:
-            st.markdown("**Saved runs**")
-            st.dataframe(saved.drop(columns="path"), hide_index=True, width="stretch")
-
     # ── Header & stats ───────────────────────────────────────────────────
     st.title("Running Your First AI Weather Forecast")
     st.caption("Pick up to four models, a start date and a region, run the forecasts on your "
@@ -309,6 +296,18 @@ def render():
     col3.metric("Saved Runs", len(saved))
     col4.metric("Free Disk", f"{free_gb:,.0f} GB")
     st.caption(f"GPU: {gpu}" if gpu else "No GPU detected")
+
+    # ── Developer options (main dashboard) ───────────────────────────────
+    with st.expander("Developer options", expanded=False, key="forecast_dev_options"):
+        synthetic = st.toggle("Use synthetic output", value=False, key="forecast_synthetic",
+                              help="Generate fake fields in the output format instead of running a model. "
+                                   "For building the visualizations before the model runners exist.")
+        st.caption(f"Output folder: `{store.OUTPUT_DIR}`")
+        if store.BUCKET:
+            st.caption(f"Shared bucket: `{store.BUCKET}`")
+        if not saved.empty:
+            st.markdown("**Saved runs**")
+            st.dataframe(saved.drop(columns="path"), hide_index=True, width="stretch")
 
     # ── Step 2a: model(s) ────────────────────────────────────────────────
     st.subheader("Step 2 · Model(s)")

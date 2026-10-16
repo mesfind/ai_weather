@@ -12,7 +12,10 @@
 # /root/.cache, which run.sh keeps on the host.
 FROM nvcr.io/nvidia/pytorch:25.10-py3
 
-# The locks are exact; NGC's pip constraint file would fight them.
+# Use bash for every RUN so `source` works (the default /bin/sh does not have it)
+SHELL ["/bin/bash", "-c"]
+
+# The locks are exact; NGC's pip constraint file would fight themdd.
 ENV PIP_CONSTRAINT= \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
@@ -42,20 +45,6 @@ RUN python -m venv --system-site-packages /opt/envs/fgn \
  && /opt/envs/fgn/bin/pip install --no-deps -r /tmp/locks/fgn.txt \
  && /opt/envs/fgn/bin/python -c "from weathernext.weathernext2 import fgn; import xarray_jax"
 
-# Install uv for fast virtual environment management
-RUN pip install uv
-
-# Set workdir and copy app code early so we can create .venv inside /app
-WORKDIR /app
-COPY . /app
-
-# Create .venv using uv, activate it, install requirements, and pre-download cartopy maps
-RUN rm -rf .venv \
- && uv venv .venv \
- && . .venv/bin/activate \
- && uv pip install -r docker/requirements-ui.txt \
- && python -c "import cartopy.feature as cf, cartopy.io.shapereader as sr; [sr.natural_earth(resolution=r, category=c, name=n) for r in ('10m', '50m', '110m') for c, n in [('physical', 'coastline'), ('physical', 'land'), ('physical', 'ocean'), ('cultural', 'admin_0_boundary_lines_land'), ('cultural', 'admin_0_countries')]]"
-
 # Earth2Studio 0.16's GraphCast wraps Datasets in xr.Dataset(...), which newer
 # xarray rejects; copy them instead (the same fix the summer environment carried).
 RUN cd /opt/envs/graphcast/lib/python3.12/site-packages/earth2studio/models/px \
@@ -64,10 +53,27 @@ RUN cd /opt/envs/graphcast/lib/python3.12/site-packages/earth2studio/models/px \
  && grep -q "forcings = forcings.copy()" graphcast_operational.py \
  && grep -q "forcings = forcings.copy()" graphcast_small.py
 
-# ENV is the Docker-native way to "activate" a venv for the CMD and docker exec sessions
+# Install uv for fast virtual environment management
+RUN pip install uv
+
+# Set workdir and copy app code so .venv is created inside /app
+WORKDIR /app
+COPY . /app
+
+# Create the UI venv
+RUN rm -rf .venv && uv venv .venv
+
+# "Activate" the venv for every later build step, the CMD and docker exec sessions.
+# The model venvs above are called by absolute path, so they are not affected.
 ENV VIRTUAL_ENV=/app/.venv \
     PATH=/app/.venv/bin:$PATH \
     DEMO_ENV_ROOT=/opt/envs
+d
+# Install UI requirements and pre-download cartopy maps.
+# `source` has the same effect as the ENV above; it is kept to make the intent explicit.
+RUN source .venv/bin/activate \
+ && uv pip install -r docker/requirements.txt \
+ && python -c "import cartopy.feature as cf, cartopy.io.shapereader as sr; [sr.natural_earth(resolution=r, category=c, name=n) for r in ('10m', '50m', '110m') for c, n in [('physical', 'coastline'), ('physical', 'land'), ('physical', 'ocean'), ('cultural', 'admin_0_boundary_lines_land'), ('cultural', 'admin_0_countries')]]"
 
 EXPOSE 8501
 CMD ["streamlit", "run", "ui/app.py", "--server.headless", "true", "--server.address", "0.0.0.0", "--server.port", "8501", "--browser.gatherUsageStats", "false"]
