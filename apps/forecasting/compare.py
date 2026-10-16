@@ -1,9 +1,6 @@
-"""Compare up to 4 models for the same start date, lead time and region.
-
-Saved runs load straight away; models without one run on the Spark one after
-another (never two at once, so they don't compete for memory), and each joins
-the chart as soon as it finishes.
-"""
+"""Time-series comparison of the loaded models: one chart of area-mean daily rainfall
+(on the CHIRPS grid, with CHIRPS) or daily maximum 2 m temperature (with ERA5 on
+request), plus each model's onset share for the Onset use case."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,35 +11,11 @@ import plotly.graph_objects as go
 import streamlit as st
 import xarray as xr
 
-from . import catalog, jobs, obs, onset, store
+from . import catalog, obs, onset
 from .regions import Box
 from .results import crop
 
-MAX_MODELS = 4
 COLORS = ["#2563eb", "#dc2626", "#059669", "#d97706"]
-
-
-def _plan(keys, init, lead_days, box, region_name, use_case, synthetic):
-    """Per model: ('ready', path) | ('run', RunRequest) | ('skip', reason)."""
-    out = {}
-    for k in keys:
-        m = catalog.BY_KEY[k]
-        members = m.default_members if m.kind == "ensemble" else 1
-        errs = [msg for lvl, msg in catalog.check(m, init, lead_days, members, box, region_name, use_case)
-                if lvl == "error"]
-        need = catalog.USE_CASE_NEEDS.get(use_case)
-        path = store.find_any(k, init, lead_days * 24, synthetic)
-        if need in m.missing:
-            out[k] = ("skip", f"{m.name} does not forecast {catalog.VAR_LABELS[need]}")
-        elif path:
-            out[k] = ("ready", str(path))
-        elif errs:
-            out[k] = ("skip", errs[0].split(". ")[0])
-        elif m.live or synthetic:
-            out[k] = ("run", store.RunRequest(k, init, lead_days * 24, members, synthetic))
-        else:
-            out[k] = ("skip", f"no saved run, and {m.name} can't run live on this Spark")
-    return out
 
 
 @st.cache_data(max_entries=32, show_spinner=False)
@@ -89,95 +62,7 @@ def _obs_series(box_t: tuple, init: pd.Timestamp, lead_days: int, var: str) -> x
     return onset.area_mean(da)
 
 
-def _status_rows(plan, state):
-    rows = []
-    for k, (what, info) in plan.items():
-        name = catalog.BY_KEY[k].name
-        if k in state["paths"]:
-            rows.append((name, "loaded"))
-        elif what == "skip":
-            rows.append((name, f"not included: {info}"))
-        elif state.get("running") == k:
-            s = jobs.status(state["job"])
-            rows.append((name, f"running on the Spark: {s.get('message', '')} "
-                               f"({100 * s.get('progress', 0):.0f}%, {s.get('elapsed_s', 0):.0f} s)"))
-        elif k in state["failed"]:
-            rows.append((name, f"run failed: {state['failed'][k]}"))
-        else:
-            rows.append((name, "waiting its turn"))
-    return pd.DataFrame(rows, columns=["Model", "Status"])
-
-
-def section(init, lead_days, box: Box, region_name: str, use_case: str, synthetic: bool,
-            defn: onset.Definition | None, main_job_running: bool) -> None:
-    ss = st.session_state
-    var = "t2m" if use_case == "Heat" else "tp"
-    keys = st.multiselect(f"Models to compare (up to {MAX_MODELS})", [m.key for m in catalog.MODELS],
-                          default=[], max_selections=MAX_MODELS, key="cmp_keys",
-                          format_func=lambda k: catalog.BY_KEY[k].name)
-    if not keys:
-        st.caption("Pick 2–4 models. Each uses this page's start date, lead time and region; "
-                   "ensembles use their default number of members.")
-        return
-    plan = _plan(keys, init, lead_days, box, region_name, use_case, synthetic)
-    sig = (tuple(keys), str(init), lead_days, synthetic, use_case,
-           (box.lat_min, box.lat_max, box.lon_min, box.lon_max))
-    state = ss.get("cmp")
-    if state is None or state["sig"] != sig:
-        state = ss["cmp"] = dict(sig=sig, paths={}, queue=[], running=None, job=None, failed={},
-                                 started=False)
-    to_run = [k for k, (w, _) in plan.items() if w == "run"]
-    label = ("Load and compare" if not to_run else
-             f"Load saved runs and run {len(to_run)} model{'s' if len(to_run) > 1 else ''} one after another")
-    if not state["started"]:
-        if st.button(label, type="primary", key="cmp_go"):
-            state["started"] = True
-            state["paths"] = {k: info for k, (w, info) in plan.items() if w == "ready"}
-            state["queue"] = list(to_run)
-            st.rerun()
-        if to_run:
-            est = sum(catalog.load_timings().get(k, {}).get("run_s", 0) +
-                      catalog.load_timings().get(k, {}).get("load_s", 0) for k in to_run)
-            st.caption(f"ⓘ {', '.join(catalog.BY_KEY[k].name for k in to_run)} "
-                       f"{'have' if len(to_run) > 1 else 'has'} no saved run for these settings "
-                       f"(about {est / 60:.0f} min on the Spark in total).")
-        st.dataframe(_status_rows(plan, state).assign(
-            Status=lambda d: d.Status.where(d.Status.str.startswith("not included"),
-                                            ["saved run" if plan[k][0] == "ready" else "will run"
-                                             for k in plan])), hide_index=True, width="stretch")
-        return
-
-    busy = bool(state["running"] or state["queue"])
-    # only this block refreshes while runs are going, not the whole page
-    st.fragment(_live, run_every=3 if busy else None)(
-        plan, state, keys, init, lead_days, box, region_name, use_case, var, defn, main_job_running)
-
-
-def _live(plan, state, keys, init, lead_days, box, region_name, use_case, var, defn, main_job_running):
-    was_busy = bool(state["running"] or state["queue"])
-    # advance the queue: one run at a time, and not while the main run is going
-    if state["running"]:
-        s = jobs.status(state["job"])
-        if s["state"] == "done":
-            state["paths"][state["running"]] = s["output"]
-            state["running"] = state["job"] = None
-        elif s["state"] not in ("queued", "running", "unknown"):
-            state["failed"][state["running"]] = s.get("message", "see the job log")
-            state["running"] = state["job"] = None
-    if not state["running"] and state["queue"] and not main_job_running:
-        k = state["queue"].pop(0)
-        state["running"], state["job"] = k, jobs.launch(plan[k][1])
-
-    st.dataframe(_status_rows(plan, state), hide_index=True, width="stretch")
-    if main_job_running and state["queue"] and not state["running"]:
-        st.caption("Waiting for the forecast above to finish before starting the next run.")
-    if state["paths"]:
-        chart(state["paths"], keys, init, lead_days, box, region_name, use_case, var, defn)
-    if was_busy and not (state["running"] or state["queue"]):
-        st.rerun()  # all done: one full rerun stops the timer
-
-
-def chart(paths, keys, init, lead_days, box, region_name, use_case, var, defn):
+def chart(paths, keys, init, lead_days, box, region_name, var):
     box_t = (box.lat_min, box.lat_max, box.lon_min, box.lon_max)
     fig = go.Figure()
     unit = "mm/day" if var == "tp" else "°C"
@@ -208,42 +93,43 @@ def chart(paths, keys, init, lead_days, box, region_name, use_case, var, defn):
     what = {"tp": "area-mean daily rainfall (land)", "t2m": "area-mean daily maximum 2 m temperature"}[var]
     fig.update_layout(title=f"{region_name}: {what}", yaxis_title=unit, height=420,
                       margin=dict(l=10, r=10, t=50, b=10), legend=dict(orientation="h", y=-0.15))
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, width="stretch", key="compare_chart")
     if var == "tp":
         st.caption("Each model's rainfall is put on the CHIRPS grid and averaged over land, so it "
                    "compares like for like with the observations. Shaded: range across members.")
     else:
         st.caption("Daily maximum of the 6-hourly values (models and ERA5 alike). Shaded: range "
                    "across members.")
-    if use_case == "Onset" and defn is not None:
-        onset_table(paths, keys, init, lead_days, box, region_name, defn)
 
 
-def onset_table(paths, keys, init, lead_days, box, region_name, defn):
-    from .onset_view import _day_field, compute
-    box_t = (box.lat_min, box.lat_max, box.lon_min, box.lon_max)
-    search_from = onset.search_start(defn, region_name, init)
+
+def onset_table(paths, keys, init, lead_days, box, region_name, defn, search_from):
+    from .onset_view import _day_field, result
     rows, obs_row = [], None
     for k in keys:
         if k not in paths:
             continue
-        p = Path(paths[k])
-        r = compute(str(p), p.stat().st_mtime, box_t, init, lead_days, defn, search_from)
+        try:
+            r = result(paths[k], box, init, lead_days, defn, search_from)
+        except (OSError, FileNotFoundError):
+            continue
         land = r["land"]
         n = max(1, int(land.sum()))
         f = r["f_on"]
-        conf = (f.status == onset.CONFIRMED)
-        poss = (f.status == onset.POSSIBLE)
         fday, _ = _day_field(f, r["init_day"], land)
         during = fday >= 1
         share = lambda m: 100 * float((m & land).sum()) / n / (f.sizes.get("ensemble", 1))
-        rows.append((catalog.BY_KEY[k].name, f"{share(during & conf):.0f}%", f"{share(during & poss):.0f}%"))
+        rows.append((catalog.BY_KEY[k].name, f"{share(during & (f.status == onset.CONFIRMED)):.0f}%",
+                     f"{share(during & (f.status == onset.POSSIBLE)):.0f}%"))
         if obs_row is None and r["o_on"] is not None:
             oday, _ = _day_field(r["o_on"], r["init_day"], land)
             n_days = (r["fc_end"] - r["init_day"]).days + 1
-            obs_row = ("Observed (CHIRPS)", f"{100 * float(((oday >= 1) & (oday <= n_days) & land).sum()) / n:.0f}%", "")
+            obs_row = ("Observed (CHIRPS)",
+                       f"{100 * float(((oday >= 1) & (oday <= n_days) & land).sum()) / n:.0f}%", "")
     if obs_row:
         rows.append(obs_row)
+    if not rows:
+        return
     st.markdown(f"**Onset during the forecast** ({defn.name}, searching from {search_from:%-d %b %Y})")
     st.dataframe(pd.DataFrame(rows, columns=["", "Onset (confirmed)", "Possible onset"]),
                  hide_index=True, width="stretch")

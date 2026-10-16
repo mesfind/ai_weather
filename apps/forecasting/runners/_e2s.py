@@ -30,6 +30,34 @@ def peak_gpu_gb() -> float | None:
     return round(max(peaks) / 1e9, 1) if any(peaks) else None
 
 
+ARCO_ATTRS_URL = ("https://storage.googleapis.com/gcp-public-data-arco-era5/ar/"
+                  "full_37-1h-0p25deg-chunk-1.zarr-v3/.zattrs")
+
+
+def arco():
+    """Earth2Studio's ARCO ERA5 source, told the end date from Google's live metadata.
+
+    Earth2Studio reads ERA5's end date from the store's metadata, but through its
+    download cache, which keeps files for a year; a stale copy made it refuse dates
+    after 30 Apr 2026 although ERA5 ran to 30 Jun. A subclass attribute takes
+    precedence over the value Earth2Studio writes onto ARCO itself.
+    """
+    import json
+    import urllib.request
+    from datetime import datetime
+    from earth2studio.data import ARCO
+    try:
+        with urllib.request.urlopen(ARCO_ATTRS_URL, timeout=10) as r:
+            stop = datetime.strptime(json.load(r)["valid_time_stop"], "%Y-%m-%d")
+    except Exception:
+        return ARCO()
+
+    class ARCOLive(ARCO):
+        ARCO_TIME_STOP = stop
+
+    return ARCOLive()
+
+
 def run_e2s(model_cls, data, init: pd.Timestamp, lead_hours: int, members: int, report,
             *, ensemble: bool = False, step_hours: int = 6, seed: int = 0,
             precip_fix=None, device: str = "cuda") -> xr.Dataset:

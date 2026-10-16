@@ -80,8 +80,8 @@ PAGE_MODULE_MAPPING = {
 
 PRIMARY_MENU_CONFIG = {
     "Home": {"target": "Home", "label": "Home"},
-    "AI Forecast": {"target": "AI Forecast", "label": "AI Forecast"},
-    "AI Benchmarking": {"target": "SM_Benchmarking", "label": "Benchmarking"},
+    "AI Forecast": {"target": "AI Forecast", "label": "Demo3"},
+    "AI Benchmarking": {"target": "SM_Benchmarking", "label": "Demo4"},
 }
 
 COMING_SOON = {
