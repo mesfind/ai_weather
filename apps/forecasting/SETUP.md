@@ -43,13 +43,13 @@ systemctl --user daemon-reload
 
 ```bash
 git clone https://github.com/mesfind/ai_weather.git
-cd ai_weather/demos/demo3
+cd ai_weather
 ```
 
 ## 3. Build the image (once, ~1 hour)
 
 ```bash
-docker build -t demo3 -f docker/Dockerfile .
+docker build -t ai_weather -f docker/Dockerfile .
 ```
 
 Most of the hour is compiling two libraries (earth2grid, NATTEN). Later rebuilds reuse
@@ -60,9 +60,9 @@ and every model's Python environment; model weights are not inside it.
 
 ```bash
 # on the Spark that has it
-docker save demo3 | gzip > demo3-image.tar.gz
+docker save ai_weather | gzip > ai_weather-image.tar.gz
 # copy the file over (scp/rsync over Tailscale), then on the new Spark
-docker load < demo3-image.tar.gz
+docker load < ai_weather-image.tar.gz
 ```
 
 ## 4. Start it
@@ -71,12 +71,12 @@ docker load < demo3-image.tar.gz
 bash docker/run.sh
 ```
 
-This starts a container named `demo3` that restarts by itself after reboots, and keeps:
+This starts a container named `ai_weather` that restarts by itself after reboots, and keeps:
 
 | What | Where on the Spark | Size |
 |---|---|---|
-| Saved forecasts, event movies, job logs | `ai_weather/demos/demo3/outputs/` | grows with use |
-| Model weights (downloaded on each model's first run) | `~/.cache/demo3/` | up to ~75 GB |
+| Saved forecasts, event movies, job logs | `~/data/outputs/` | grows with use |
+| Model weights (downloaded on each model's first run) | `~/.cache/ai_weather/` | up to ~75 GB |
 
 Options (put them before `bash docker/run.sh`):
 
@@ -89,7 +89,7 @@ Options (put them before `bash docker/run.sh`):
 has them (replace `<user>@<spark>` and the source paths with the right ones):
 
 ```bash
-rsync -a --info=progress2 <user>@<spark>:<its weights cache>/ ~/.cache/demo3/
+rsync -a --info=progress2 <user>@<spark>:<its weights cache>/ ~/.cache/ai_weather/
 rsync -a --info=progress2 <user>@<spark>:ai_weather/demos/demo3/outputs/ ai_weather/demos/demo3/outputs/
 ```
 
@@ -123,10 +123,10 @@ loaded in class.
 ## Everyday commands
 
 ```bash
-docker logs -f demo3                 # page log
-docker restart demo3                 # restart the page
+docker logs -f ai_weather                 # page log
+docker restart ai_weather                 # restart the page
 git pull                             # update the code (live with DEV=1; otherwise rebuild)
-docker build -t demo3 -f docker/Dockerfile . && docker rm -f demo3 && bash docker/run.sh
+docker build -t ai_weather -f docker/Dockerfile . && docker rm -f demo3 && bash docker/run.sh
                                      # rebuild and restart with the new image
 ```
 

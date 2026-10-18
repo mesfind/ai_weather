@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from demo3 import store  # noqa: E402
+from apps.forecasting  import store  # noqa: E402
 
 
 def main() -> int:

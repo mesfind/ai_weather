@@ -1,6 +1,6 @@
-"""Run one model and write its output in the shared format (see demo3/contract.py).
+"""Run one model and write its output in the shared format (see apps/forecasting/contract.py).
 
-Invoked by the app (demo3/jobs.py) with the interpreter of the model's own
+Invoked by the app (forecasting/jobs.py) with the interpreter of the model's own
 environment:
 
     python runners/run_model.py --model graphcast --init 2025-07-01T00 \
@@ -34,12 +34,12 @@ import xarray as xr
 # The largest JAX model needs ~18 GB; 35% (~42 GB) leaves room for everything else.
 os.environ.setdefault("XLA_PYTHON_CLIENT_MEM_FRACTION", "0.35")
 
-APP_ROOT = Path(__file__).resolve().parent.parent
+APP_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(APP_ROOT))
 sys.path.insert(0, str(APP_ROOT / "runners"))
 
-from demo3 import contract  # noqa: E402
-from demo3.catalog import BY_KEY  # noqa: E402
+from apps.forecasting import contract  # noqa: E402
+from apps.forecasting.catalog import BY_KEY  # noqa: E402
 
 
 class Reporter:

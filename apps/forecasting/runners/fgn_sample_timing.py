@@ -28,7 +28,7 @@ import xarray as xr
 
 APP_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(APP_ROOT))
-from demo3 import contract  # noqa: E402
+from apps.forecasting import contract  # noqa: E402
 
 DATA_FILE = "hres_2024-10-07_0p25_steps30.nc"
 CHECKPOINTS = {  # config name -> local weights file (checkpoint 1 of 4)
