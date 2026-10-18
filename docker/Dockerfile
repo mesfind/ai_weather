@@ -20,6 +20,11 @@ ENV PIP_CONSTRAINT= \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
+# Fail fast: check that the UI requirements resolve before the long model builds
+RUN pip install uv
+COPY docker/requirements.txt /tmp/requirements.txt
+RUN uv pip compile /tmp/requirements.txt --python-version 3.12 -o /dev/null
+
 COPY docker/locks /tmp/locks
 
 # Atlas CRPS, Aurora 1.5, AIFS v2 single (Earth2Studio 0.18). No build isolation:
@@ -46,7 +51,6 @@ RUN python -m venv --system-site-packages /opt/envs/fgn \
  && /opt/envs/fgn/bin/python -c "from weathernext.weathernext2 import fgn; import xarray_jax"
 
 # The Streamlit page and Panchali's event movie, kept apart from the model stacks
-COPY docker/requirements.txt /tmp/requirements.txt
 RUN python -m venv /opt/envs/ui \
  && /opt/envs/ui/bin/pip install -r /tmp/requirements.txt \
  && /opt/envs/ui/bin/python -c "\
@@ -64,9 +68,6 @@ RUN cd /opt/envs/graphcast/lib/python3.12/site-packages/earth2studio/models/px \
  && grep -q "forcings = forcings.copy()" graphcast_operational.py \
  && grep -q "forcings = forcings.copy()" graphcast_small.py
 
-# Install uv for fast virtual environment management (system-wide, before PATH changes)
-RUN pip install uv
-
 WORKDIR /app
 COPY . /app
 
@@ -74,14 +75,16 @@ COPY . /app
 RUN rm -rf .venv && uv venv .venv
 
 # "Activate" .venv for every later build step, the CMD and docker exec sessions.
-# /opt/envs/ui/bin stays on PATH behind it; the model envs are called by absolute path.
+# PYTHONPATH=/app lets `import config` (and other top-level modules in /app) resolve
+# when Streamlit runs ui/app.py. /opt/envs/ui/bin stays on PATH behind .venv.
 ENV VIRTUAL_ENV=/app/.venv \
     PATH=/app/.venv/bin:/opt/envs/ui/bin:$PATH \
-    DEMO3_ENV_ROOT=/opt/envs
+    PYTHONPATH=/app:/app/ai_weather \
+    AI_WEATHER_ENV_ROOT=/opt/envs
 
 # Same effect as the ENV above; kept so the activation is explicit
 RUN source .venv/bin/activate \
- && uv pip install -r docker/requirements-ui.txt
+ && uv pip install -r docker/requirements.txt
 
 EXPOSE 8501
 CMD ["streamlit", "run", "ui/app.py", "--server.headless", "true", "--server.port", "8501", \
