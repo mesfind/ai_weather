@@ -299,7 +299,7 @@ def render():
 
     # ── Developer options (main dashboard) ───────────────────────────────
     with st.expander("Developer options", expanded=False, key="forecast_dev_options"):
-        synthetic = st.toggle("Use synthetic output", value=False, key="forecast_synthetic",
+        synthetic = st.toggle("Use synthetic output", value=True, key="forecast_synthetic",
                               help="Generate fake fields in the output format instead of running a model. "
                                    "For building the visualizations before the model runners exist.")
         st.caption(f"Output folder: `{store.OUTPUT_DIR}`")

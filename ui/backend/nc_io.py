@@ -1,5 +1,3 @@
-# Authors: The africlimate AI team
-# SPDX-License-Identifier: MIT
 """Serialized NetCDF reads — the bundled libhdf5 is not thread-safe.
 
 The dashboard opens NetCDF files from several worker threads at once: the
@@ -36,6 +34,14 @@ import xarray as xr
 _HDF5_LOCK = threading.RLock()
 
 
+def _open(path: Any, **kwargs: Any) -> xr.Dataset:
+    """xr.open_dataset for local files; streams from the bucket for gs:// paths."""
+    if str(path).startswith(("gs://", "gcs://")):
+        import config                      # its open_dataset reads gs:// via gcsfs
+        return config.open_dataset(path, **kwargs)
+    return xr.open_dataset(path, **kwargs)
+
+
 def read_dataset(path: Any, **open_kwargs: Any) -> xr.Dataset:
     """Read ``path`` fully into memory and close the backend, under the HDF5 lock.
 
@@ -45,5 +51,5 @@ def read_dataset(path: Any, **open_kwargs: Any) -> xr.Dataset:
     the lock. ``open_kwargs`` are forwarded verbatim (e.g. ``engine=``).
     """
     with _HDF5_LOCK:
-        with xr.open_dataset(path, **open_kwargs) as ds:
+        with _open(path, **open_kwargs) as ds:
             return ds.load()

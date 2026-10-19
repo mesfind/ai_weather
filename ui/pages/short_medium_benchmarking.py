@@ -414,12 +414,12 @@ def render_benchmark_figure(path_str: str) -> None:
 # ======================================================================
 # Auto-detection helpers
 # ======================================================================
-def _extract_time_range_from_nc(nc_path: Path):
+def _extract_time_range_from_nc(nc_path):
     try:
-        ds = xr.open_dataset(nc_path, decode_cf=True, decode_times=True)
+        ds = config.open_dataset(nc_path, decode_cf=True, decode_times=True)   # local or gs://
     except Exception:
         try:
-            ds = xr.open_dataset(nc_path, decode_cf=False, decode_times=False)
+            ds = config.open_dataset(nc_path, decode_cf=False, decode_times=False)
         except Exception:
             return None, None
 
@@ -506,31 +506,35 @@ def _scan_filename_date_range(nc_files: List[Path]):
     return None, None
 
 
-def _detect_model_data_date_range(model_dir: Path):
+def _detect_model_data_date_range(model_dir):
     if not model_dir or str(model_dir).strip() in {"", "."}:
         return None, None
 
-    model_dir = Path(model_dir)
-    if not model_dir.exists():
-        return None, None
-
+    model_dir = str(model_dir)                 # keep gs:// intact (Path() would make it gs:/)
+    remote = config.is_uri(model_dir)
     try:
-        nc_files = list(model_dir.rglob("*.nc"))
+        if not config.exists(model_dir):
+            return None, None
+        if remote:
+            nc_files = config.glob(model_dir.rstrip("/") + "/**/*.nc")
+        else:
+            nc_files = [str(p) for p in Path(model_dir).rglob("*.nc")]
     except Exception:
         return None, None
 
     if not nc_files:
         return None, None
 
-    def file_year(p: Path) -> int:
-        m = re.search(r"(?:19|20)\d{2}", p.stem)
+    def file_year(p) -> int:
+        m = re.search(r"(?:19|20)\d{2}", Path(str(p)).stem)
         return int(m.group(0)) if m else 0
 
-    files_sorted = sorted(nc_files, key=lambda p: (file_year(p), p.name))
+    files_sorted = sorted(nc_files, key=lambda p: (file_year(p), Path(str(p)).name))
+    n_each = 2 if remote else 5                # fewer files opened over the network
     sample = (
         files_sorted
-        if len(files_sorted) <= 10
-        else files_sorted[:5] + files_sorted[-5:]
+        if len(files_sorted) <= 2 * n_each
+        else files_sorted[:n_each] + files_sorted[-n_each:]
     )
 
     starts, ends = [], []
@@ -543,7 +547,7 @@ def _detect_model_data_date_range(model_dir: Path):
     if starts and ends:
         return min(starts), max(ends)
 
-    return _scan_filename_date_range(files_sorted)
+    return _scan_filename_date_range([Path(str(p)) for p in files_sorted])
 
 
 @st.cache_data(show_spinner=False, ttl=120)
@@ -563,7 +567,7 @@ def detect_benchmark_models(force_refresh: bool = False) -> List[Dict[str, Any]]
         if not dir_raw:
             continue
 
-        start_date, end_date = _detect_model_data_date_range(Path(dir_raw))
+        start_date, end_date = _detect_model_data_date_range(dir_raw)
         if start_date is None or end_date is None:
             continue
 
@@ -1332,21 +1336,20 @@ def _onset_config_kwargs() -> Dict[str, Any]:
 
 
 def _get_onset_base_kwargs():
-    CHIRPS_DIR = Path(
-        getattr(
-            config,
-            "CHIRPS_DIR",
-            Path(config.PROJECT_ROOT) / "data" / "external" / "CHIRPS_IMERG",
-        )
+    _chirps = getattr(
+        config,
+        "CHIRPS_DIR",
+        Path(config.PROJECT_ROOT) / "data" / "external" / "CHIRPS_IMERG",
     )
+    CHIRPS_DIR = str(_chirps) if config.is_uri(_chirps) else Path(_chirps)   # gs:// stays a string
     base_kwargs = {
         "obs": "CHIRPS",
         "obs_dir": str(CHIRPS_DIR),
         "obs_file_pattern": ("{}.nc",),
-        "obs_var": "RAINFALL",
+        "obs_var": "precip",
         "ref_model_dir": str(CHIRPS_DIR),
         "ref_model_file_pattern": "{}.nc",
-        "ref_model_var": "RAINFALL",
+        "ref_model_var": "precip",
     }
     base_kwargs = {**_onset_config_kwargs(), **base_kwargs}
     if OTS_AVAILABLE:
@@ -1366,26 +1369,23 @@ def _get_onset_base_kwargs():
 @st.cache_data(show_spinner=False)
 def _available_years():
     base_kwargs, CHIRPS_DIR = _get_onset_base_kwargs()
-    if not CHIRPS_DIR.is_dir():
+    if not config.exists(CHIRPS_DIR):
         return list(range(2015, 2024))
     pattern = base_kwargs.get("obs_file_pattern", ("{}.nc",))
     pattern = pattern[0] if isinstance(pattern, (tuple, list)) else pattern
-    years = [
-        y
-        for y in range(1980, 2031)
-        if (CHIRPS_DIR / pattern.format(y)).is_file()
-    ]
+    present = {Path(f).name for f in config.glob(str(CHIRPS_DIR).rstrip("/") + "/*.nc")}   # one listing
+    years = [y for y in range(1980, 2031) if pattern.format(y) in present]
     return years or list(range(2015, 2024))
 
 
 @st.cache_data(show_spinner=False)
 def _snap_to_grid(lat, lon, data_dir_str):
-    data_dir = Path(data_dir_str)
-    sample = next(data_dir.glob("*.nc"), None)
+    files = config.glob(str(data_dir_str).rstrip("/") + "/*.nc")
+    sample = files[0] if files else None
     if not sample:
         return lat, lon
     try:
-        with xr.open_dataset(sample) as ds:
+        with config.open_dataset(sample) as ds:
             lat_key = next(
                 (
                     k

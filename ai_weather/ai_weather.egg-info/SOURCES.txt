@@ -59,4 +59,5 @@ apps/benchmarking/ROMP/momp/utils/practical.py
 apps/benchmarking/ROMP/momp/utils/printing.py
 apps/benchmarking/ROMP/momp/utils/region.py
 apps/benchmarking/ROMP/momp/utils/standard.py
+apps/benchmarking/ROMP/momp/utils/storage.py
 apps/benchmarking/ROMP/momp/utils/visual.py

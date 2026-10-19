@@ -128,13 +128,13 @@ def collect_config_problems():
         if not driver.exists():
             problems.append(f"ROMP driver not found: {driver}")
         for label, path in (("Observation folder", config.obs_dir), ("Region mask", config.nc_mask)):
-            if path and not Path(path).exists():
+            if path and not config.exists(path):          # works for local paths and gs://
                 problems.append(f"{label} not found: {path}")
         for key, meta in config.BENCHMARK_MODEL_CATALOG.items():
-            folder = Path(meta["dir"])
-            if not folder.is_dir():
+            folder = str(meta["dir"])                      # not Path(): it would turn gs:// into gs:/
+            if not config.exists(folder):
                 problems.append(f"{key}: model folder not found: {folder}")
-            elif not any(folder.glob("*.nc")):
+            elif not config.glob(folder.rstrip("/") + "/*.nc"):
                 problems.append(f"{key}: no .nc files in {folder}")
     except Exception as exc:  # noqa: BLE001
         problems.append(f"config check failed: {type(exc).__name__}: {exc}")
@@ -438,4 +438,4 @@ def main():
     _inject_heartbeat()
 
 if __name__ == "__main__":
-    main() 
+    main()

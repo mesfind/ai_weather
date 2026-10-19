@@ -1,6 +1,6 @@
 # Demo 3 and 4 on a DGX Spark: the Streamlit page and every model in one image.
 #
-# Build (from the demos/demo3/ folder, on the Spark; aarch64 only):
+# Build (from the ai_weather folder, on the Spark; aarch64 only):
 #   docker build -t ai_weather -f docker/Dockerfile .
 # Run: see docker/run.sh
 #
@@ -85,6 +85,8 @@ ENV VIRTUAL_ENV=/app/.venv \
 # Same effect as the ENV above; kept so the activation is explicit
 RUN source .venv/bin/activate \
  && uv pip install -r docker/requirements.txt
+
+ 
 
 EXPOSE 8501
 CMD ["streamlit", "run", "ui/app.py", "--server.headless", "true", "--server.port", "8501", \

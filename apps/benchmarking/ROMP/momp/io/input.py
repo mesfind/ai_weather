@@ -5,6 +5,7 @@ import pandas as pd
 import xarray as xr
 from momp.utils.standard import dim_fmt, dim_fmt_model, dim_fmt_model_ensemble
 from momp.utils.region import region_select
+from momp.utils import storage   # local folders or gs:// (Google bucket)
 #from momp.lib.control import restore_args
 from momp.utils.practical import restore_args
 
@@ -21,7 +22,7 @@ from momp.utils.practical import restore_args
 
 def load_thresh_file(*, thresh_file, thresh_var, wet_threshold, region, **kwargs):
     if thresh_file:
-        thresh_ds = xr.open_dataset(thresh_file)
+        thresh_ds = storage.open_dataset(thresh_file)
         #thresh_da = thresh_ds[kwargs["thresh_var"]]
         thresh_da = thresh_ds[thresh_var]
 
@@ -91,13 +92,13 @@ def load_imd_rainfall(year, *, obs_dir, obs_file_pattern, obs_var, obs_unit_cvt,
 
     obs_file = None
     for pattern in file_patterns:
-        test_path = f"{obs_dir}/{pattern}"
-        if os.path.exists(test_path):
+        test_path = storage.join(obs_dir, pattern)
+        if storage.exists(test_path):
             obs_file = test_path
             break
 
     if obs_file is None:
-        available_files = [f for f in os.listdir(obs_dir) if f.endswith('.nc')]
+        available_files = storage.list_nc(obs_dir)
         raise FileNotFoundError(
             f"No observation file found for year {year} in {obs_dir}. "
             f"Tried patterns: {file_patterns}. "
@@ -106,7 +107,7 @@ def load_imd_rainfall(year, *, obs_dir, obs_file_pattern, obs_var, obs_unit_cvt,
 
     #print(f"Loading observation rainfall from: {obs_file}")
 
-    ds = xr.open_dataset(obs_file)
+    ds = storage.open_dataset(obs_file)
 
     # Standardize dimension names
     ds = dim_fmt(ds)
@@ -142,9 +143,9 @@ def get_forecast_deterministic_twice_weekly(year, *, model_dir, model_var, date_
     kwargs = restore_args(get_forecast_deterministic_twice_weekly, kwargs, locals())
 
     fname = file_pattern.format(year)
-    file_path = os.path.join(model_dir, fname)
+    file_path = storage.join(model_dir, fname)
 
-    if not os.path.exists(file_path):
+    if not storage.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
 
     # Filter for twice weekly data from daily for the specified year based on 2024 Monday and Thursday dates (to match with IFS CY48R1 reforecasts)
@@ -152,7 +153,7 @@ def get_forecast_deterministic_twice_weekly(year, *, model_dir, model_var, date_
     filtered_dates_yr = get_initialization_dates(year, **kwargs)
 
     # Load data using xarray
-    ds = xr.open_dataset(file_path)
+    ds = storage.open_dataset(file_path)
 
     ds = dim_fmt_model(ds)
 
@@ -199,17 +200,17 @@ def get_forecast_probabilistic_twice_weekly(year, *, model_dir, model_var, date_
 
 #    print("\n file_pattern =  ", file_pattern)
     fname = file_pattern.format(year)
-    file_path = os.path.join(model_dir, fname)
+    file_path = storage.join(model_dir, fname)
 
 #    print("AAAAA", file_path)
-    if not os.path.exists(file_path):
+    if not storage.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
 
     filtered_dates_yr = get_initialization_dates(year, **kwargs)
 #    print("BBBBB")
 
     # Load data using xarray
-    ds = xr.open_dataset(file_path)
+    ds = storage.open_dataset(file_path)
 
     ds.load()
 #    print("\n\nYYYYY ds raw ", ds.tp[1,1,1,...].values)

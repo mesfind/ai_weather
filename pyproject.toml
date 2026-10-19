@@ -44,6 +44,7 @@ dependencies = [
     "git-filter-repo>=2.47.0",
     "plotly>=7.1.0",
     "google-cloud-storage>=3.16.0",
+    "gcsfs>=2025.3.2",
 ]
 
 [project.optional-dependencies]
