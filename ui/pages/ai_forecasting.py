@@ -368,15 +368,15 @@ def render():
     init = pd.Timestamp(init_day) + pd.Timedelta(hours=init_hour)
     if len(models) == 1:
         m = models[0]
-        st.caption(f"ⓘ Start dates for {m.name}: {init_lo:%-d %b %Y} – {init_hi:%-d %b %Y}. {m.date_reason()}")
+        st.caption(f"Start dates for {m.name}: {init_lo:%-d %b %Y} – {init_hi:%-d %b %Y}. {m.date_reason()}")
     else:
-        st.caption("ⓘ Start dates: " + " · ".join(f"{catalog.BY_KEY[k].name} {lo:%-d %b %Y} – {hi:%-d %b %Y}"
+        st.caption("Start dates: " + " · ".join(f"{catalog.BY_KEY[k].name} {lo:%-d %b %Y} – {hi:%-d %b %Y}"
                                                   for k, (lo, hi) in ranges.items()))
         if no_common:
             st.warning("No start date works for all the selected models; the ones that can't use the "
                        "chosen date are left out.")
         elif max_lead < max(m.max_lead_days for m in models):
-            st.caption(f"ⓘ Lead time is limited to {max_lead} days, the most every selected model can do.")
+            st.caption(f"Lead time is limited to {max_lead} days, the most every selected model can do.")
 
     # ── Step 2c: region ──────────────────────────────────────────────────
     _section("Region", "violet")
@@ -495,7 +495,7 @@ def render():
                                 (box.lat_min, box.lat_max, box.lon_min, box.lon_max), lead_days * 24)
     if store.BUCKET and not full.attrs.get("synthetic"):
         if store.in_bucket(p):
-            st.caption(f"ⓘ This {m.name} run is in the shared bucket, so other Sparks can load it.")
+            st.caption(f"This {m.name} run is in the shared bucket, so other Sparks can load it.")
         elif st.button(f"Upload this {m.name} run to the shared bucket", key=f"forecast_upload_{k}"):
             with st.spinner("Uploading to the shared bucket…"):
                 store.upload(p)

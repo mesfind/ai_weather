@@ -1,7 +1,10 @@
 import functools
 import os
 import re
+import shutil
+import subprocess
 import sys
+import time
 import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -157,20 +160,69 @@ def is_uri(p: Any) -> bool:
 def _strip(uri: str) -> str:
     return str(uri).split("://", 1)[1]
 
-@functools.lru_cache(maxsize=1)
-def gcs_fs():
-    """Google Cloud Storage client. Never falls back to anonymous (that only gives a confusing
-    401) unless DEMO_BUCKET_ANON=1 (public bucket)."""
-    import gcsfs
-    if os.getenv("DEMO_BUCKET_ANON", "0").strip().lower() in ("1", "true", "yes"):
-        return gcsfs.GCSFileSystem(token="anon")
-    key = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
+# ── Google login: no key file needed ────────────────────────────────────────
+# Order: DEMO_BUCKET_ANON=1 -> anonymous | GOOGLE_APPLICATION_CREDENTIALS key file |
+#        `gcloud auth application-default login` | the account you are logged into with
+#        `gcloud auth login` (via `gcloud auth print-access-token`, or $DEMO_GCS_ACCESS_TOKEN) |
+#        anonymous (works only for a publicly readable bucket).
+_token_cache = [0.0, ""]
+
+
+def _gcloud_token() -> str:
+    tok = os.environ.get("DEMO_GCS_ACCESS_TOKEN", "").strip()
+    if tok:
+        return tok
+    if time.time() - _token_cache[0] < 1500 and _token_cache[1]:
+        return _token_cache[1]
+    exe = shutil.which("gcloud")
+    if not exe:
+        return ""
+    try:
+        out = subprocess.run([exe, "auth", "print-access-token"], capture_output=True, text=True, timeout=30)
+    except Exception:
+        return ""
+    tok = out.stdout.strip() if out.returncode == 0 else ""
+    _token_cache[:] = [time.time(), tok]
+    return tok
+
+
+def _auth_token():
+    """The `token=` argument for gcsfs (see the order above)."""
+    if os.environ.get("DEMO_BUCKET_ANON", "0").strip().lower() in ("1", "true", "yes"):
+        return "anon"
+    key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
     if key:
-        key_path = Path(key).expanduser()
-        if not key_path.is_file():
-            raise FileNotFoundError(f"GOOGLE_APPLICATION_CREDENTIALS points to a missing file: {key_path}")
-        return gcsfs.GCSFileSystem(token=str(key_path))
-    return gcsfs.GCSFileSystem(token="google_default")     # gcloud auth application-default login
+        if not Path(key).expanduser().is_file():
+            raise FileNotFoundError(f"GOOGLE_APPLICATION_CREDENTIALS points to a missing file: {key}")
+        return "google_default"                     # reads that file (service account or user login)
+    if (Path.home() / ".config" / "gcloud" / "application_default_credentials.json").is_file():
+        return "google_default"
+    tok = _gcloud_token()
+    if tok:
+        from google.oauth2.credentials import Credentials
+        return Credentials(tok)                     # valid for about an hour
+    return "anon"                                   # public bucket only
+
+
+def _auth_hint(err: Exception) -> str:
+    t = str(err)
+    if "401" in t or "Anonymous" in t or "403" in t or "credentials" in t.lower():
+        return (" No Google login was found and the bucket is not public. Run `gcloud auth login` "
+                "(or `gcloud auth application-default login`) on this machine, or set "
+                "GOOGLE_APPLICATION_CREDENTIALS.")
+    return ""
+
+
+_fs_cache = [0.0, None]
+
+
+def gcs_fs():
+    """Google Cloud Storage client (re-made every 25 minutes so a gcloud token never goes stale)."""
+    if _fs_cache[1] is None or time.time() - _fs_cache[0] > 1500:
+        import gcsfs
+        _fs_cache[:] = [time.time(), gcsfs.GCSFileSystem(token=_auth_token())]
+    return _fs_cache[1]
+
 
 def join(base: Any, name: str) -> str:
     """os.path.join that keeps 'gs://' intact (pathlib would turn it into 'gs:/')."""
@@ -203,6 +255,7 @@ def open_dataset(path: Any, **kwargs):
 # Picking local vs bucket, item by item
 # ------------------------------------------------------------------------------
 DATA_SOURCES: Dict[str, str] = {}      # what was picked for each item: "local", "bucket" or "missing"
+_MISSING_ITEMS: List[str] = []         # reported together in ONE warning (see "Data check" below)
 
 def _match_case(p: Path) -> Path:
     """Case-insensitive match of the folders below ~/data/external (AIFS vs aifs, ...)."""
@@ -243,8 +296,7 @@ def _pick(label: str, local_candidates: List[tuple], remote_uri: str):
         return remote_uri
     DATA_SOURCES[label] = "missing"
     first = Path(local_candidates[0][0])
-    warnings.warn(f"config: {label} not found locally ({first}) and the bucket fallback is off "
-                  f"({BUCKET_NOTE})", stacklevel=3)
+    _MISSING_ITEMS.append(f"{label}: {first}")
     return first
 
 LOCAL_MODEL_DIRS = {             # local mapping, as before
@@ -377,6 +429,18 @@ BENCHMARK_MODEL_CATALOG: Dict[str, Dict[str, Any]] = {
     },
 }
 
+# ==============================================================================
+# DATA CHECK: one warning (not one per item) when inputs were found nowhere
+# ==============================================================================
+if _MISSING_ITEMS:
+    warnings.warn(
+        f"config: {len(_MISSING_ITEMS)} input(s) not found locally and the bucket fallback is off "
+        f"({BUCKET_NOTE}). Missing: " + "; ".join(_MISSING_ITEMS)
+        + ". Run `python ai_weather/config.py` for details.",
+        stacklevel=2,
+    )
+
+
 def _catalog_models(category: str, catalog: Optional[Dict[str, Any]] = None):
     catalog = catalog or BENCHMARK_MODEL_CATALOG
     return [m for m in catalog.values() if m["category"] == category]
@@ -405,8 +469,8 @@ layout = ("model", "verification_window")
 # 2. OBSERVATION DATA SETTINGS
 # ==============================================================================
 _OBS_SETS = {
-    "CHIRPS": dict(dir=OBS_DIR, pattern=("{}.nc",), var="precip"),
-    "IMERG": dict(dir=OBS_DIR, pattern=("{}.nc",), var="precip"),
+    "CHIRPS": dict(dir=OBS_DIR, pattern=("{}.nc",), var="RAINFALL"),
+    "IMERG": dict(dir=OBS_DIR, pattern=("{}.nc",), var="RAINFALL"),
     #"ENACTS": dict(dir=ENACTS_DIR, pattern=("{}_0p25.nc",), var="precip"),  
 }
 if obs not in _OBS_SETS:   # obs defaults to CHIRPS (see top of file)
@@ -578,31 +642,47 @@ def compute_mode_overrides(mode: str = "det", catalog: Optional[Dict[str, Any]] 
     return overrides
 
 
-def check_data() -> bool:
-    """Check everything the benchmark reads: local files, or the bucket where the bucket is used."""
+def _explain_error(e: Exception) -> str:
+    """One line saying what is wrong and what to do about it."""
+    if isinstance(e, ImportError):
+        return (f"{type(e).__name__}: {e}. Install the bucket reader in this Python environment: "
+                f"pip install gcsfs h5netcdf h5py")
+    return f"{type(e).__name__}: {e}." + (_auth_hint(e) or "")
+
+
+def check_data() -> int:
+    """Check everything the benchmark reads (local files, or the bucket where it is used).
+    Returns 0 if all found, 2 if something is missing, 1 if the bucket could not be read."""
     items = [("observations", obs_dir), ("region mask", nc_mask)]
     items += [(f"model {k}", resolve_path(m["dir"])) for k, m in BENCHMARK_MODEL_CATALOG.items()]
-    all_ok = True
+    missing = errors = 0
     for label, where in items:
-        n, parent_names = 0, None
-        if is_uri(where):
-            fs = gcs_fs()
-            path = _strip(where)
-            n = (1 if fs.exists(path) else 0) if where.endswith(".nc") else len(fs.glob(path + "/*.nc"))
-            if not n:
-                parent = path.rstrip("/").rsplit("/", 1)[0]
-                try:
-                    parent_names = sorted(e.rstrip("/").rsplit("/", 1)[-1] for e in fs.ls(parent))[:12]
-                except Exception:
-                    parent_names = []
-        else:
-            n = 1 if _has_nc(Path(where), True) else 0
         src = "bucket" if is_uri(where) else "local "
-        all_ok &= n > 0
-        print(f"  {'ok     ' if n else 'MISSING'} [{src}] {label:<14} {where}")
-        if parent_names is not None and not n:
-            print(f"          folders next to it: {', '.join(parent_names) or '(parent not found)'}")
-    return all_ok
+        try:
+            if is_uri(where):
+                fs = gcs_fs()
+                path = _strip(where)
+                n = (1 if fs.exists(path) else 0) if where.endswith(".nc") else len(fs.glob(path + "/*.nc"))
+            else:
+                n = 1 if _has_nc(Path(where), True) else 0
+        except Exception as e:                       # one bad item must not hide the others
+            errors += 1
+            print(f"  ERROR   [{src}] {label:<14} {where}")
+            print(f"          {_explain_error(e)}")
+            continue
+        print(f"  {'ok     ' if n else 'MISSING'} [{src}] {label:<14} {where}"
+              + (f"   ({n} .nc)" if n and not where.endswith(".nc") else ""))
+        if not n:
+            missing += 1
+            if is_uri(where):
+                parent = _strip(where).rstrip("/").rsplit("/", 1)[0]
+                try:
+                    names = sorted(x.rstrip("/").rsplit("/", 1)[-1] for x in gcs_fs().ls(parent))[:12]
+                    print(f"          folders next to it: {', '.join(names) or '(none)'}")
+                except Exception:
+                    print(f"          gs://{parent} not found")
+    print(f"  summary: {len(items) - missing - errors} ok, {missing} missing, {errors} error(s)")
+    return 1 if errors else (2 if missing else 0)
 
 
 if __name__ == "__main__":
@@ -620,11 +700,4 @@ if __name__ == "__main__":
                             ("demo4", f"DATA/{region}/{obs}")):
             print(f"  {console_url(_demo, _rel)}")
     print("check     :")
-    try:
-        _ok = check_data()
-    except Exception as _e:
-        print(f"  cannot read the bucket: {type(_e).__name__}: {_e}")
-        print("  Not authenticated? Run: gcloud auth application-default login   "
-              "(or set GOOGLE_APPLICATION_CREDENTIALS to a service-account key)")
-        sys.exit(1)
-    sys.exit(0 if _ok else 2)
+    sys.exit(check_data())

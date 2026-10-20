@@ -32,6 +32,7 @@ Requires-Dist: git-filter-repo>=2.47.0
 Requires-Dist: plotly>=7.1.0
 Requires-Dist: google-cloud-storage>=3.16.0
 Requires-Dist: gcsfs>=2025.3.2
+Requires-Dist: watchdog>=6.0.0
 Provides-Extra: dev
 Requires-Dist: dask; extra == "dev"
 Requires-Dist: pytest; extra == "dev"
