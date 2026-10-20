@@ -15,8 +15,10 @@ import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
-
 import pandas as pd
+
+APP_ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(APP_ROOT))
 
 OUTPUT_DIR = Path(os.environ.get("DEMO3_OUTPUT_DIR", Path(__file__).resolve().parent.parent / "outputs"))
 JOBS_DIR = OUTPUT_DIR / "_jobs"

@@ -1,6 +1,6 @@
 # ui/pages/ai_forecasting.py
 """
-AI Forecast Demo — Running Your First AI Weather Forecast.
+AI Forecast Lab — Running Your First AI Weather Forecast.
 Integrated into Onset Forecast Platform.
 
 Choose up to 4 models, the start date, lead time, region and use case; load saved
@@ -284,7 +284,7 @@ def render():
     gpu = gpu_name()
 
     # ── Header & stats ───────────────────────────────────────────────────
-    st.title("Running Your First AI Weather Forecast")
+    st.title("Running Your First AI forecast | Lab")
     st.caption("Pick up to four models, a start date and a region, run the forecasts on your "
                "Spark, and compare them with each other and with what was observed.")
 
