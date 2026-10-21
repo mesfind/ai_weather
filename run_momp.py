@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import ast
 import contextlib
+import fnmatch
 import importlib.metadata
 import json
 import os
@@ -155,6 +156,8 @@ def _obs_meta(obs_key: str):
 def resolve_path(p):
     if p is None or str(p).strip() == "":
         return None
+    if config.is_uri(p):                      # gs:// (Google bucket) paths are used as they are
+        return str(p).strip().rstrip("/")
     p = Path(str(p)).expanduser()
     if p.is_absolute():
         return str(p)
@@ -294,7 +297,7 @@ def apply_spec_to_cfg(cfg, spec: dict, model_key: str):
             cfg.obs = ground_truth
             obs_dir = _clean_str(_meta_get(obs_meta, "dir", ""))
             if obs_dir:
-                cfg.obs_dir = str(Path(obs_dir).expanduser().resolve())
+                cfg.obs_dir = resolve_path(obs_dir)
             file_pattern = _clean_str(_meta_get(obs_meta, "file_pattern", "{}.nc"))
             cfg.obs_file_pattern = (file_pattern,)
             cfg.obs_var = _clean_str(_meta_get(obs_meta, "var", "precip"))
@@ -426,7 +429,7 @@ def configure_model(cfg, catalog_key: str, meta, mode):
     name = _model_name(meta, catalog_key)
     cfg.model_list = (name,)
     model_dir = resolve_path(_meta_get(meta, "dir", ""))
-    if not model_dir or not Path(model_dir).is_dir():
+    if not model_dir or not config.exists(model_dir):
         raise FileNotFoundError(
             f"Model data directory for '{name}' not found: {model_dir!r}. "
             "Check BENCHMARK_MODEL_CATALOG['dir'] in config.py."
@@ -455,20 +458,31 @@ def configure_model(cfg, catalog_key: str, meta, mode):
     cfg.dir_out = str(out_dir)
     cfg.dir_fig = str(fig_dir)
 
+def _path_exists(path) -> bool:
+    """True if a local path or a gs:// object/folder exists."""
+    return config.exists(str(path)) if config.is_uri(path) else Path(str(path)).expanduser().exists()
+
+
+def _list_nc(folder):
+    """Names of the .nc files directly in a local folder or gs:// folder."""
+    return sorted(Path(f).name for f in config.glob(config.join(folder, "*.nc")))
+
+
 def validate_paths(cfg):
     checks = {
-        "obs_dir ": getattr(cfg, "obs_dir ", None),
-        "ref_model_dir ": getattr(cfg, "ref_model_dir ", None),
-        "nc_mask ": getattr(cfg, "nc_mask ", None),
-        "shpfile_dir ": getattr(cfg, "shpfile_dir ", None),
-        "thresh_file ": getattr(cfg, "thresh_file ", None),
+        "obs_dir": getattr(cfg, "obs_dir", None),
+        "ref_model_dir": getattr(cfg, "ref_model_dir", None),
+        "nc_mask": getattr(cfg, "nc_mask", None),
+        "thresh_file": getattr(cfg, "thresh_file", None),
     }
-    for i, d in enumerate(getattr(cfg, "model_dir_list ", ()) or ()):
-        checks[f"model_dir_list[{i}] "] = d
+    if getattr(cfg, "polygon", False):                 # the shapefile folder is only needed for polygons
+        checks["shpfile_dir"] = getattr(cfg, "shpfile_dir", None)
+    for i, d in enumerate(getattr(cfg, "model_dir_list", ()) or ()):
+        checks[f"model_dir_list[{i}]"] = d
     missing = [
         f"  {name}: {path}"
         for name, path in checks.items()
-        if path and not Path(str(path)).expanduser().exists()
+        if path and not _path_exists(path)
     ]
     if missing:
         raise FileNotFoundError(
@@ -482,22 +496,22 @@ def validate_paths(cfg):
     obs_pat = _first(getattr(cfg, "obs_file_pattern", None)) or "{}.nc"
     sd, ed = getattr(cfg, "start_date", None), getattr(cfg, "end_date", None)
     if obs_dir and sd and ed:
-        absent = [y for y in range(sd[0], ed[0] + 1)
-                  if not (Path(obs_dir) / obs_pat.format(y)).exists()]
+        names = _list_nc(obs_dir)                      # one listing, also for the bucket
+        absent = [y for y in range(sd[0], ed[0] + 1) if obs_pat.format(y) not in names]
         if absent:
-            avail = sorted(f.name for f in Path(obs_dir).glob("*.nc"))[:5]
             problems.append(
                 f"obs: no file '{obs_pat}' in {obs_dir} for years {absent}; "
-                f"first files found: {avail or 'none'}"
+                f"first files found: {names[:5] or 'none'}"
             )
     ref_dir = getattr(cfg, "ref_model_dir", None)
     ref_pat = _first(getattr(cfg, "ref_model_file_pattern", None)) or "{}.nc"
-    if ref_dir and not list(Path(ref_dir).glob(ref_pat.replace("{}", "*"))):
-        avail = sorted(f.name for f in Path(ref_dir).glob("*.nc"))[:5]
-        problems.append(
-            f"ref model: nothing matches '{ref_pat}' in {ref_dir}; "
-            f"first files found: {avail or 'none'}"
-        )
+    if ref_dir:
+        names = _list_nc(ref_dir)
+        if not any(fnmatch.fnmatch(n, ref_pat.replace("{}", "*")) for n in names):
+            problems.append(
+                f"ref model: nothing matches '{ref_pat}' in {ref_dir}; "
+                f"first files found: {names[:5] or 'none'}"
+            )
     if problems:
         raise FileNotFoundError("Data file check failed:\n  " + "\n  ".join(problems))
 
